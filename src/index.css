@@ -8,78 +8,87 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Dark futuristic base */
-    --background: 215 28% 6%;
+    /* Sophisticated neutral base */
+    --background: 0 0% 2%;
     --foreground: 0 0% 98%;
-
-    --card: 215 27% 8%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 215 27% 8%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 263 85% 65%;
-    --primary-foreground: 215 28% 6%;
-
-    --secondary: 215 20% 12%;
-    --secondary-foreground: 0 0% 90%;
-
-    --muted: 215 20% 10%;
-    --muted-foreground: 0 0% 60%;
-
-    --accent: 183 90% 55%;
-    --accent-foreground: 215 28% 6%;
-
-    --destructive: 0 84% 60%;
+    
+    /* Refined card system */
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 95%;
+    
+    /* Sophisticated primary palette */
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 2%;
+    
+    --secondary: 0 0% 8%;
+    --secondary-foreground: 0 0% 85%;
+    
+    --muted: 0 0% 6%;
+    --muted-foreground: 0 0% 45%;
+    
+    --accent: 270 50% 65%;
+    --accent-foreground: 0 0% 2%;
+    
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
-
-    --border: 215 20% 15%;
-    --input: 215 20% 12%;
-    --ring: 263 85% 65%;
     
-    /* Futuristic Matter tokens */
-    --neon-cyan: 183 90% 55%;
-    --neon-purple: 263 85% 65%;
-    --neon-pink: 315 85% 70%;
-    --electric-blue: 220 100% 70%;
-    --quantum-green: 120 85% 65%;
+    --border: 0 0% 12%;
+    --input: 0 0% 8%;
+    --ring: 270 50% 65%;
     
-    --glass-bg: 215 20% 12% / 0.8;
-    --glass-border: 0 0% 100% / 0.1;
-    --neural-glow: 263 85% 65% / 0.2;
+    /* Premium color system */
+    --premium-purple: 270 50% 65%;
+    --premium-blue: 220 70% 60%;
+    --premium-green: 150 60% 55%;
+    --premium-amber: 45 90% 60%;
     
-    /* Advanced gradients */
-    --gradient-neural: linear-gradient(135deg, hsl(var(--neon-purple)), hsl(var(--neon-cyan)), hsl(var(--electric-blue)));
-    --gradient-quantum: linear-gradient(45deg, hsl(var(--neon-cyan)) 0%, hsl(var(--neon-purple)) 50%, hsl(var(--neon-pink)) 100%);
-    --gradient-matrix: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(215 25% 8%) 50%, hsl(var(--background)) 100%);
-    --gradient-consciousness: radial-gradient(circle at 50% 50%, hsl(var(--neon-purple)) 0%, transparent 70%);
+    /* Glass morphism refined */
+    --glass: 0 0% 8% / 0.6;
+    --glass-border: 0 0% 100% / 0.08;
+    --glass-subtle: 0 0% 4% / 0.8;
     
-    /* Typography - futuristic fonts */
+    /* Sophisticated gradients */
+    --gradient-primary: linear-gradient(180deg, hsl(0 0% 4%) 0%, hsl(0 0% 1%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 6%) 0%, hsl(0 0% 3%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(270 50% 65%) 0%, hsl(220 70% 60%) 100%);
+    
+    /* Typography system */
     --font-sans: 'Inter', system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
     
-    /* Advanced animations */
-    --transition-neural: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-    --transition-quantum: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* Spacing system */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+    --space-3xl: 4rem;
     
-    /* Particle effects */
-    --particle-glow: 0 0 20px hsl(var(--neon-cyan)), 0 0 40px hsl(var(--neon-cyan)), 0 0 60px hsl(var(--neon-cyan));
-    --neural-shadow: 0 8px 32px hsl(var(--neon-purple) / 0.3), 0 0 0 1px hsl(var(--glass-border));
+    /* Shadows refined */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.1), 0 2px 4px -2px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.1), 0 4px 6px -4px hsl(0 0% 0% / 0.1);
+    --shadow-premium: 0 25px 50px -12px hsl(0 0% 0% / 0.25);
+    
+    /* Radius system */
+    --radius: 0.75rem;
 
-    --radius: 0.5rem;
-
-    --sidebar-background: 215 20% 12%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 263 85% 65%;
-    --sidebar-primary-foreground: 215 28% 6%;
-    --sidebar-accent: 215 20% 15%;
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 215 20% 15%;
-    --sidebar-ring: 263 85% 65%;
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 0 0% 85%;
+    --sidebar-primary: 270 50% 65%;
+    --sidebar-primary-foreground: 0 0% 2%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 85%;
+    --sidebar-border: 0 0% 12%;
+    --sidebar-ring: 270 50% 65%;
   }
 
   .dark {
-    /* Already dark by default */
+    /* Already optimized for dark mode */
   }
 }
 

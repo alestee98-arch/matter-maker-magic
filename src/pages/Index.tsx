@@ -1,5 +1,5 @@
 import { useState } from "react";
-import FuturisticLanding from "@/components/FuturisticLanding";
+import DribbbleGrade from "@/components/DribbbleGrade";
 import InteractiveDemo from "@/components/InteractiveDemo";
 import WeeklyQuestion from "@/components/WeeklyQuestion";
 import PersonalArchive from "@/components/PersonalArchive";
@@ -12,28 +12,26 @@ const Index = () => {
   if (currentView === 'landing') {
     return (
       <div>
-        <FuturisticLanding />
-        <div className="bg-background py-20 text-center border-t border-glass-border">
-          <h2 className="text-4xl font-light text-foreground mb-12 font-mono tracking-wider">
-            EXPERIENCE THE <span className="text-neon-cyan">PROTOCOL</span>
+        <DribbbleGrade />
+        <div className="bg-background py-20 text-center border-t border-border">
+          <h2 className="text-3xl font-light text-foreground mb-12 tracking-tight">
+            Experience the platform
           </h2>
-          <div className="flex justify-center gap-6">
+          <div className="flex justify-center gap-4">
             <Button 
               onClick={() => setCurrentView('demo')} 
-              size="lg" 
-              className="group bg-gradient-neural hover:shadow-particle transition-all duration-500 font-mono tracking-wider px-8 py-6"
+              className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8"
             >
-              <Terminal className="w-5 h-5 mr-2 group-hover:animate-pulse" />
-              NEURAL DEMO
+              <Terminal className="w-4 h-4 mr-2" />
+              Interactive Demo
             </Button>
             <Button 
               onClick={() => setCurrentView('app')} 
               variant="outline" 
-              size="lg"
-              className="group border-glass-border hover:bg-glass-bg backdrop-blur-xl font-mono tracking-wider px-8 py-6"
+              className="rounded-full px-8"
             >
-              <Cpu className="w-5 h-5 mr-2 group-hover:animate-pulse" />
-              ACCESS PLATFORM
+              <Cpu className="w-4 h-4 mr-2" />
+              Try Platform
             </Button>
           </div>
         </div>
@@ -43,15 +41,15 @@ const Index = () => {
 
   if (currentView === 'demo') {
     return (
-      <div className="min-h-screen bg-gradient-matrix">
-        <div className="bg-glass-bg/50 backdrop-blur-xl border-b border-glass-border py-6 px-6 text-center">
+      <div className="min-h-screen bg-gradient-primary">
+        <div className="bg-glass backdrop-blur-xl border-b border-glass-border py-6 px-8">
           <Button 
             onClick={() => setCurrentView('landing')} 
             variant="ghost" 
             size="sm"
-            className="font-mono text-neon-cyan hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground"
           >
-            ← RETURN TO PROTOCOL
+            ← Back
           </Button>
         </div>
         <InteractiveDemo />
@@ -60,15 +58,15 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-matrix">
-      <div className="bg-glass-bg/50 backdrop-blur-xl border-b border-glass-border py-6 px-6 text-center">
+    <div className="min-h-screen bg-gradient-primary">
+      <div className="bg-glass backdrop-blur-xl border-b border-glass-border py-6 px-8">
         <Button 
           onClick={() => setCurrentView('landing')} 
           variant="ghost" 
           size="sm"
-          className="font-mono text-neon-cyan hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground"
         >
-          ← RETURN TO PROTOCOL
+          ← Back
         </Button>
       </div>
       <WeeklyQuestion />
