@@ -1,10 +1,10 @@
 import { useState } from "react";
-import MatterLanding from "@/components/MatterLanding";
+import FuturisticLanding from "@/components/FuturisticLanding";
 import InteractiveDemo from "@/components/InteractiveDemo";
 import WeeklyQuestion from "@/components/WeeklyQuestion";
 import PersonalArchive from "@/components/PersonalArchive";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play } from "lucide-react";
+import { Terminal, Cpu } from "lucide-react";
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'demo' | 'app'>('landing');
@@ -12,28 +12,28 @@ const Index = () => {
   if (currentView === 'landing') {
     return (
       <div>
-        <MatterLanding />
-        <div className="bg-background py-16 text-center">
-          <h2 className="text-3xl font-serif font-bold text-foreground mb-8">
-            Experience the Vision
+        <FuturisticLanding />
+        <div className="bg-background py-20 text-center border-t border-glass-border">
+          <h2 className="text-4xl font-light text-foreground mb-12 font-mono tracking-wider">
+            EXPERIENCE THE <span className="text-neon-cyan">PROTOCOL</span>
           </h2>
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-6">
             <Button 
               onClick={() => setCurrentView('demo')} 
               size="lg" 
-              className="gap-2"
+              className="group bg-gradient-neural hover:shadow-particle transition-all duration-500 font-mono tracking-wider px-8 py-6"
             >
-              <Play className="w-5 h-5" />
-              Interactive Demo
+              <Terminal className="w-5 h-5 mr-2 group-hover:animate-pulse" />
+              NEURAL DEMO
             </Button>
             <Button 
               onClick={() => setCurrentView('app')} 
               variant="outline" 
               size="lg"
-              className="gap-2"
+              className="group border-glass-border hover:bg-glass-bg backdrop-blur-xl font-mono tracking-wider px-8 py-6"
             >
-              <ArrowRight className="w-5 h-5" />
-              Try the Platform
+              <Cpu className="w-5 h-5 mr-2 group-hover:animate-pulse" />
+              ACCESS PLATFORM
             </Button>
           </div>
         </div>
@@ -43,14 +43,15 @@ const Index = () => {
 
   if (currentView === 'demo') {
     return (
-      <div>
-        <div className="bg-primary/5 py-8 px-6 text-center">
+      <div className="min-h-screen bg-gradient-matrix">
+        <div className="bg-glass-bg/50 backdrop-blur-xl border-b border-glass-border py-6 px-6 text-center">
           <Button 
             onClick={() => setCurrentView('landing')} 
             variant="ghost" 
             size="sm"
+            className="font-mono text-neon-cyan hover:text-foreground"
           >
-            ← Back to Landing
+            ← RETURN TO PROTOCOL
           </Button>
         </div>
         <InteractiveDemo />
@@ -59,20 +60,19 @@ const Index = () => {
   }
 
   return (
-    <div>
-      <div className="bg-primary/5 py-4 px-6 text-center">
+    <div className="min-h-screen bg-gradient-matrix">
+      <div className="bg-glass-bg/50 backdrop-blur-xl border-b border-glass-border py-6 px-6 text-center">
         <Button 
           onClick={() => setCurrentView('landing')} 
           variant="ghost" 
           size="sm"
+          className="font-mono text-neon-cyan hover:text-foreground"
         >
-          ← Back to Landing
+          ← RETURN TO PROTOCOL
         </Button>
       </div>
-      <div className="min-h-screen bg-gradient-subtle">
-        <WeeklyQuestion />
-        <PersonalArchive />
-      </div>
+      <WeeklyQuestion />
+      <PersonalArchive />
     </div>
   );
 };

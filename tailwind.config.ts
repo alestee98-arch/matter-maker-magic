@@ -52,13 +52,13 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				'warm-gold': {
-					DEFAULT: 'hsl(var(--warm-gold))',
-					foreground: 'hsl(var(--warm-gold-foreground))'
-				},
-				'deep-brown': 'hsl(var(--deep-brown))',
-				'soft-cream': 'hsl(var(--soft-cream))',
-				'gentle-shadow': 'hsl(var(--gentle-shadow))',
+				'neon-cyan': 'hsl(var(--neon-cyan))',
+				'neon-purple': 'hsl(var(--neon-purple))', 
+				'neon-pink': 'hsl(var(--neon-pink))',
+				'electric-blue': 'hsl(var(--electric-blue))',
+				'quantum-green': 'hsl(var(--quantum-green))',
+				'glass-bg': 'hsl(var(--glass-bg))',
+				'glass-border': 'hsl(var(--glass-border))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -71,14 +71,48 @@ export default {
 				}
 			},
 			backgroundImage: {
-				'gradient-warm': 'var(--gradient-warm)',
-				'gradient-subtle': 'var(--gradient-subtle)'
+				'gradient-neural': 'var(--gradient-neural)',
+				'gradient-quantum': 'var(--gradient-quantum)',
+				'gradient-matrix': 'var(--gradient-matrix)',
+				'gradient-consciousness': 'var(--gradient-consciousness)'
 			},
 			fontFamily: {
-				'serif': 'var(--font-serif)'
+				'sans': 'var(--font-sans)',
+				'mono': 'var(--font-mono)'
 			},
-			transitionProperty: {
-				'gentle': 'var(--transition-gentle)'
+			boxShadow: {
+				'neural': 'var(--neural-shadow)',
+				'particle': 'var(--particle-glow)'
+			},
+			animation: {
+				'pulse-glow': 'pulse-glow 2s ease-in-out infinite alternate',
+				'float': 'float 6s ease-in-out infinite',
+				'matrix-rain': 'matrix-rain 20s linear infinite',
+				'neural-pulse': 'neural-pulse 3s ease-in-out infinite'
+			},
+			keyframes: {
+				'pulse-glow': {
+					'0%': { 
+						boxShadow: '0 0 20px hsl(var(--neon-cyan))',
+						transform: 'scale(1)'
+					},
+					'100%': { 
+						boxShadow: '0 0 40px hsl(var(--neon-purple)), 0 0 60px hsl(var(--neon-cyan))',
+						transform: 'scale(1.02)'
+					}
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0px)' },
+					'50%': { transform: 'translateY(-20px)' }
+				},
+				'matrix-rain': {
+					'0%': { transform: 'translateY(-100%)' },
+					'100%': { transform: 'translateY(100vh)' }
+				},
+				'neural-pulse': {
+					'0%, 100%': { opacity: '0.4' },
+					'50%': { opacity: '1' }
+				}
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
