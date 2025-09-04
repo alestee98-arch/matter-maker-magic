@@ -1,39 +1,34 @@
-import { useState } from "react";
-import DribbbleGrade from "@/components/DribbbleGrade";
-import InteractiveDemo from "@/components/InteractiveDemo";
-import WeeklyQuestion from "@/components/WeeklyQuestion";
-import PersonalArchive from "@/components/PersonalArchive";
-import { Button } from "@/components/ui/button";
-import { Terminal, Cpu } from "lucide-react";
+import React, { useState } from 'react';
+import DribbbleGrade from '@/components/DribbbleGrade';
+import InteractiveDemo from '@/components/InteractiveDemo';
+import WeeklyQuestion from '@/components/WeeklyQuestion';
+import PersonalArchive from '@/components/PersonalArchive';
+import ProfilePage from '@/components/ProfilePage';
+import AppLayout from '@/components/AppLayout';
+import { Button } from '@/components/ui/button';
 
-const Index = () => {
+export default function Index() {
   const [currentView, setCurrentView] = useState<'landing' | 'demo' | 'app'>('landing');
+  const [appView, setAppView] = useState<'home' | 'archive' | 'profile' | 'settings'>('home');
 
   if (currentView === 'landing') {
     return (
-      <div>
+      <div className="min-h-screen">
         <DribbbleGrade />
-        <div className="bg-background py-20 text-center border-t border-border">
-          <h2 className="text-3xl font-light text-foreground mb-12 tracking-tight">
-            Experience the platform
-          </h2>
-          <div className="flex justify-center gap-4">
-            <Button 
-              onClick={() => setCurrentView('demo')} 
-              className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-8"
-            >
-              <Terminal className="w-4 h-4 mr-2" />
-              Interactive Demo
-            </Button>
-            <Button 
-              onClick={() => setCurrentView('app')} 
-              variant="outline" 
-              className="rounded-full px-8"
-            >
-              <Cpu className="w-4 h-4 mr-2" />
-              Try Platform
-            </Button>
-          </div>
+        <div className="fixed bottom-8 right-8 flex flex-col gap-4">
+          <Button 
+            onClick={() => setCurrentView('demo')}
+            className="bg-premium-purple hover:bg-premium-purple/80"
+          >
+            Ver Demo
+          </Button>
+          <Button 
+            onClick={() => setCurrentView('app')}
+            variant="outline"
+            className="border-premium-purple text-premium-purple hover:bg-premium-purple/10"
+          >
+            Entrar a la App
+          </Button>
         </div>
       </div>
     );
@@ -41,38 +36,52 @@ const Index = () => {
 
   if (currentView === 'demo') {
     return (
-      <div className="min-h-screen bg-gradient-primary">
-        <div className="bg-glass backdrop-blur-xl border-b border-glass-border py-6 px-8">
+      <div className="min-h-screen">
+        <InteractiveDemo />
+        <div className="fixed top-8 left-8">
           <Button 
-            onClick={() => setCurrentView('landing')} 
-            variant="ghost" 
-            size="sm"
-            className="text-muted-foreground hover:text-foreground"
+            onClick={() => setCurrentView('landing')}
+            variant="outline"
           >
-            ← Back
+            ← Volver
           </Button>
         </div>
-        <InteractiveDemo />
       </div>
     );
   }
 
+  // App view with navigation
   return (
-    <div className="min-h-screen bg-gradient-primary">
-      <div className="bg-glass backdrop-blur-xl border-b border-glass-border py-6 px-8">
-        <Button 
-          onClick={() => setCurrentView('landing')} 
-          variant="ghost" 
-          size="sm"
-          className="text-muted-foreground hover:text-foreground"
-        >
-          ← Back
-        </Button>
+    <AppLayout currentView={appView} onViewChange={setAppView}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Button 
+            onClick={() => setCurrentView('landing')}
+            variant="outline"
+            size="sm"
+          >
+            ← Volver al Inicio
+          </Button>
+        </div>
+        
+        {appView === 'home' && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <WeeklyQuestion />
+            <PersonalArchive />
+          </div>
+        )}
+        
+        {appView === 'archive' && <PersonalArchive />}
+        
+        {appView === 'profile' && <ProfilePage />}
+        
+        {appView === 'settings' && (
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-semibold mb-4">Configuración</h2>
+            <p className="text-muted-foreground">Panel de configuración próximamente...</p>
+          </div>
+        )}
       </div>
-      <WeeklyQuestion />
-      <PersonalArchive />
-    </div>
+    </AppLayout>
   );
-};
-
-export default Index;
+}
