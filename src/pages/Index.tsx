@@ -15,17 +15,16 @@ export default function Index() {
     return (
       <div className="min-h-screen">
         <DribbbleGrade />
-        <div className="fixed bottom-8 right-8 flex flex-col gap-4">
+        <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-50">
           <Button 
             onClick={() => setCurrentView('demo')}
-            className="bg-premium-purple hover:bg-premium-purple/80"
+            className="bg-premium-purple text-white hover:bg-premium-purple/80 shadow-lg"
           >
             Ver Demo
           </Button>
           <Button 
             onClick={() => setCurrentView('app')}
-            variant="outline"
-            className="border-premium-purple text-premium-purple hover:bg-premium-purple/10"
+            className="bg-card text-card-foreground border-2 border-premium-purple hover:bg-premium-purple hover:text-white shadow-lg"
           >
             Entrar a la App
           </Button>
