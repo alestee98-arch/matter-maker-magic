@@ -7,11 +7,11 @@ import { Search, Download, Play, Edit, Lock, Share, Archive } from "lucide-react
 
 const MOCK_PROFILE = {
   id: "user_001",
-  name: "Alexis Martínez",
-  handle: "@alexis",
+  name: "Alex Martinez",
+  handle: "@alex",
   avatar: "https://i.pravatar.cc/160?img=13",
   bio: "Building MATTER — preserving essence through time. Lover of wellness, AI, and good questions.",
-  location: "Ciudad de México, MX",
+  location: "Mexico City, MX",
   joined: "2025-02-14",
   stats: {
     answers: 87,
@@ -19,90 +19,90 @@ const MOCK_PROFILE = {
     categories: 9
   },
   privacyDefault: "Private",
-  legacyExecutor: "María Martínez (Hermana)",
+  legacyExecutor: "Maria Martinez (Sister)",
 };
 
 const MOCK_PROMPTS = [
   {
     id: "p_203",
-    depth: "Ligera",
-    text: "¿Cuál es una canción que te levanta el ánimo al instante?",
+    depth: "Light",
+    text: "What's a song that instantly lifts your mood?",
   },
   {
     id: "p_204",
-    depth: "Media", 
-    text: "Cuenta una pequeña decisión que cambió tu trayectoria más de lo que imaginabas.",
+    depth: "Medium", 
+    text: "Tell about a small decision that changed your trajectory more than you imagined.",
   },
   {
     id: "p_205",
-    depth: "Profunda",
-    text: "¿Qué le dirías a tu yo de 17 años sobre el amor y el fracaso?",
+    depth: "Deep",
+    text: "What would you tell your 17-year-old self about love and failure?",
   },
 ];
 
 const MOCK_ENTRIES = [
   {
     id: "e_118",
-    title: "Aprendiendo a fallar bien",
+    title: "Learning to fail well",
     date: "2025-08-21",
-    category: "Lecciones",
+    category: "Lessons",
     privacy: "Private",
-    summary: "Cómo redefiní el fracaso como retroalimentación y ritmo.",
+    summary: "How I redefined failure as feedback and rhythm.",
     mediaType: "video",
     duration: "02:34",
-    transcriptSnippet: "Fallar no me rompió; me enseñó a escuchar más…",
+    transcriptSnippet: "Failing didn't break me; it taught me to listen more…",
   },
   {
     id: "e_117",
-    title: "Lo que significa familia para mí",
+    title: "What family means to me",
     date: "2025-08-14",
-    category: "Familia",
+    category: "Family",
     privacy: "Share",
     mediaType: "audio",
     duration: "03:18",
-    transcriptSnippet: "La mesa del domingo fue el primer aula…",
+    transcriptSnippet: "Sunday dinner table was the first classroom…",
   },
   {
     id: "e_116", 
-    title: "Mi relación con el trabajo y la calma",
+    title: "My relationship with work and calm",
     date: "2025-08-07",
-    category: "Trabajo",
+    category: "Work",
     privacy: "Private",
     mediaType: "text",
     duration: null,
-    transcriptSnippet: "La ambición sin descanso se queda vacía…",
+    transcriptSnippet: "Ambition without rest stays empty…",
   },
   {
     id: "e_115",
-    title: "Una alegría pequeña (y diaria)",
+    title: "A small (and daily) joy",
     date: "2025-07-31",
-    category: "Alegría", 
+    category: "Joy", 
     privacy: "Legacy",
     mediaType: "audio",
     duration: "01:11",
-    transcriptSnippet: "El primer sorbo de café, antes de que el mundo me encuentre…",
+    transcriptSnippet: "The first sip of coffee, before the world finds me…",
   },
 ];
 
 const CATEGORIES = [
-  "Todos",
-  "Amor", 
-  "Familia",
-  "Trabajo",
-  "Salud",
-  "Alegría",
-  "Miedo",
-  "Lecciones",
-  "Amistad",
+  "All",
+  "Love", 
+  "Family",
+  "Work",
+  "Health",
+  "Joy",
+  "Fear",
+  "Lessons",
+  "Friendship",
 ];
 
 export default function ProfilePage() {
   const [query, setQuery] = useState("");
-  const [activeCat, setActiveCat] = useState("Todos");
+  const [activeCat, setActiveCat] = useState("All");
 
   const filtered = useMemo(() => {
     return MOCK_ENTRIES.filter((e) => {
-      const matchCat = activeCat === "Todos" ? true : e.category === activeCat;
+      const matchCat = activeCat === "All" ? true : e.category === activeCat;
       const q = query.trim().toLowerCase();
       const matchQ = !q
         ? true
@@ -127,12 +127,12 @@ export default function ProfilePage() {
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <CardTitle>Tu archivo</CardTitle>
+            <CardTitle>Your Archive</CardTitle>
             <div className="flex flex-col gap-3 md:flex-row md:items-center">
               <SearchInput value={query} onChange={setQuery} />
               <Button variant="outline" size="sm">
                 <Download className="mr-2 h-4 w-4" />
-                Exportar todo
+                Export All
               </Button>
             </div>
           </div>
@@ -166,18 +166,18 @@ function ProfileHeader({ profile }: { profile: any }) {
               <p className="text-muted-foreground">{profile.handle} · {profile.location}</p>
               <p className="mt-2 max-w-prose text-sm text-foreground">{profile.bio}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <Badge variant="secondary">{profile.stats.answers} respuestas</Badge>
-                <Badge variant="secondary">{profile.stats.streakWeeks} semanas seguidas</Badge>
-                <Badge variant="secondary">{profile.stats.categories} categorías</Badge>
-                <Badge variant="secondary">Desde {new Date(profile.joined).toLocaleDateString()}</Badge>
+                <Badge variant="secondary">{profile.stats.answers} answers</Badge>
+                <Badge variant="secondary">{profile.stats.streakWeeks} weeks straight</Badge>
+                <Badge variant="secondary">{profile.stats.categories} categories</Badge>
+                <Badge variant="secondary">Since {new Date(profile.joined).toLocaleDateString()}</Badge>
               </div>
             </div>
           </div>
           <div className="flex w-full flex-col items-start gap-2 md:w-auto md:items-end">
-            <p className="text-sm text-muted-foreground">Privacidad predeterminada</p>
+            <p className="text-sm text-muted-foreground">Default Privacy</p>
             <div className="flex items-center gap-2">
               <PrivacyPill level={profile.privacyDefault} />
-              <Button variant="outline" size="sm">Cambiar</Button>
+              <Button variant="outline" size="sm">Change</Button>
             </div>
           </div>
         </div>
@@ -208,8 +208,8 @@ function PromptCard({ prompts }: { prompts: any[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Pregunta de esta semana</CardTitle>
-        <p className="text-sm text-muted-foreground">Elige una y responde en texto, audio o video.</p>
+        <CardTitle>This week&apos;s question</CardTitle>
+        <p className="text-sm text-muted-foreground">Choose one and respond with text, audio or video.</p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 gap-3">
@@ -221,8 +221,8 @@ function PromptCard({ prompts }: { prompts: any[] }) {
           ))}
         </div>
         <div className="flex items-center gap-3">
-          <Button>Responder ahora</Button>
-          <Button variant="outline">Programar para más tarde</Button>
+          <Button>Answer now</Button>
+          <Button variant="outline">Schedule for later</Button>
         </div>
       </CardContent>
     </Card>
@@ -233,31 +233,31 @@ function LegacyCard({ profile }: { profile: any }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Legado</CardTitle>
-        <p className="text-sm text-muted-foreground">Controla qué se comparte y cuándo.</p>
+        <CardTitle>Legacy</CardTitle>
+        <p className="text-sm text-muted-foreground">Control what gets shared and when.</p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-3 text-sm">
           <div className="flex items-center justify-between">
-            <span>Ejecutor/a de legado</span>
+            <span>Legacy executor</span>
             <span className="font-medium">{profile.legacyExecutor}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span>Exportar archivo</span>
+            <span>Export archive</span>
             <Button variant="outline" size="sm">
               <Download className="mr-2 h-4 w-4" />
-              Descargar .zip
+              Download .zip
             </Button>
           </div>
           <div className="flex items-center justify-between">
-            <span>Estado</span>
-            <Badge className="bg-premium-green/20 text-premium-green">Cifrado y respaldado</Badge>
+            <span>Status</span>
+            <Badge className="bg-premium-green/20 text-premium-green">Encrypted & backed up</Badge>
           </div>
         </div>
         <div className="rounded-lg bg-secondary p-4 text-sm">
           <p>
-            <strong>Privacidad:</strong> Cada respuesta puede marcarse como <em>Privada</em>,
-            <em> Compartida</em> (visible para tu círculo) o <em>Legado</em> (visible solo después de tu fallecimiento).
+            <strong>Privacy:</strong> Each response can be marked as <em>Private</em>,
+            <em> Shared</em> (visible to your circle) or <em>Legacy</em> (visible only after your passing).
           </p>
         </div>
       </CardContent>
@@ -272,7 +272,7 @@ function SearchInput({ value, onChange }: { value: string; onChange: (value: str
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Buscar por tema, frase o recuerdo…"
+        placeholder="Search by topic, phrase or memory…"
         className="pl-10"
       />
     </div>
@@ -300,7 +300,7 @@ function Timeline({ entries }: { entries: any[] }) {
   if (!entries.length) {
     return (
       <div className="rounded-lg border border-dashed border-border p-8 text-center text-muted-foreground">
-        No hay entradas con esos filtros todavía.
+        No entries with those filters yet.
       </div>
     );
   }
@@ -318,7 +318,7 @@ function EntryCard({ entry }: { entry: any }) {
   const mediaBadge = {
     video: { icon: Play, label: "Video" },
     audio: { icon: Play, label: "Audio" },
-    text: { icon: Edit, label: "Texto" },
+    text: { icon: Edit, label: "Text" },
   };
 
   const privacyTint = {
@@ -352,9 +352,9 @@ function EntryCard({ entry }: { entry: any }) {
             {entry.duration && ` · ${entry.duration}`}
           </Badge>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">Ver</Button>
-            <Button variant="outline" size="sm">Editar</Button>
-            <Button variant="outline" size="sm">Privacidad</Button>
+            <Button variant="outline" size="sm">View</Button>
+            <Button variant="outline" size="sm">Edit</Button>
+            <Button variant="outline" size="sm">Privacy</Button>
           </div>
         </div>
       </CardContent>

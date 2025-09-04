@@ -20,13 +20,13 @@ export default function Index() {
             onClick={() => setCurrentView('demo')}
             className="bg-premium-purple text-white hover:bg-premium-purple/80 shadow-lg"
           >
-            Ver Demo
+            View Demo
           </Button>
           <Button 
             onClick={() => setCurrentView('app')}
             className="bg-card text-card-foreground border-2 border-premium-purple hover:bg-premium-purple hover:text-white shadow-lg"
           >
-            Entrar a la App
+            Enter App
           </Button>
         </div>
       </div>
@@ -42,7 +42,7 @@ export default function Index() {
             onClick={() => setCurrentView('landing')}
             variant="outline"
           >
-            ← Volver
+            ← Back
           </Button>
         </div>
       </div>
@@ -59,7 +59,7 @@ export default function Index() {
             variant="outline"
             size="sm"
           >
-            ← Volver al Inicio
+            ← Back to Home
           </Button>
         </div>
         
@@ -76,8 +76,8 @@ export default function Index() {
         
         {appView === 'settings' && (
           <div className="text-center py-12">
-            <h2 className="text-2xl font-semibold mb-4">Configuración</h2>
-            <p className="text-muted-foreground">Panel de configuración próximamente...</p>
+            <h2 className="text-2xl font-semibold mb-4">Settings</h2>
+            <p className="text-muted-foreground">Settings panel coming soon...</p>
           </div>
         )}
       </div>

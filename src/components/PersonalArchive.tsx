@@ -10,9 +10,9 @@ const sampleEntries = [
   {
     id: 1,
     date: '2024-01-15',
-    question: '¿Cuál fue un momento donde te sentiste completamente presente?',
-    preview: 'Esta mañana, mientras tomaba café en el balcón, observando cómo la luz del amanecer se filtraba entre los árboles...',
-    type: 'Reflexión',
+    question: 'What was a moment where you felt completely present?',
+    preview: 'This morning, while having coffee on the balcony, watching how the dawn light filtered through the trees...',
+    type: 'Reflection',
     mood: '😌',
     category: 'Mindfulness',
     privacy: 'Private',
@@ -21,49 +21,49 @@ const sampleEntries = [
   {
     id: 2,
     date: '2024-01-08',
-    question: '¿Qué es algo pequeño que alguien hizo por ti que te hizo sonreír?',
-    preview: 'Mi vecina María me trajo flores de su jardín sin ninguna razón especial. Un gesto tan simple pero que iluminó todo mi día...',
-    type: 'Gratitud',
+    question: 'What\'s something small someone did for you that made you smile?',
+    preview: 'My neighbor Maria brought me flowers from her garden for no particular reason. Such a simple gesture but it brightened my entire day...',
+    type: 'Gratitude',
     mood: '😊',
-    category: 'Relaciones',
+    category: 'Relationships',
     privacy: 'Share',
     mediaType: 'audio'
   },
   {
     id: 3,
     date: '2024-01-01',
-    question: '¿Cuál es una lección que aprendiste sobre ti mismo esta semana?',
-    preview: 'Descubrí que puedo ser más paciente de lo que pensaba. Cuando mi hermano necesitaba ayuda con la mudanza...',
-    type: 'Aprendizaje',
+    question: 'What\'s a lesson you learned about yourself this week?',
+    preview: 'I discovered I can be more patient than I thought. When my brother needed help moving...',
+    type: 'Learning',
     mood: '🤔',
-    category: 'Crecimiento',
+    category: 'Growth',
     privacy: 'Legacy',
     mediaType: 'video'
   },
   {
     id: 4,
     date: '2023-12-25',
-    question: '¿Qué tradición familiar significa más para ti y por qué?',
-    preview: 'Cada Navidad, mi abuela nos cuenta la historia de cómo llegó al país. Sus ojos se iluminan al recordar...',
-    type: 'Memoria',
+    question: 'What family tradition means the most to you and why?',
+    preview: 'Every Christmas, my grandmother tells us the story of how she came to this country. Her eyes light up as she remembers...',
+    type: 'Memory',
     mood: '❤️',
-    category: 'Familia',
+    category: 'Family',
     privacy: 'Legacy',
     mediaType: 'text'
   }
 ];
 
-const categories = ['Todos', 'Mindfulness', 'Relaciones', 'Crecimiento', 'Familia'];
+const categories = ['All', 'Mindfulness', 'Relationships', 'Growth', 'Family'];
 
 export default function PersonalArchive() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Todos');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [showFilters, setShowFilters] = useState(false);
 
   const filteredEntries = sampleEntries.filter(entry => {
     const matchesSearch = entry.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          entry.preview.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'Todos' || entry.category === selectedCategory;
+    const matchesCategory = selectedCategory === 'All' || entry.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -92,13 +92,13 @@ export default function PersonalArchive() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Archive className="h-5 w-5" />
-              Tu Archivo Personal
+              Your Personal Archive
             </CardTitle>
             <CardDescription>
-              Un espacio seguro para reflexionar y preservar tus pensamientos más importantes
+              A safe space to reflect and preserve your most important thoughts
             </CardDescription>
           </div>
-          <Badge variant="secondary">{sampleEntries.length} entradas</Badge>
+          <Badge variant="secondary">{sampleEntries.length} entries</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -108,7 +108,7 @@ export default function PersonalArchive() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar en tus entradas..."
+                placeholder="Search your entries..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -148,7 +148,7 @@ export default function PersonalArchive() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="outline" className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {new Date(entry.date).toLocaleDateString('es-ES')}
+                      {new Date(entry.date).toLocaleDateString('en-US')}
                     </Badge>
                     <Badge variant="secondary">{entry.type}</Badge>
                     <Badge variant="outline" className="flex items-center gap-1">
@@ -163,8 +163,8 @@ export default function PersonalArchive() {
                     {entry.preview}
                   </p>
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">Ver completa</Button>
-                    <Button variant="outline" size="sm">Editar</Button>
+                    <Button variant="outline" size="sm">View full</Button>
+                    <Button variant="outline" size="sm">Edit</Button>
                   </div>
                 </div>
                 <div className="text-2xl">{entry.mood}</div>
@@ -175,7 +175,7 @@ export default function PersonalArchive() {
         
         {filteredEntries.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">No se encontraron entradas que coincidan con tu búsqueda.</p>
+            <p className="text-muted-foreground">No entries found matching your search.</p>
           </div>
         )}
         
@@ -184,10 +184,10 @@ export default function PersonalArchive() {
             <Heart className="h-5 w-5 text-premium-purple" />
             <Brain className="h-5 w-5 text-premium-blue" />
           </div>
-          <h3 className="font-medium mb-2">Tu legado digital está creciendo</h3>
+          <h3 className="font-medium mb-2">Your digital legacy is growing</h3>
           <p className="text-sm text-muted-foreground">
-            Cada respuesta es un fragmento de tu historia. Con el tiempo, crearás un archivo único 
-            de quién eres y cómo ves el mundo.
+            Each response is a fragment of your story. Over time, you&apos;ll create a unique archive 
+            of who you are and how you see the world.
           </p>
         </div>
       </CardContent>

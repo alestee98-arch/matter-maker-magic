@@ -9,33 +9,33 @@ import { PenTool, Mic, Video, Calendar } from 'lucide-react';
 const questions = [
   {
     id: 1,
-    text: "¿Cuál fue un momento esta semana donde te sentiste completamente presente?",
-    depth: "Ligera"
+    text: "What was a moment this week where you felt completely present?",
+    depth: "Light"
   },
   {
     id: 2,
-    text: "¿Qué es algo pequeño que alguien hizo por ti que te hizo sonreír?",
-    depth: "Ligera"
+    text: "What's something small someone did for you that made you smile?",
+    depth: "Light"
   },
   {
     id: 3,
-    text: "¿Cuál es una lección que aprendiste sobre ti mismo esta semana?",
-    depth: "Media"
+    text: "What's a lesson you learned about yourself this week?",
+    depth: "Medium"
   },
   {
     id: 4,
-    text: "¿Qué es algo que esperabas con ansias y cómo se sintió cuando sucedió?",
-    depth: "Media"
+    text: "What's something you looked forward to and how did it feel when it happened?",
+    depth: "Medium"
   },
   {
     id: 5,
-    text: "¿Cuál es un recuerdo de la infancia que te vino a la mente esta semana?",
-    depth: "Profunda"
+    text: "What's a childhood memory that came to mind this week?",
+    depth: "Deep"
   },
   {
     id: 6,
-    text: "¿Qué le dirías a tu yo de 17 años sobre el amor y el fracaso?",
-    depth: "Profunda"
+    text: "What would you tell your 17-year-old self about love and failure?",
+    depth: "Deep"
   },
 ];
 
@@ -53,9 +53,9 @@ export default function WeeklyQuestion() {
 
   const getDepthVariant = (depth: string) => {
     switch (depth) {
-      case 'Ligera': return 'bg-premium-green/20 text-premium-green';
-      case 'Media': return 'bg-premium-blue/20 text-premium-blue';
-      case 'Profunda': return 'bg-premium-amber/20 text-premium-amber';
+      case 'Light': return 'bg-premium-green/20 text-premium-green';
+      case 'Medium': return 'bg-premium-blue/20 text-premium-blue';
+      case 'Deep': return 'bg-premium-amber/20 text-premium-amber';
       default: return 'secondary';
     }
   };
@@ -67,10 +67,10 @@ export default function WeeklyQuestion() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Pregunta de la Semana
+              Week's Question
             </CardTitle>
             <CardDescription>
-              {new Date().toLocaleDateString('es-ES', { 
+              {new Date().toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 year: 'numeric', 
                 month: 'long', 
@@ -99,7 +99,7 @@ export default function WeeklyQuestion() {
               className="flex items-center gap-2"
             >
               <PenTool className="h-4 w-4" />
-              Texto
+              Text
             </Button>
             <Button
               variant={responseType === 'audio' ? 'default' : 'outline'}
@@ -124,7 +124,7 @@ export default function WeeklyQuestion() {
           {responseType === 'text' && (
             <div className="space-y-4">
               <Textarea
-                placeholder="Comparte tus pensamientos aquí..."
+                placeholder="Share your thoughts here..."
                 value={response}
                 onChange={(e) => setResponse(e.target.value)}
                 className="min-h-[120px] bg-card border-border"
@@ -135,10 +135,10 @@ export default function WeeklyQuestion() {
                   disabled={!response.trim()}
                   className="flex-1"
                 >
-                  Guardar Respuesta
+                  Save Response
                 </Button>
                 <Button variant="outline">
-                  Programar para más tarde
+                  Schedule for later
                 </Button>
               </div>
             </div>
@@ -147,9 +147,9 @@ export default function WeeklyQuestion() {
           {responseType === 'audio' && (
             <div className="rounded-xl border-2 border-dashed border-border bg-card p-8 text-center">
               <Mic className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="text-muted-foreground">Grabación de audio próximamente...</p>
+              <p className="text-muted-foreground">Audio recording coming soon...</p>
               <p className="mt-2 text-xs text-muted-foreground">
-                Podrás grabar hasta 5 minutos de audio de alta calidad
+                You&apos;ll be able to record up to 5 minutes of high quality audio
               </p>
             </div>
           )}
@@ -157,9 +157,9 @@ export default function WeeklyQuestion() {
           {responseType === 'video' && (
             <div className="rounded-xl border-2 border-dashed border-border bg-card p-8 text-center">
               <Video className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="text-muted-foreground">Grabación de video próximamente...</p>
+              <p className="text-muted-foreground">Video recording coming soon...</p>
               <p className="mt-2 text-xs text-muted-foreground">
-                Graba videos de hasta 3 minutos en HD
+                Record videos up to 3 minutes in HD
               </p>
             </div>
           )}

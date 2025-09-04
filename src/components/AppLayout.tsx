@@ -12,10 +12,10 @@ const navigation: Array<{
   label: string;
   icon: any;
 }> = [
-  { id: 'home', label: 'Inicio', icon: Home },
-  { id: 'archive', label: 'Archivo', icon: FileText },
-  { id: 'profile', label: 'Perfil', icon: User },
-  { id: 'settings', label: 'Ajustes', icon: Settings },
+  { id: 'home', label: 'Home', icon: Home },
+  { id: 'archive', label: 'Archive', icon: FileText },
+  { id: 'profile', label: 'Profile', icon: User },
+  { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
 export default function AppLayout({ children, currentView, onViewChange }: AppLayoutProps) {
@@ -65,7 +65,7 @@ function ResponseButtons() {
     <div className="flex items-center gap-2">
       <button className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80">
         <PenTool className="h-4 w-4" />
-        <span className="hidden sm:inline">Texto</span>
+        <span className="hidden sm:inline">Text</span>
       </button>
       <button className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80">
         <Mic className="h-4 w-4" />
@@ -85,7 +85,7 @@ function UserMenu() {
       <button className="h-8 w-8 overflow-hidden rounded-full bg-secondary">
         <img 
           src="https://i.pravatar.cc/32?img=13" 
-          alt="Usuario" 
+          alt="User" 
           className="h-full w-full object-cover"
         />
       </button>
@@ -116,12 +116,12 @@ function Sidebar({ currentView, onViewChange }: { currentView: 'home' | 'archive
         
         <div className="border-t border-border p-4">
           <div className="rounded-lg bg-secondary p-4">
-            <h3 className="text-sm font-medium text-secondary-foreground">Esta semana</h3>
+            <h3 className="text-sm font-medium text-secondary-foreground">This week</h3>
             <p className="mt-1 text-xs text-muted-foreground">
-              ¿Cuál es una canción que te levanta el ánimo al instante?
+              What&apos;s a song that instantly lifts your mood?
             </p>
             <button className="mt-3 w-full rounded-md bg-accent px-3 py-2 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/80">
-              Responder ahora
+              Answer now
             </button>
           </div>
         </div>
