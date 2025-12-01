@@ -63,20 +63,20 @@ const DribbbleGrade = () => {
               <div className="space-y-8">
                 <div className="space-y-6">
                   <Badge variant="secondary" className="px-3 py-1 text-xs font-medium bg-secondary/50 border-border/50">
-                    Digital Immortality Protocol
+                    The Fourth Pillar of Identity
                   </Badge>
                   
                   <div className="space-y-4">
                     <h1 className="text-5xl lg:text-6xl font-light tracking-tight leading-[0.95]">
-                      Preserve your
+                      A universal
                       <span className="block font-medium bg-gradient-accent bg-clip-text text-transparent">
-                        essence forever
+                        human archive
                       </span>
                     </h1>
                     
                     <p className="text-xl text-muted-foreground leading-relaxed max-w-lg">
-                      Weekly questions build an AI model that captures your complete personality, 
-                      voice, and wisdom for future generations to interact with.
+                      Every person receives a Matter identity at birth. One question per week. 
+                      A lifetime of answers. An authentic AI of who you truly are.
                     </p>
                   </div>
                 </div>
@@ -86,7 +86,7 @@ const DribbbleGrade = () => {
                     className="bg-foreground text-background hover:bg-foreground/90 px-8 py-6 rounded-full font-medium"
                     size="lg"
                   >
-                    Begin Legacy
+                    Claim Your Identity
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                   
@@ -96,16 +96,16 @@ const DribbbleGrade = () => {
                     className="text-muted-foreground hover:text-foreground px-8 py-6 rounded-full"
                   >
                     <Play className="w-4 h-4 mr-2" />
-                    Watch Demo
+                    See How It Works
                   </Button>
                 </div>
 
                 <div className="flex items-center gap-8 pt-4">
                   <div className="text-sm text-muted-foreground">
-                    <span className="text-foreground font-medium">2.1M</span> memories preserved
+                    <span className="text-foreground font-medium">As foundational</span> as a birth certificate
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    <span className="text-foreground font-medium">50K</span> active legacies
+                    <span className="text-foreground font-medium">Built for</span> 8 billion humans
                   </div>
                 </div>
               </div>
@@ -118,10 +118,10 @@ const DribbbleGrade = () => {
                       <Brain className="w-6 h-6 text-accent" />
                     </div>
                     <div className="flex-1 space-y-2">
-                      <h3 className="text-lg font-medium">AI Personality Mapping</h3>
+                      <h3 className="text-lg font-medium">Your Own Words</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        Advanced algorithms analyze your responses to build a comprehensive 
-                        model of your personality, values, and decision-making patterns.
+                        Not fabricated. Not imagined. Your Matter identity is built from decades 
+                        of your authentic voice — your stories, values, and emotional patterns.
                       </p>
                     </div>
                   </div>
@@ -133,10 +133,10 @@ const DribbbleGrade = () => {
                       <Sparkles className="w-6 h-6 text-premium-blue" />
                     </div>
                     <div className="flex-1 space-y-2">
-                      <h3 className="text-lg font-medium">Voice Synthesis</h3>
+                      <h3 className="text-lg font-medium">Cross-Generational Continuity</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        State-of-the-art voice cloning preserves your unique speech patterns, 
-                        tone, and mannerisms for authentic future interactions.
+                        Your children, grandchildren, and great-grandchildren will know you 
+                        as a real person — not a fading memory, but a living presence.
                       </p>
                     </div>
                   </div>
@@ -148,10 +148,10 @@ const DribbbleGrade = () => {
                       <Infinity className="w-6 h-6 text-premium-green" />
                     </div>
                     <div className="flex-1 space-y-2">
-                      <h3 className="text-lg font-medium">Eternal Presence</h3>
+                      <h3 className="text-lg font-medium">Not Erased</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        Your digital consciousness enables meaningful conversations 
-                        with descendants, sharing wisdom across generations.
+                        Photos can't preserve essence. Matter stops the loss. Your humor, 
+                        wisdom, voice, and perspective — preserved forever.
                       </p>
                     </div>
                   </div>
@@ -167,25 +167,26 @@ const DribbbleGrade = () => {
             <Card className="p-12 bg-glass border-glass-border backdrop-blur-xl">
               <div className="text-center space-y-6">
                 <h2 className="text-2xl font-light">
-                  As universal as a <span className="font-medium text-accent">bank account</span>
+                  This is not a gadget. This is <span className="font-medium text-accent">human infrastructure</span>
                 </h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Imagine a world where digital immortality is as common as banking. 
-                  Where every person's essence is preserved, accessible, and eternal.
+                <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                  Matter is not about living forever — it's about not being erased. 
+                  A tree of presence, not just a tree of names. 
+                  The digital immortality of humankind.
                 </p>
                 
                 <div className="grid md:grid-cols-3 gap-8 pt-8">
                   <div className="text-center space-y-2">
-                    <div className="text-3xl font-light">∞</div>
-                    <div className="text-sm text-muted-foreground">Infinite preservation</div>
+                    <div className="text-3xl font-light">52</div>
+                    <div className="text-sm text-muted-foreground">Questions per year</div>
                   </div>
                   <div className="text-center space-y-2">
-                    <div className="text-3xl font-light">2089</div>
-                    <div className="text-sm text-muted-foreground">Future conversations</div>
+                    <div className="text-3xl font-light">∞</div>
+                    <div className="text-sm text-muted-foreground">Generations preserved</div>
                   </div>
                   <div className="text-center space-y-2">
                     <div className="text-3xl font-light">8B</div>
-                    <div className="text-sm text-muted-foreground">Potential users</div>
+                    <div className="text-sm text-muted-foreground">Future identities</div>
                   </div>
                 </div>
               </div>
