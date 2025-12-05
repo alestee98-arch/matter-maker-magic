@@ -8,6 +8,8 @@ interface VoiceDemoProps {
   onTryDemo: () => void;
 }
 
+const EMMA_QUESTION = "Grandpa, I'm scared about going to college. Did you ever feel like you didn't belong?";
+
 const GRANDPA_RESPONSE = `Oh honey, let me tell you something. The day I walked onto that Navy base in '62, I was terrified. Eighteen years old, skinny as a rail, and convinced everyone could see right through me.
 
 But here's what I learned—everyone feels that way. The confident ones? They're just better at hiding it. 
@@ -15,36 +17,113 @@ But here's what I learned—everyone feels that way. The confident ones? They're
 You're smart, you're kind, and you've got more courage than you know. College isn't about fitting in, it's about finding your people. And you will. Trust your grandpa on this one.`;
 
 export default function VoiceDemo({ onTryDemo }: VoiceDemoProps) {
-  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audioLoaded, setAudioLoaded] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Emma's audio state
+  const [isLoadingEmma, setIsLoadingEmma] = useState(false);
+  const [isPlayingEmma, setIsPlayingEmma] = useState(false);
+  const [emmaAudioLoaded, setEmmaAudioLoaded] = useState(false);
+  const [isAnimatingEmma, setIsAnimatingEmma] = useState(false);
+  const emmaAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Grandpa's audio state
+  const [isLoadingGrandpa, setIsLoadingGrandpa] = useState(false);
+  const [isPlayingGrandpa, setIsPlayingGrandpa] = useState(false);
+  const [grandpaAudioLoaded, setGrandpaAudioLoaded] = useState(false);
+  const [isAnimatingGrandpa, setIsAnimatingGrandpa] = useState(false);
+  const grandpaAudioRef = useRef<HTMLAudioElement | null>(null);
+
   const { toast } = useToast();
 
-  const generateAndPlayAudio = async () => {
-    console.log('generateAndPlayAudio called');
-    
+  const generateAndPlayEmma = async () => {
+    // Stop grandpa if playing
+    if (grandpaAudioRef.current && isPlayingGrandpa) {
+      grandpaAudioRef.current.pause();
+      setIsPlayingGrandpa(false);
+      setIsAnimatingGrandpa(false);
+    }
+
     // If audio is already loaded, just play/pause
-    if (audioRef.current && audioLoaded) {
-      console.log('Audio already loaded, toggling play/pause');
-      if (isPlaying) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-        setIsAnimating(false);
+    if (emmaAudioRef.current && emmaAudioLoaded) {
+      if (isPlayingEmma) {
+        emmaAudioRef.current.pause();
+        setIsPlayingEmma(false);
+        setIsAnimatingEmma(false);
       } else {
-        audioRef.current.play();
-        setIsPlaying(true);
-        setIsAnimating(true);
+        emmaAudioRef.current.play();
+        setIsPlayingEmma(true);
+        setIsAnimatingEmma(true);
       }
       return;
     }
 
-    setIsLoadingAudio(true);
-    console.log('Starting audio generation...');
+    setIsLoadingEmma(true);
     
     try {
-      console.log('Calling text-to-speech edge function...');
+      const { data, error } = await supabase.functions.invoke('text-to-speech', {
+        body: { 
+          text: EMMA_QUESTION,
+          voiceId: 'pFZP5JQG7iQjIQuC4Bku' // Lily - young female voice
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.audioContent) {
+        const audioBlob = new Blob(
+          [Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))],
+          { type: 'audio/mpeg' }
+        );
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        emmaAudioRef.current = new Audio(audioUrl);
+        emmaAudioRef.current.onended = () => {
+          setIsPlayingEmma(false);
+          setIsAnimatingEmma(false);
+        };
+        
+        setEmmaAudioLoaded(true);
+        await emmaAudioRef.current.play();
+        setIsPlayingEmma(true);
+        setIsAnimatingEmma(true);
+      } else {
+        throw new Error('No audio content received');
+      }
+    } catch (error) {
+      console.error('Error generating Emma audio:', error);
+      toast({
+        title: "Audio generation failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingEmma(false);
+    }
+  };
+
+  const generateAndPlayGrandpa = async () => {
+    // Stop Emma if playing
+    if (emmaAudioRef.current && isPlayingEmma) {
+      emmaAudioRef.current.pause();
+      setIsPlayingEmma(false);
+      setIsAnimatingEmma(false);
+    }
+
+    // If audio is already loaded, just play/pause
+    if (grandpaAudioRef.current && grandpaAudioLoaded) {
+      if (isPlayingGrandpa) {
+        grandpaAudioRef.current.pause();
+        setIsPlayingGrandpa(false);
+        setIsAnimatingGrandpa(false);
+      } else {
+        grandpaAudioRef.current.play();
+        setIsPlayingGrandpa(true);
+        setIsAnimatingGrandpa(true);
+      }
+      return;
+    }
+
+    setIsLoadingGrandpa(true);
+    
+    try {
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
         body: { 
           text: GRANDPA_RESPONSE,
@@ -52,60 +131,48 @@ export default function VoiceDemo({ onTryDemo }: VoiceDemoProps) {
         }
       });
 
-      console.log('Edge function response:', { data, error });
-
-      if (error) {
-        console.error('Edge function error:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       if (data?.audioContent) {
-        console.log('Got audio content, length:', data.audioContent.length);
         const audioBlob = new Blob(
           [Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))],
           { type: 'audio/mpeg' }
         );
         const audioUrl = URL.createObjectURL(audioBlob);
-        console.log('Audio URL created:', audioUrl);
         
-        audioRef.current = new Audio(audioUrl);
-        audioRef.current.onended = () => {
-          console.log('Audio playback ended');
-          setIsPlaying(false);
-          setIsAnimating(false);
-        };
-        audioRef.current.onerror = (e) => {
-          console.error('Audio playback error:', e);
+        grandpaAudioRef.current = new Audio(audioUrl);
+        grandpaAudioRef.current.onended = () => {
+          setIsPlayingGrandpa(false);
+          setIsAnimatingGrandpa(false);
         };
         
-        setAudioLoaded(true);
-        console.log('Starting audio playback...');
-        await audioRef.current.play();
-        console.log('Audio playback started');
-        setIsPlaying(true);
-        setIsAnimating(true);
+        setGrandpaAudioLoaded(true);
+        await grandpaAudioRef.current.play();
+        setIsPlayingGrandpa(true);
+        setIsAnimatingGrandpa(true);
       } else {
-        console.error('No audioContent in response:', data);
         throw new Error('No audio content received');
       }
     } catch (error) {
-      console.error('Error generating audio:', error);
+      console.error('Error generating Grandpa audio:', error);
       toast({
         title: "Audio generation failed",
-        description: error instanceof Error ? error.message : "Please try again in a moment.",
+        description: error instanceof Error ? error.message : "Please try again.",
         variant: "destructive"
       });
     } finally {
-      setIsLoadingAudio(false);
+      setIsLoadingGrandpa(false);
     }
   };
+
+  const currentlyPlaying = isPlayingEmma ? 'emma' : isPlayingGrandpa ? 'grandpa' : null;
 
   return (
     <div className="bg-matter-navy rounded-3xl p-8 md:p-12 shadow-premium">
       {/* Caller Info */}
       <div className="text-center mb-10">
         <div className={`w-28 h-28 rounded-full mx-auto mb-4 overflow-hidden ring-4 shadow-xl transition-all duration-300 ${
-          isAnimating ? 'ring-matter-sage ring-opacity-100 animate-pulse' : 'ring-matter-sage/30'
+          isAnimatingGrandpa ? 'ring-matter-sage ring-opacity-100 animate-pulse' : 'ring-matter-sage/30'
         }`}>
           <img 
             src={grandpaPhoto} 
@@ -122,29 +189,45 @@ export default function VoiceDemo({ onTryDemo }: VoiceDemoProps) {
         {/* Emma's Voice Message */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 rounded-full bg-matter-coral/40 flex items-center justify-center">
+            <div className={`w-8 h-8 rounded-full bg-matter-coral/40 flex items-center justify-center transition-all ${
+              isAnimatingEmma ? 'ring-2 ring-matter-coral animate-pulse' : ''
+            }`}>
               <span className="text-white text-sm font-medium">E</span>
             </div>
             <span className="text-white/70 text-sm">Emma, 16</span>
           </div>
           <div className="bg-matter-coral/20 rounded-2xl px-5 py-4">
             <div className="flex items-center gap-4">
-              <button className="w-12 h-12 rounded-full bg-matter-coral flex items-center justify-center hover:bg-matter-coral/80 transition-colors flex-shrink-0 opacity-50 cursor-default">
-                <Play className="h-5 w-5 text-white ml-0.5" />
+              <button 
+                onClick={generateAndPlayEmma}
+                disabled={isLoadingEmma}
+                className="w-12 h-12 rounded-full bg-matter-coral flex items-center justify-center hover:bg-matter-coral/80 transition-colors flex-shrink-0 disabled:opacity-50"
+              >
+                {isLoadingEmma ? (
+                  <Loader2 className="h-5 w-5 text-white animate-spin" />
+                ) : isPlayingEmma ? (
+                  <Pause className="h-5 w-5 text-white" />
+                ) : (
+                  <Play className="h-5 w-5 text-white ml-0.5" />
+                )}
               </button>
               <div className="flex-1">
                 <div className="flex items-center gap-0.5 mb-2">
                   {[...Array(40)].map((_, i) => (
                     <div
                       key={i}
-                      className="w-1 bg-matter-coral/60 rounded-full"
+                      className={`w-1 rounded-full transition-all duration-150 ${
+                        isAnimatingEmma ? 'bg-matter-coral' : 'bg-matter-coral/60'
+                      }`}
                       style={{ 
-                        height: `${6 + Math.sin(i * 0.5) * 10 + Math.random() * 6}px`,
+                        height: isAnimatingEmma 
+                          ? `${4 + Math.random() * 16}px`
+                          : `${6 + Math.sin(i * 0.5) * 10 + Math.random() * 6}px`,
                       }}
                     />
                   ))}
                 </div>
-                <p className="text-white/50 text-xs italic">"Grandpa, I'm scared about going to college. Did you ever feel like you didn't belong?"</p>
+                <p className="text-white/50 text-xs italic">"{EMMA_QUESTION}"</p>
               </div>
               <span className="text-white/40 text-sm flex-shrink-0">0:08</span>
             </div>
@@ -163,13 +246,13 @@ export default function VoiceDemo({ onTryDemo }: VoiceDemoProps) {
           <div className="bg-matter-sage/20 rounded-2xl px-5 py-4">
             <div className="flex items-center gap-4">
               <button 
-                onClick={generateAndPlayAudio}
-                disabled={isLoadingAudio}
+                onClick={generateAndPlayGrandpa}
+                disabled={isLoadingGrandpa}
                 className="w-12 h-12 rounded-full bg-matter-sage flex items-center justify-center hover:bg-matter-sage/80 transition-colors flex-shrink-0 disabled:opacity-50"
               >
-                {isLoadingAudio ? (
+                {isLoadingGrandpa ? (
                   <Loader2 className="h-5 w-5 text-white animate-spin" />
-                ) : isPlaying ? (
+                ) : isPlayingGrandpa ? (
                   <Pause className="h-5 w-5 text-white" />
                 ) : (
                   <Play className="h-5 w-5 text-white ml-0.5" />
@@ -181,13 +264,12 @@ export default function VoiceDemo({ onTryDemo }: VoiceDemoProps) {
                     <div
                       key={i}
                       className={`w-1 rounded-full transition-all duration-150 ${
-                        isAnimating ? 'bg-matter-sage' : 'bg-matter-sage/60'
+                        isAnimatingGrandpa ? 'bg-matter-sage' : 'bg-matter-sage/60'
                       }`}
                       style={{ 
-                        height: isAnimating 
+                        height: isAnimatingGrandpa 
                           ? `${4 + Math.random() * 20}px`
                           : `${4 + Math.sin(i * 0.3) * 14 + Math.random() * 8}px`,
-                        transition: isAnimating ? 'height 0.1s ease-in-out' : 'none'
                       }}
                     />
                   ))}
@@ -206,7 +288,11 @@ export default function VoiceDemo({ onTryDemo }: VoiceDemoProps) {
 
       <div className="text-center">
         <p className="text-white/60 text-sm mb-4">
-          {isPlaying ? "Playing Grandpa Robert's voice..." : "Click play to hear Grandpa Robert's AI voice respond"}
+          {currentlyPlaying === 'emma' 
+            ? "Playing Emma's voice..." 
+            : currentlyPlaying === 'grandpa'
+            ? "Playing Grandpa Robert's voice..."
+            : "Click play on either message to hear the conversation"}
         </p>
       </div>
     </div>
