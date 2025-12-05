@@ -77,7 +77,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
                   className="rounded-full text-lg px-8 h-14 border-2 border-white/40 bg-white/10 text-white hover:bg-white/20"
                 >
                   <Phone className="mr-2 h-5 w-5" />
-                  Talk to Someone Who's Gone
+                  Connect with Loved Ones
                 </Button>
               </div>
             </motion.div>
