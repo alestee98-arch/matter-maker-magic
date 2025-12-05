@@ -39,36 +39,28 @@ export default function Index() {
 
   // App view with navigation
   return (
-    <AppLayout currentView={appView} onViewChange={setAppView}>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <Button 
-            onClick={() => setCurrentView('landing')}
-            variant="outline"
-            size="sm"
-          >
-            ← Back to Home
-          </Button>
+    <AppLayout 
+      currentView={appView} 
+      onViewChange={setAppView}
+      onBack={() => setCurrentView('landing')}
+    >
+      {appView === 'home' && (
+        <div className="grid gap-8 lg:grid-cols-2">
+          <WeeklyQuestion />
+          <PersonalArchive />
         </div>
-        
-        {appView === 'home' && (
-          <div className="grid gap-6 lg:grid-cols-2">
-            <WeeklyQuestion />
-            <PersonalArchive />
-          </div>
-        )}
-        
-        {appView === 'archive' && <PersonalArchive />}
-        
-        {appView === 'profile' && <ProfilePage />}
-        
-        {appView === 'settings' && (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-semibold mb-4">Settings</h2>
-            <p className="text-muted-foreground">Settings panel coming soon...</p>
-          </div>
-        )}
-      </div>
+      )}
+      
+      {appView === 'archive' && <PersonalArchive />}
+      
+      {appView === 'profile' && <ProfilePage />}
+      
+      {appView === 'settings' && (
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-semibold mb-4">Settings</h2>
+          <p className="text-muted-foreground">Settings panel coming soon...</p>
+        </div>
+      )}
     </AppLayout>
   );
 }

@@ -52,10 +52,11 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				'premium-purple': 'hsl(var(--premium-purple))',
-				'premium-blue': 'hsl(var(--premium-blue))',
-				'premium-green': 'hsl(var(--premium-green))',
-				'premium-amber': 'hsl(var(--premium-amber))',
+				'matter-teal': 'hsl(var(--matter-teal))',
+				'matter-navy': 'hsl(var(--matter-navy))',
+				'matter-coral': 'hsl(var(--matter-coral))',
+				'matter-gold': 'hsl(var(--matter-gold))',
+				'matter-sage': 'hsl(var(--matter-sage))',
 				'glass': 'hsl(var(--glass))',
 				'glass-border': 'hsl(var(--glass-border))',
 				'glass-subtle': 'hsl(var(--glass-subtle))',
@@ -71,9 +72,10 @@ export default {
 				}
 			},
 			backgroundImage: {
-				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-hero': 'var(--gradient-hero)',
 				'gradient-card': 'var(--gradient-card)',
-				'gradient-accent': 'var(--gradient-accent)'
+				'gradient-accent': 'var(--gradient-accent)',
+				'gradient-warm': 'var(--gradient-warm)'
 			},
 			fontFamily: {
 				'sans': 'var(--font-sans)',
