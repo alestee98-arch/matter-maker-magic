@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import DribbbleGrade from '@/components/DribbbleGrade';
+import LandingPage from '@/components/LandingPage';
 import InteractiveDemo from '@/components/InteractiveDemo';
 import WeeklyQuestion from '@/components/WeeklyQuestion';
 import PersonalArchive from '@/components/PersonalArchive';
@@ -13,23 +13,10 @@ export default function Index() {
 
   if (currentView === 'landing') {
     return (
-      <div className="min-h-screen">
-        <DribbbleGrade />
-        <div className="fixed bottom-8 right-8 flex flex-col gap-4 z-50">
-          <Button 
-            onClick={() => setCurrentView('demo')}
-            className="bg-premium-purple text-white hover:bg-premium-purple/80 shadow-lg"
-          >
-            View Demo
-          </Button>
-          <Button 
-            onClick={() => setCurrentView('app')}
-            className="bg-card text-card-foreground border-2 border-premium-purple hover:bg-premium-purple hover:text-white shadow-lg"
-          >
-            Enter App
-          </Button>
-        </div>
-      </div>
+      <LandingPage 
+        onStartJourney={() => setCurrentView('app')}
+        onTryDemo={() => setCurrentView('demo')}
+      />
     );
   }
 
@@ -37,10 +24,11 @@ export default function Index() {
     return (
       <div className="min-h-screen">
         <InteractiveDemo />
-        <div className="fixed top-8 left-8">
+        <div className="fixed top-8 left-8 z-50">
           <Button 
             onClick={() => setCurrentView('landing')}
             variant="outline"
+            className="bg-card/80 backdrop-blur-sm"
           >
             ← Back
           </Button>
