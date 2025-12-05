@@ -5,8 +5,8 @@ import MatterLogo from '@/components/MatterLogo';
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  currentView: 'home' | 'archive' | 'profile' | 'settings';
-  onViewChange: (view: 'home' | 'archive' | 'profile' | 'settings') => void;
+  currentView: 'home' | 'archive' | 'profile' | 'settings' | 'voice-clone';
+  onViewChange: (view: 'home' | 'archive' | 'profile' | 'settings' | 'voice-clone') => void;
   onBack?: () => void;
 }
 

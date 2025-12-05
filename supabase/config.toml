@@ -2,3 +2,6 @@ project_id = "cvwangxqdioecygzyjvz"
 
 [functions.text-to-speech]
 verify_jwt = false
+
+[functions.clone-voice]
+verify_jwt = false
