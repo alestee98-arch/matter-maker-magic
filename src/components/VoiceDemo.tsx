@@ -23,8 +23,11 @@ export default function VoiceDemo({ onTryDemo }: VoiceDemoProps) {
   const { toast } = useToast();
 
   const generateAndPlayAudio = async () => {
+    console.log('generateAndPlayAudio called');
+    
     // If audio is already loaded, just play/pause
     if (audioRef.current && audioLoaded) {
+      console.log('Audio already loaded, toggling play/pause');
       if (isPlaying) {
         audioRef.current.pause();
         setIsPlaying(false);
@@ -38,8 +41,10 @@ export default function VoiceDemo({ onTryDemo }: VoiceDemoProps) {
     }
 
     setIsLoadingAudio(true);
+    console.log('Starting audio generation...');
     
     try {
+      console.log('Calling text-to-speech edge function...');
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
         body: { 
           text: GRANDPA_RESPONSE,
@@ -47,31 +52,47 @@ export default function VoiceDemo({ onTryDemo }: VoiceDemoProps) {
         }
       });
 
-      if (error) throw error;
+      console.log('Edge function response:', { data, error });
+
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
 
       if (data?.audioContent) {
+        console.log('Got audio content, length:', data.audioContent.length);
         const audioBlob = new Blob(
           [Uint8Array.from(atob(data.audioContent), c => c.charCodeAt(0))],
           { type: 'audio/mpeg' }
         );
         const audioUrl = URL.createObjectURL(audioBlob);
+        console.log('Audio URL created:', audioUrl);
         
         audioRef.current = new Audio(audioUrl);
         audioRef.current.onended = () => {
+          console.log('Audio playback ended');
           setIsPlaying(false);
           setIsAnimating(false);
         };
+        audioRef.current.onerror = (e) => {
+          console.error('Audio playback error:', e);
+        };
         
         setAudioLoaded(true);
-        audioRef.current.play();
+        console.log('Starting audio playback...');
+        await audioRef.current.play();
+        console.log('Audio playback started');
         setIsPlaying(true);
         setIsAnimating(true);
+      } else {
+        console.error('No audioContent in response:', data);
+        throw new Error('No audio content received');
       }
     } catch (error) {
       console.error('Error generating audio:', error);
       toast({
         title: "Audio generation failed",
-        description: "Please try again in a moment.",
+        description: error instanceof Error ? error.message : "Please try again in a moment.",
         variant: "destructive"
       });
     } finally {
