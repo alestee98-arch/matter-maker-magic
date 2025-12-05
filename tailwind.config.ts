@@ -52,14 +52,14 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				'matter-teal': 'hsl(var(--matter-teal))',
-				'matter-navy': 'hsl(var(--matter-navy))',
+				'matter-forest': 'hsl(var(--matter-forest))',
+				'matter-sage': 'hsl(var(--matter-sage))',
+				'matter-cream': 'hsl(var(--matter-cream))',
 				'matter-coral': 'hsl(var(--matter-coral))',
 				'matter-gold': 'hsl(var(--matter-gold))',
-				'matter-sage': 'hsl(var(--matter-sage))',
+				'matter-navy': 'hsl(var(--matter-navy))',
 				'glass': 'hsl(var(--glass))',
 				'glass-border': 'hsl(var(--glass-border))',
-				'glass-subtle': 'hsl(var(--glass-subtle))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -78,8 +78,8 @@ export default {
 				'gradient-warm': 'var(--gradient-warm)'
 			},
 			fontFamily: {
-				'sans': 'var(--font-sans)',
-				'mono': 'var(--font-mono)'
+				'sans': ['Inter', 'system-ui', 'sans-serif'],
+				'serif': ['Instrument Serif', 'Georgia', 'serif']
 			},
 			boxShadow: {
 				'premium': 'var(--shadow-premium)',

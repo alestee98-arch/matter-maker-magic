@@ -1,117 +1,116 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* 23andMe-inspired clean, warm design system */
+/* StoryWorth-inspired premium design system - Matter on STEROIDS */
 
 @layer base {
   :root {
-    /* Clean light base - warm whites */
-    --background: 40 33% 98%;
-    --foreground: 220 25% 15%;
+    /* Deep forest green base - like StoryWorth but richer */
+    --background: 150 25% 97%;
+    --foreground: 160 30% 12%;
     
-    /* Cards - subtle warmth */
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 15%;
+    /* Cards - warm cream */
+    --card: 40 30% 98%;
+    --card-foreground: 160 30% 12%;
     
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 15%;
+    --popover: 40 30% 98%;
+    --popover-foreground: 160 30% 12%;
     
-    /* Primary - warm teal/green like 23andMe */
-    --primary: 172 50% 35%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary - deep forest green */
+    --primary: 160 35% 22%;
+    --primary-foreground: 40 30% 98%;
     
-    /* Secondary - soft warm gray */
-    --secondary: 220 15% 95%;
-    --secondary-foreground: 220 25% 25%;
+    /* Secondary - warm cream */
+    --secondary: 40 25% 94%;
+    --secondary-foreground: 160 30% 20%;
     
-    --muted: 220 15% 92%;
-    --muted-foreground: 220 15% 45%;
+    --muted: 40 20% 92%;
+    --muted-foreground: 160 15% 40%;
     
-    /* Accent - warm coral/pink like 23andMe highlights */
-    --accent: 340 75% 55%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent - warm coral/terracotta */
+    --accent: 15 70% 55%;
+    --accent-foreground: 40 30% 98%;
     
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 220 15% 90%;
-    --input: 220 15% 92%;
-    --ring: 172 50% 35%;
+    --border: 40 20% 88%;
+    --input: 40 20% 92%;
+    --ring: 160 35% 22%;
     
     /* Matter brand colors */
-    --matter-teal: 172 50% 35%;
-    --matter-navy: 220 45% 25%;
-    --matter-coral: 340 75% 55%;
-    --matter-gold: 38 92% 60%;
-    --matter-sage: 145 30% 65%;
+    --matter-forest: 160 35% 22%;
+    --matter-sage: 145 25% 45%;
+    --matter-cream: 40 30% 96%;
+    --matter-coral: 15 70% 55%;
+    --matter-gold: 38 85% 55%;
+    --matter-navy: 220 40% 18%;
     
-    /* Glass effects - light version */
-    --glass: 0 0% 100% / 0.8;
-    --glass-border: 220 15% 85%;
-    --glass-subtle: 220 15% 98%;
+    /* Glass effects */
+    --glass: 40 30% 98% / 0.9;
+    --glass-border: 160 20% 80%;
     
     /* Gradients */
-    --gradient-hero: linear-gradient(180deg, hsl(200 40% 85%) 0%, hsl(180 35% 90%) 50%, hsl(40 33% 98%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(220 15% 98%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(172 50% 35%) 0%, hsl(185 45% 45%) 100%);
-    --gradient-warm: linear-gradient(135deg, hsl(340 75% 55%) 0%, hsl(20 85% 60%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(160 35% 22%) 0%, hsl(160 30% 18%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(15 70% 55%) 0%, hsl(38 85% 55%) 100%);
+    --gradient-forest: linear-gradient(135deg, hsl(160 35% 22%) 0%, hsl(145 25% 35%) 100%);
     
-    /* Typography - clean, modern */
-    --font-sans: 'DM Sans', system-ui, sans-serif;
-    --font-serif: 'Source Serif 4', Georgia, serif;
+    /* Typography - editorial serif + clean sans */
+    --font-serif: 'Instrument Serif', Georgia, serif;
+    --font-sans: 'Inter', system-ui, sans-serif;
     
-    /* Shadows - soft and subtle */
-    --shadow-sm: 0 1px 2px 0 hsl(220 25% 15% / 0.04);
-    --shadow-md: 0 4px 12px -2px hsl(220 25% 15% / 0.08);
-    --shadow-lg: 0 12px 32px -4px hsl(220 25% 15% / 0.12);
-    --shadow-premium: 0 24px 48px -12px hsl(220 25% 15% / 0.15);
+    /* Shadows - warm and soft */
+    --shadow-sm: 0 1px 3px 0 hsl(160 30% 12% / 0.04);
+    --shadow-md: 0 4px 16px -2px hsl(160 30% 12% / 0.08);
+    --shadow-lg: 0 12px 40px -8px hsl(160 30% 12% / 0.12);
+    --shadow-premium: 0 24px 60px -12px hsl(160 30% 12% / 0.18);
     
     /* Radius */
     --radius: 0.75rem;
 
-    /* Sidebar - clean */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 25% 25%;
-    --sidebar-primary: 172 50% 35%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 95%;
-    --sidebar-accent-foreground: 220 25% 25%;
-    --sidebar-border: 220 15% 90%;
-    --sidebar-ring: 172 50% 35%;
+    /* Sidebar */
+    --sidebar-background: 40 30% 98%;
+    --sidebar-foreground: 160 30% 20%;
+    --sidebar-primary: 160 35% 22%;
+    --sidebar-primary-foreground: 40 30% 98%;
+    --sidebar-accent: 40 25% 94%;
+    --sidebar-accent-foreground: 160 30% 20%;
+    --sidebar-border: 40 20% 88%;
+    --sidebar-ring: 160 35% 22%;
   }
 
   .dark {
-    --background: 220 25% 8%;
-    --foreground: 40 33% 98%;
+    --background: 160 30% 8%;
+    --foreground: 40 30% 96%;
     
-    --card: 220 25% 10%;
-    --card-foreground: 40 33% 95%;
+    --card: 160 25% 12%;
+    --card-foreground: 40 30% 94%;
     
-    --popover: 220 25% 10%;
-    --popover-foreground: 40 33% 95%;
+    --popover: 160 25% 12%;
+    --popover-foreground: 40 30% 94%;
     
-    --primary: 172 50% 45%;
-    --primary-foreground: 220 25% 8%;
+    --primary: 145 35% 50%;
+    --primary-foreground: 160 30% 8%;
     
-    --secondary: 220 20% 15%;
-    --secondary-foreground: 40 33% 90%;
+    --secondary: 160 20% 18%;
+    --secondary-foreground: 40 30% 90%;
     
-    --muted: 220 20% 12%;
-    --muted-foreground: 220 15% 55%;
+    --muted: 160 20% 15%;
+    --muted-foreground: 40 20% 55%;
     
-    --accent: 340 75% 60%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 15 70% 60%;
+    --accent-foreground: 40 30% 98%;
     
-    --border: 220 20% 18%;
-    --input: 220 20% 15%;
-    --ring: 172 50% 45%;
+    --border: 160 20% 22%;
+    --input: 160 20% 18%;
+    --ring: 145 35% 50%;
     
-    --sidebar-background: 220 25% 10%;
-    --sidebar-foreground: 40 33% 90%;
-    --sidebar-border: 220 20% 18%;
+    --sidebar-background: 160 25% 12%;
+    --sidebar-foreground: 40 30% 90%;
+    --sidebar-border: 160 20% 22%;
   }
 }
 
@@ -123,12 +122,10 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
-    font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1, h2, h3 {
     font-family: var(--font-serif);
-    font-weight: 500;
   }
 }
 
@@ -137,23 +134,55 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Selection color */
+/* Selection */
 ::selection {
   background: hsl(var(--primary) / 0.2);
   color: hsl(var(--foreground));
 }
 
-/* Hero gradient background */
-.bg-hero-gradient {
-  background: var(--gradient-hero);
+/* Hero with image overlay */
+.hero-overlay {
+  background: linear-gradient(90deg, hsl(160 35% 18% / 0.95) 0%, hsl(160 35% 18% / 0.7) 50%, transparent 100%);
 }
 
-/* Custom card hover */
-.card-hover {
-  transition: all 0.3s ease;
+/* Premium card hover */
+.card-premium {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+.card-premium:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-premium);
+}
+
+/* Testimonial quote style */
+.testimonial-quote::before {
+  content: '"';
+  font-family: var(--font-serif);
+  font-size: 4rem;
+  line-height: 1;
+  color: hsl(var(--primary) / 0.2);
+  position: absolute;
+  top: -1rem;
+  left: -0.5rem;
+}
+
+/* Audio waveform animation */
+@keyframes wave {
+  0%, 100% { height: 4px; }
+  50% { height: 20px; }
+}
+
+.wave-bar {
+  animation: wave 1s ease-in-out infinite;
+}
+
+/* Press logo fade */
+.press-logo {
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.press-logo:hover {
+  opacity: 1;
 }
