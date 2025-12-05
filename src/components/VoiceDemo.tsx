@@ -171,9 +171,13 @@ export default function VoiceDemo({ onTryDemo }: VoiceDemoProps) {
     <div className="bg-matter-navy rounded-3xl p-8 md:p-12 shadow-premium">
       {/* Caller Info */}
       <div className="text-center mb-10">
-        <div className={`w-28 h-28 rounded-full mx-auto mb-4 overflow-hidden ring-4 shadow-xl transition-all duration-300 ${
-          isAnimatingGrandpa ? 'ring-matter-sage ring-opacity-100 animate-pulse' : 'ring-matter-sage/30'
-        }`}>
+        <div 
+          className={`w-28 h-28 rounded-full mx-auto mb-4 overflow-hidden ring-4 shadow-xl transition-all duration-500 ${
+            isAnimatingGrandpa 
+              ? 'ring-matter-sage shadow-[0_0_30px_rgba(139,166,139,0.5)]' 
+              : 'ring-matter-sage/30'
+          }`}
+        >
           <img 
             src={grandpaPhoto} 
             alt="Grandpa Robert"
@@ -189,8 +193,8 @@ export default function VoiceDemo({ onTryDemo }: VoiceDemoProps) {
         {/* Emma's Voice Message */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
-            <div className={`w-8 h-8 rounded-full bg-matter-coral/40 flex items-center justify-center transition-all ${
-              isAnimatingEmma ? 'ring-2 ring-matter-coral animate-pulse' : ''
+          <div className={`w-8 h-8 rounded-full bg-matter-coral/40 flex items-center justify-center transition-all duration-300 ${
+              isAnimatingEmma ? 'ring-2 ring-matter-coral shadow-[0_0_15px_rgba(232,121,121,0.4)]' : ''
             }`}>
               <span className="text-white text-sm font-medium">E</span>
             </div>
