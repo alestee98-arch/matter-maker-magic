@@ -68,7 +68,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
                   size="lg" 
                   className="bg-matter-coral hover:bg-matter-coral/90 text-white rounded-full text-lg px-8 h-14 shadow-lg"
                 >
-                  Start Preserving Yourself
+                  Build Your Legacy
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button 
