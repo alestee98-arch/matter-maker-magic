@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, MessageSquare, Shield, Heart, ChevronRight, Mic, Video, FileText, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import MatterLogo from '@/components/MatterLogo';
 
 interface LandingPageProps {
   onStartJourney: () => void;
@@ -31,12 +32,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <div className="w-3 h-3 rounded-full bg-primary-foreground" />
-            </div>
-            <span className="text-xl font-semibold text-foreground font-sans">Matter</span>
-          </div>
+          <MatterLogo size="md" />
           
           <div className="hidden md:flex items-center gap-8">
             <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors">How it Works</a>
@@ -411,12 +407,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
       {/* Footer */}
       <footer className="py-12 px-6 bg-card border-t border-border">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <div className="w-3 h-3 rounded-full bg-primary-foreground" />
-            </div>
-            <span className="font-semibold text-foreground">Matter</span>
-          </div>
+          <MatterLogo size="sm" />
           <p className="text-muted-foreground text-sm">The fourth pillar of identity</p>
           <div className="flex gap-6 text-sm text-muted-foreground">
             <a href="#" className="hover:text-foreground transition-colors">Privacy</a>

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Home, Archive, User, Settings, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import MatterLogo from '@/components/MatterLogo';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -37,10 +37,7 @@ export default function AppLayout({ children, currentView, onViewChange, onBack 
                   ← Back
                 </Button>
               )}
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <div className="w-3 h-3 rounded-full bg-primary-foreground" />
-              </div>
-              <span className="text-xl font-semibold text-foreground">Matter</span>
+              <MatterLogo size="md" />
             </div>
             
             {/* Desktop Navigation */}
