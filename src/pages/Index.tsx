@@ -4,12 +4,13 @@ import InteractiveDemo from '@/components/InteractiveDemo';
 import WeeklyQuestion from '@/components/WeeklyQuestion';
 import PersonalArchive from '@/components/PersonalArchive';
 import ProfilePage from '@/components/ProfilePage';
+import VoiceCloning from '@/components/VoiceCloning';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 
 export default function Index() {
-  const [currentView, setCurrentView] = useState<'landing' | 'demo' | 'app'>('landing');
-  const [appView, setAppView] = useState<'home' | 'archive' | 'profile' | 'settings'>('home');
+const [currentView, setCurrentView] = useState<'landing' | 'demo' | 'app'>('landing');
+  const [appView, setAppView] = useState<'home' | 'archive' | 'profile' | 'settings' | 'voice-clone'>('home');
 
   if (currentView === 'landing') {
     return (
@@ -56,10 +57,36 @@ export default function Index() {
       {appView === 'profile' && <ProfilePage />}
       
       {appView === 'settings' && (
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-semibold mb-4">Settings</h2>
-          <p className="text-muted-foreground">Settings panel coming soon...</p>
+        <div className="space-y-8">
+          <div className="text-center">
+            <h2 className="text-2xl font-serif text-foreground mb-2">Settings</h2>
+            <p className="text-muted-foreground">Manage your Matter profile and preferences</p>
+          </div>
+          
+          <div className="grid gap-4 max-w-xl mx-auto">
+            <button
+              onClick={() => setAppView('voice-clone')}
+              className="flex items-center gap-4 p-4 bg-card rounded-xl border border-border hover:border-primary/50 transition-colors text-left"
+            >
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <span className="text-2xl">🎙️</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-foreground">Voice Cloning</h3>
+                <p className="text-sm text-muted-foreground">Create your personalized AI voice</p>
+              </div>
+            </button>
+          </div>
         </div>
+      )}
+      
+      {appView === 'voice-clone' && (
+        <VoiceCloning 
+          onBack={() => setAppView('settings')}
+          onVoiceCreated={(voiceId, name) => {
+            console.log('Voice created:', voiceId, name);
+          }}
+        />
       )}
     </AppLayout>
   );
