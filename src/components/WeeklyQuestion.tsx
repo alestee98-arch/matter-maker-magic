@@ -1,42 +1,15 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { PenTool, Mic, Video, Calendar } from 'lucide-react';
+import { PenTool, Mic, Video, Sparkles } from 'lucide-react';
 
-// Weekly questions pool with depth categories
 const questions = [
-  {
-    id: 1,
-    text: "What was a moment this week where you felt completely present?",
-    depth: "Light"
-  },
-  {
-    id: 2,
-    text: "What's something small someone did for you that made you smile?",
-    depth: "Light"
-  },
-  {
-    id: 3,
-    text: "What's a lesson you learned about yourself this week?",
-    depth: "Medium"
-  },
-  {
-    id: 4,
-    text: "What's something you looked forward to and how did it feel when it happened?",
-    depth: "Medium"
-  },
-  {
-    id: 5,
-    text: "What's a childhood memory that came to mind this week?",
-    depth: "Deep"
-  },
-  {
-    id: 6,
-    text: "What would you tell your 17-year-old self about love and failure?",
-    depth: "Deep"
-  },
+  { id: 1, text: "What was a moment this week where you felt completely present?", depth: "Light" },
+  { id: 2, text: "What's something small someone did for you that made you smile?", depth: "Light" },
+  { id: 3, text: "What's a lesson you learned about yourself this week?", depth: "Medium" },
+  { id: 4, text: "What's something you looked forward to and how did it feel when it happened?", depth: "Medium" },
+  { id: 5, text: "What's a childhood memory that came to mind this week?", depth: "Deep" },
+  { id: 6, text: "What would you tell your 17-year-old self about love and failure?", depth: "Deep" },
 ];
 
 export default function WeeklyQuestion() {
@@ -51,120 +24,117 @@ export default function WeeklyQuestion() {
     setResponse('');
   };
 
-  const getDepthVariant = (depth: string) => {
+  const getDepthStyle = (depth: string) => {
     switch (depth) {
-      case 'Light': return 'bg-premium-green/20 text-premium-green';
-      case 'Medium': return 'bg-premium-blue/20 text-premium-blue';
-      case 'Deep': return 'bg-premium-amber/20 text-premium-amber';
-      default: return 'secondary';
+      case 'Light': return 'bg-matter-sage/20 text-matter-sage border-matter-sage/30';
+      case 'Medium': return 'bg-primary/10 text-primary border-primary/30';
+      case 'Deep': return 'bg-matter-gold/20 text-matter-gold border-matter-gold/30';
+      default: return 'bg-secondary text-secondary-foreground';
     }
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
+    <div className="bg-card rounded-3xl border border-border shadow-md overflow-hidden">
+      {/* Header */}
+      <div className="px-6 py-5 border-b border-border bg-secondary/30">
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Week's Question
-            </CardTitle>
-            <CardDescription>
-              {new Date().toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </CardDescription>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Sparkles className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-foreground">This Week's Question</h2>
+              <p className="text-sm text-muted-foreground">
+                {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+              </p>
+            </div>
           </div>
-          <Badge className={getDepthVariant(currentQuestion.depth)}>
+          <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getDepthStyle(currentQuestion.depth)}`}>
             {currentQuestion.depth}
-          </Badge>
+          </span>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="rounded-xl bg-gradient-card border border-border p-6">
-          <p className="text-lg font-medium leading-relaxed">
-            {currentQuestion.text}
-          </p>
-        </div>
+      </div>
 
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <Button
-              variant={responseType === 'text' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setResponseType('text')}
-              className="flex items-center gap-2"
+      {/* Question */}
+      <div className="px-6 py-8">
+        <p className="text-xl md:text-2xl text-foreground leading-relaxed">
+          {currentQuestion.text}
+        </p>
+      </div>
+
+      {/* Response type selector */}
+      <div className="px-6 pb-4">
+        <div className="flex gap-2">
+          {[
+            { type: 'text' as const, icon: PenTool, label: 'Text' },
+            { type: 'audio' as const, icon: Mic, label: 'Audio' },
+            { type: 'video' as const, icon: Video, label: 'Video' },
+          ].map(({ type, icon: Icon, label }) => (
+            <button
+              key={type}
+              onClick={() => setResponseType(type)}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all ${
+                responseType === type
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+              }`}
             >
-              <PenTool className="h-4 w-4" />
-              Text
-            </Button>
-            <Button
-              variant={responseType === 'audio' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setResponseType('audio')}
-              className="flex items-center gap-2"
-            >
-              <Mic className="h-4 w-4" />
-              Audio
-            </Button>
-            <Button
-              variant={responseType === 'video' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setResponseType('video')}
-              className="flex items-center gap-2"
-            >
-              <Video className="h-4 w-4" />
-              Video
-            </Button>
+              <Icon className="h-4 w-4" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Response area */}
+      <div className="px-6 pb-6">
+        {responseType === 'text' && (
+          <div className="space-y-4">
+            <Textarea
+              placeholder="Share your thoughts..."
+              value={response}
+              onChange={(e) => setResponse(e.target.value)}
+              className="min-h-[140px] bg-background border-border rounded-xl resize-none"
+            />
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleSubmit}
+                disabled={!response.trim()}
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12"
+              >
+                Save Response
+              </Button>
+              <Button variant="outline" className="rounded-xl h-12">
+                Save Draft
+              </Button>
+            </div>
           </div>
+        )}
 
-          {responseType === 'text' && (
-            <div className="space-y-4">
-              <Textarea
-                placeholder="Share your thoughts here..."
-                value={response}
-                onChange={(e) => setResponse(e.target.value)}
-                className="min-h-[120px] bg-card border-border"
-              />
-              <div className="flex gap-3">
-                <Button 
-                  onClick={handleSubmit}
-                  disabled={!response.trim()}
-                  className="flex-1"
-                >
-                  Save Response
-                </Button>
-                <Button variant="outline">
-                  Schedule for later
-                </Button>
-              </div>
+        {responseType === 'audio' && (
+          <div className="rounded-2xl border-2 border-dashed border-border bg-secondary/30 p-10 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center">
+              <Mic className="h-8 w-8 text-accent" />
             </div>
-          )}
+            <p className="text-foreground font-medium mb-2">Record Your Story</p>
+            <p className="text-sm text-muted-foreground">
+              Audio recording coming soon • Up to 5 minutes
+            </p>
+          </div>
+        )}
 
-          {responseType === 'audio' && (
-            <div className="rounded-xl border-2 border-dashed border-border bg-card p-8 text-center">
-              <Mic className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="text-muted-foreground">Audio recording coming soon...</p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                You&apos;ll be able to record up to 5 minutes of high quality audio
-              </p>
+        {responseType === 'video' && (
+          <div className="rounded-2xl border-2 border-dashed border-border bg-secondary/30 p-10 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-matter-gold/10 flex items-center justify-center">
+              <Video className="h-8 w-8 text-matter-gold" />
             </div>
-          )}
-
-          {responseType === 'video' && (
-            <div className="rounded-xl border-2 border-dashed border-border bg-card p-8 text-center">
-              <Video className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="text-muted-foreground">Video recording coming soon...</p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Record videos up to 3 minutes in HD
-              </p>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            <p className="text-foreground font-medium mb-2">Record Your Story</p>
+            <p className="text-sm text-muted-foreground">
+              Video recording coming soon • Up to 3 minutes HD
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
