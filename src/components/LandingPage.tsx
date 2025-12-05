@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { ArrowRight, Play, Mic, Check, Star, MessageCircle, Shield, Lock, Volume2, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MatterLogo from '@/components/MatterLogo';
@@ -10,22 +10,7 @@ interface LandingPageProps {
   onTryDemo: () => void;
 }
 
-const rotatingPhrases = [
-  "your father's laugh",
-  "your grandmother's wisdom",
-  "your own voice—for them",
-  "who you really are",
-];
-
 export default function LandingPage({ onStartJourney, onTryDemo }: LandingPageProps) {
-  const [currentPhrase, setCurrentPhrase] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentPhrase((prev) => (prev + 1) % rotatingPhrases.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,34 +52,14 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1 }}
             >
-              <p className="text-primary-foreground/70 text-lg mb-6 font-light italic">
-                "Death is just another path, one we all must take."
-              </p>
-              
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif text-primary-foreground leading-[1.1] mb-8">
-                What will you<br />
-                leave behind?
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-primary-foreground leading-[1.2] mb-8">
+                One day, someone you love<br />
+                will wish they could hear<br />
+                your voice one more time.
               </h1>
               
-              <p className="text-xl md:text-2xl text-primary-foreground/90 mb-4 leading-relaxed max-w-xl">
-                Matter preserves{' '}
-                <span className="relative inline-block min-w-[280px]">
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={currentPhrase}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="text-matter-gold font-medium"
-                    >
-                      {rotatingPhrases[currentPhrase]}
-                    </motion.span>
-                  </AnimatePresence>
-                </span>
-              </p>
-              
-              <p className="text-lg text-primary-foreground/70 mb-10 max-w-lg">
-                So that one day, those you love can still hear you, talk to you, and truly know who you were.
+              <p className="text-2xl md:text-3xl text-matter-gold font-serif mb-10">
+                Make sure they can.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-12">
