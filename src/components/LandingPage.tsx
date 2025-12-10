@@ -215,6 +215,39 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
         </div>
       </section>
 
+      {/* This Is Section */}
+      <section className="py-24 px-6 bg-matter-cream">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <p className="text-xl text-muted-foreground mb-10">This is:</p>
+            
+            <div className="flex flex-wrap justify-center gap-x-6 gap-y-3 mb-12">
+              {['ancestry', 'psychology', 'storytelling', 'presence', 'wisdom', 'continuity', 'heritage', 'learning', 'grieving', 'connection'].map((word, idx) => (
+                <motion.span
+                  key={word}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="text-2xl md:text-3xl font-serif text-foreground"
+                >
+                  {word}
+                </motion.span>
+              ))}
+            </div>
+
+            <p className="text-xl text-foreground font-medium">
+              Bundled into a single system.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
       {/* The Reality */}
       <section className="py-24 px-6 bg-primary/5">
         <div className="max-w-4xl mx-auto">
