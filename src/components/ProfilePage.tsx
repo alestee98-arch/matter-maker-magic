@@ -71,7 +71,8 @@ const MOCK_ENTRIES = [
     category: "Lessons",
     privacy: "Private",
     mediaType: "video",
-    thumbnail: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop",
+    // Selfie-style video thumbnail
+    thumbnail: "https://i.pravatar.cc/400?img=13",
     duration: "02:34",
     transcriptSnippet: "Failing didn't break me; it taught me to listen more…",
   },
@@ -82,7 +83,6 @@ const MOCK_ENTRIES = [
     category: "Family",
     privacy: "Share",
     mediaType: "audio",
-    thumbnail: "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&h=400&fit=crop",
     duration: "03:18",
     transcriptSnippet: "Sunday dinner table was the first classroom…",
   },
@@ -93,8 +93,7 @@ const MOCK_ENTRIES = [
     category: "Work",
     privacy: "Private",
     mediaType: "text",
-    thumbnail: "https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?w=400&h=400&fit=crop",
-    transcriptSnippet: "Ambition without rest stays empty…",
+    transcriptSnippet: "Ambition without rest stays empty. I learned this the hard way after my first startup failed…",
   },
   {
     id: "e_115",
@@ -103,7 +102,6 @@ const MOCK_ENTRIES = [
     category: "Joy",
     privacy: "Legacy",
     mediaType: "audio",
-    thumbnail: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop",
     duration: "01:11",
     transcriptSnippet: "The first sip of coffee, before the world finds me…",
   },
@@ -114,7 +112,7 @@ const MOCK_ENTRIES = [
     category: "Family",
     privacy: "Legacy",
     mediaType: "video",
-    thumbnail: "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?w=400&h=400&fit=crop",
+    thumbnail: "https://i.pravatar.cc/400?img=13",
     duration: "04:22",
     transcriptSnippet: "The backyard felt infinite when I was seven…",
   },
@@ -124,10 +122,29 @@ const MOCK_ENTRIES = [
     date: "2025-07-17",
     category: "Fear",
     privacy: "Private",
+    mediaType: "text",
+    transcriptSnippet: "Not being remembered for who I really was. The idea that my children might only know fragments…",
+  },
+  {
+    id: "e_112",
+    title: "My mother's advice",
+    date: "2025-07-10",
+    category: "Family",
+    privacy: "Legacy",
     mediaType: "audio",
-    thumbnail: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=400&h=400&fit=crop",
-    duration: "02:45",
-    transcriptSnippet: "Not being remembered for who I really was…",
+    duration: "05:32",
+    transcriptSnippet: "She always said: 'mijo, the world doesn't owe you anything'…",
+  },
+  {
+    id: "e_111",
+    title: "Why I started Matter",
+    date: "2025-07-03",
+    category: "Work",
+    privacy: "Share",
+    mediaType: "video",
+    thumbnail: "https://i.pravatar.cc/400?img=13",
+    duration: "06:18",
+    transcriptSnippet: "I realized after my grandfather passed that I barely knew him…",
   },
 ];
 
@@ -447,12 +464,9 @@ function DepthBadge({ depth }: { depth: string }) {
 }
 
 function EntryTile({ entry, index }: { entry: any; index: number }) {
-  const mediaIcons = {
-    video: Video,
-    audio: Mic,
-    text: FileText,
-  };
-  const MediaIcon = mediaIcons[entry.mediaType as keyof typeof mediaIcons];
+  const isVideo = entry.mediaType === "video";
+  const isAudio = entry.mediaType === "audio";
+  const isText = entry.mediaType === "text";
 
   return (
     <motion.button
@@ -462,36 +476,70 @@ function EntryTile({ entry, index }: { entry: any; index: number }) {
       whileHover={{ scale: 1.02 }}
       className="relative aspect-square overflow-hidden bg-muted group rounded-sm"
     >
-      <img
-        src={entry.thumbnail}
-        alt={entry.title}
-        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-      />
+      {/* VIDEO: Selfie-style frame */}
+      {isVideo && entry.thumbnail && (
+        <>
+          <img
+            src={entry.thumbnail}
+            alt={entry.title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          <div className="absolute top-2 right-2 bg-foreground/60 rounded px-1.5 py-0.5 flex items-center gap-1">
+            <Play className="w-3 h-3 text-white fill-white" />
+            <span className="text-[10px] text-white">{entry.duration}</span>
+          </div>
+        </>
+      )}
+
+      {/* AUDIO: Waveform visualization */}
+      {isAudio && (
+        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex flex-col items-center justify-center p-4">
+          {/* Waveform bars */}
+          <div className="flex items-end justify-center gap-[3px] h-12 mb-3">
+            {[0.4, 0.7, 0.5, 1, 0.6, 0.8, 0.4, 0.9, 0.5, 0.7, 0.3, 0.8, 0.5].map((h, i) => (
+              <div
+                key={i}
+                className="w-1 bg-primary rounded-full transition-all group-hover:animate-pulse"
+                style={{ height: `${h * 100}%`, animationDelay: `${i * 0.05}s` }}
+              />
+            ))}
+          </div>
+          <div className="flex items-center gap-1 text-primary">
+            <Mic className="w-4 h-4" />
+            <span className="text-xs font-medium">{entry.duration}</span>
+          </div>
+        </div>
+      )}
+
+      {/* TEXT: Text preview */}
+      {isText && (
+        <div className="w-full h-full bg-card p-3 flex flex-col">
+          <div className="flex-1 overflow-hidden">
+            <p className="text-[11px] leading-relaxed text-foreground/80 line-clamp-6">
+              {entry.transcriptSnippet}
+            </p>
+          </div>
+          <div className="mt-2 pt-2 border-t border-border">
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <FileText className="w-3 h-3" />
+              <span className="text-[10px]">{entry.category}</span>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Overlay on hover */}
-      <div className="absolute inset-0 bg-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-        <div className="text-center text-background px-2">
+      <div className="absolute inset-0 bg-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        <div className="text-center text-background px-3">
           <p className="text-sm font-medium line-clamp-2">{entry.title}</p>
           <p className="text-xs opacity-80 mt-1">{entry.category}</p>
         </div>
       </div>
 
-      {/* Media type indicator */}
-      <div className="absolute top-2 right-2">
-        <MediaIcon className="w-4 h-4 text-white drop-shadow-lg" />
-      </div>
-
-      {/* Duration badge */}
-      {entry.duration && (
-        <div className="absolute bottom-2 right-2 text-xs text-white bg-foreground/60 px-1.5 py-0.5 rounded">
-          {entry.duration}
-        </div>
-      )}
-
       {/* Legacy indicator */}
       {entry.privacy === "Legacy" && (
-        <div className="absolute top-2 left-2">
-          <Badge className="text-[10px] px-1.5 py-0.5 bg-amber-500/80 text-white">
+        <div className="absolute top-2 left-2 z-10">
+          <Badge className="text-[10px] px-1.5 py-0.5 bg-amber-500/90 text-white shadow-sm">
             <Archive className="w-3 h-3 mr-0.5" />
           </Badge>
         </div>
