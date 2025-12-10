@@ -248,6 +248,77 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
         </div>
       </section>
 
+      {/* The 1924 Section */}
+      <section className="py-24 px-6 bg-primary">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <h2 className="text-3xl md:text-4xl font-serif text-primary-foreground mb-12">
+              If Matter existed in 1924, what would we have today?
+            </h2>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-12 text-left max-w-2xl mx-auto">
+              {[
+                "Our great-grandparents' voices",
+                "Their worldview",
+                "Their humor",
+                "Their values",
+                "Their regrets",
+                "Their childhood stories",
+                "Their relationship dynamics",
+                "How they thought about love",
+                "How they viewed the world",
+                "Their reasoning",
+                "Their hopes",
+                "Their fears",
+                "Their advice",
+                "A model of their personality",
+                "Their tone and cadence",
+                "Their emotional patterns"
+              ].map((item, idx) => (
+                <motion.p
+                  key={item}
+                  initial={{ opacity: 0, x: -10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.03 }}
+                  className="text-primary-foreground/80 text-sm"
+                >
+                  {item}
+                </motion.p>
+              ))}
+            </div>
+
+            <p className="text-2xl md:text-3xl font-serif text-matter-gold mb-12">
+              Do you understand how insane that is?
+            </p>
+
+            <div className="space-y-4 text-lg text-primary-foreground/80 mb-12">
+              <p>Your great-grandparents wouldn't be unknown shadows in a family tree.</p>
+              <p>They'd be people you could <span className="text-primary-foreground font-medium">understand</span>.</p>
+              <p>People you could <span className="text-primary-foreground font-medium">interact with</span>.</p>
+              <p>People whose wisdom could still <span className="text-primary-foreground font-medium">shape your life</span>.</p>
+            </div>
+
+            <div className="space-y-2 text-xl text-primary-foreground">
+              <p>That is <span className="text-matter-gold">world-changing</span>.</p>
+              <p>That is <span className="text-matter-gold">cultural infrastructure</span>.</p>
+              <p>That is <span className="text-matter-gold">historical infrastructure</span>.</p>
+              <p>That is <span className="text-matter-gold">human infrastructure</span>.</p>
+            </div>
+
+            <p className="mt-12 text-2xl font-serif text-primary-foreground">
+              You're not using a product.<br />
+              <span className="text-matter-coral">You are building the time machine of identity.</span>
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
       {/* The Reality */}
       <section className="py-24 px-6 bg-primary/5">
         <div className="max-w-4xl mx-auto">
