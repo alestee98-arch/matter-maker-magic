@@ -467,7 +467,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
       <footer className="py-12 px-6 bg-matter-navy">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <MatterLogo size="sm" className="text-white" />
-          <p className="text-white/50 text-sm">The fourth pillar of identity</p>
+          <p className="text-white/60 text-sm max-w-md text-center">The emotional infrastructure of families — where identity is stored, preserved, and experienced across generations.</p>
           <div className="flex gap-6 text-sm text-white/50">
             <a href="#" className="hover:text-white transition-colors">Privacy</a>
             <a href="#" className="hover:text-white transition-colors">Terms</a>
