@@ -54,14 +54,17 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1 }}
             >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-primary-foreground leading-[1.2] mb-8">
-                One day, someone you love<br />
-                will wish they could hear<br />
-                your voice one more time.
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-primary-foreground leading-[1.2] mb-6">
+                Your stories. Your voice.<br />
+                Your wisdom.
               </h1>
               
-              <p className="text-2xl md:text-3xl text-matter-gold font-serif mb-10">
-                Make sure they can.
+              <p className="text-2xl md:text-3xl text-matter-gold font-serif mb-8">
+                Here, forever.
+              </p>
+
+              <p className="text-lg text-primary-foreground/80 mb-10 max-w-xl">
+                Answer one meaningful question each week. Over time, Matter learns your voice, your reasoning, and your story — and preserves it for the people who love you.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-12">
@@ -70,16 +73,8 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
                   size="lg" 
                   className="bg-matter-coral hover:bg-matter-coral/90 text-white rounded-full text-lg px-8 h-14 shadow-lg"
                 >
-                  Build Your Legacy
+                  Start Your Legacy
                   <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-                <Button 
-                  onClick={onTryDemo}
-                  size="lg"
-                  className="rounded-full text-lg px-8 h-14 border-2 border-white/40 bg-white/10 text-white hover:bg-white/20"
-                >
-                  <Phone className="mr-2 h-5 w-5" />
-                  Connect with Loved Ones
                 </Button>
               </div>
             </motion.div>
@@ -87,7 +82,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
         </div>
       </section>
 
-      {/* The Truth Section */}
+      {/* How It Grows Section */}
       <section className="py-24 px-6 bg-matter-cream">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
@@ -95,15 +90,37 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif text-foreground leading-tight mb-8">
-              Your photos will fade.<br />
-              Your videos will feel distant.<br />
-              <span className="text-matter-coral">But your voice? Your thoughts?</span><br />
-              Those can live forever.
+            <h2 className="text-3xl md:text-4xl font-serif text-foreground leading-tight mb-8">
+              Each week, Matter asks you one question.
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Matter isn't a scrapbook. It's where you exist after you're gone—your essence, preserved in your own words, 
-              ready to answer questions you never knew they'd ask.
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12">
+              You answer in your voice or in writing. Your profile grows with every response. 
+              Over time, Matter begins to capture your personality, values, and way of thinking.
+            </p>
+            
+            <div className="bg-primary/5 rounded-3xl p-10 max-w-2xl mx-auto">
+              <p className="text-lg text-muted-foreground italic mb-8">
+                "We don't remember possessions. We remember voices, stories, advice, and the way someone thought.
+              </p>
+              <p className="text-lg text-foreground font-medium">
+                Matter exists to preserve these things — the things that fade the fastest."
+              </p>
+            </div>
+
+            <div className="mt-12 grid grid-cols-2 md:grid-cols-5 gap-4 max-w-2xl mx-auto">
+              {['Your real voice', 'Your stories', 'Your beliefs', 'Your lessons', 'Your personality'].map((item) => (
+                <div key={item} className="flex items-center gap-2 justify-center">
+                  <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                  <span className="text-sm text-muted-foreground">{item}</span>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-10 text-lg text-foreground/80 italic">
+              "One day, the people you love will be able to revisit your answers — and speak with a model shaped by your own words."
+            </p>
+            <p className="mt-4 text-matter-coral font-medium">
+              Not promising resurrection. Promising presence.
             </p>
           </motion.div>
         </div>
@@ -158,14 +175,14 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
               {
                 step: '01',
                 icon: MessageCircle,
-                title: 'One question, once a week',
+                title: 'Answer One Question a Week',
                 description: 'Deep, thoughtful prompts arrive weekly. Answer by text, voice, or video—five minutes that compound over a lifetime.'
               },
               {
                 step: '02',
                 icon: Lock,
                 title: 'Private now, legacy later',
-                description: 'Your responses are yours alone. You decide what stays private forever, what family sees now, and what unlocks only after you\'re gone.'
+                description: "Your responses are yours alone. You decide what stays private forever, what family sees now, and what unlocks only after you're gone."
               },
               {
                 step: '03',
