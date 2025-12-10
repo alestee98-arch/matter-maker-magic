@@ -176,7 +176,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
                 step: '01',
                 icon: MessageCircle,
                 title: 'Answer One Question a Week',
-                description: 'Deep, thoughtful prompts arrive weekly. Answer by text, voice, or video—five minutes that compound over a lifetime.'
+                description: 'Deep, thoughtful prompts arrive weekly. Answer by text, voice, or video—a few minutes per week that compound over a lifetime.'
               },
               {
                 step: '02',
