@@ -30,8 +30,8 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
           </div>
           
           <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={() => navigate('/auth')} className="text-primary-foreground hover:bg-primary-foreground/10">Sign In</Button>
-            <Button onClick={onStartJourney} className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 rounded-full px-6">
+            <Button variant="ghost" onClick={() => navigate('/auth?mode=login')} className="text-primary-foreground hover:bg-primary-foreground/10">Sign In</Button>
+            <Button onClick={() => navigate('/auth?mode=signup')} className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 rounded-full px-6">
               Begin
             </Button>
           </div>
