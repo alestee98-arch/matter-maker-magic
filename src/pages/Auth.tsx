@@ -106,8 +106,16 @@ export default function Auth() {
             });
           }
         } else {
+          // Fetch the user's display name for the welcome message
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('display_name')
+            .single();
+          
+          const displayNameToShow = profile?.display_name || email.split('@')[0];
+          
           toast({
-            title: 'Welcome back!',
+            title: `Welcome back, ${displayNameToShow}!`,
             description: 'You have successfully logged in.'
           });
           navigate('/');
