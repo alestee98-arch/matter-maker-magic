@@ -16,6 +16,7 @@ const nameSchema = z.string().trim().min(1, 'This field is required').max(50, 'M
 export default function Onboarding() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ firstName?: string; lastName?: string }>({});
@@ -158,6 +159,35 @@ export default function Onboarding() {
               {errors.lastName && (
                 <p className="text-sm text-destructive">{errors.lastName}</p>
               )}
+            </div>
+
+            {/* Phone Number (Optional) */}
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-sm font-medium text-foreground">
+                Phone number (optional)
+              </Label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-foreground">
+                  <span className="text-lg">🇺🇸</span>
+                  <span className="text-sm text-muted-foreground">+1</span>
+                </div>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder=""
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    // Only allow numbers
+                    const value = e.target.value.replace(/\D/g, '');
+                    setPhoneNumber(value);
+                  }}
+                  className="h-12 text-base bg-muted/50 pl-20"
+                  maxLength={10}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Matter sends helpful reminders via text. Text STOP or disable in settings to unsubscribe. Msg & data rates may apply.
+              </p>
             </div>
 
             {/* Divider */}
