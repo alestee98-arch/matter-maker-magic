@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const MOCK_PROMPTS = [
+const SAMPLE_PROMPTS = [
   {
     id: "p_203",
     depth: "Light",
@@ -44,95 +44,6 @@ const MOCK_PROMPTS = [
   },
 ];
 
-const MOCK_CIRCLES = [
-  { id: "c1", name: "Family", avatar: "https://i.pravatar.cc/80?img=3", count: 5 },
-  { id: "c2", name: "Close Friends", avatar: "https://i.pravatar.cc/80?img=8", count: 8 },
-];
-
-const MOCK_ENTRIES = [
-  {
-    id: "e_118",
-    title: "Learning to fail well",
-    date: "2025-08-21",
-    category: "Lessons",
-    privacy: "Private",
-    mediaType: "video",
-    thumbnail: "https://i.pravatar.cc/400?img=13",
-    duration: "02:34",
-    transcriptSnippet: "Failing didn't break me; it taught me to listen more…",
-  },
-  {
-    id: "e_117",
-    title: "What family means to me",
-    date: "2025-08-14",
-    category: "Family",
-    privacy: "Share",
-    mediaType: "audio",
-    duration: "03:18",
-    transcriptSnippet: "Sunday dinner table was the first classroom…",
-  },
-  {
-    id: "e_116",
-    title: "My relationship with work",
-    date: "2025-08-07",
-    category: "Work",
-    privacy: "Private",
-    mediaType: "text",
-    transcriptSnippet: "Ambition without rest stays empty. I learned this the hard way after my first startup failed…",
-  },
-  {
-    id: "e_115",
-    title: "A small (and daily) joy",
-    date: "2025-07-31",
-    category: "Joy",
-    privacy: "Legacy",
-    mediaType: "audio",
-    duration: "01:11",
-    transcriptSnippet: "The first sip of coffee, before the world finds me…",
-  },
-  {
-    id: "e_114",
-    title: "Childhood memories",
-    date: "2025-07-24",
-    category: "Family",
-    privacy: "Legacy",
-    mediaType: "video",
-    thumbnail: "https://i.pravatar.cc/400?img=13",
-    duration: "04:22",
-    transcriptSnippet: "The backyard felt infinite when I was seven…",
-  },
-  {
-    id: "e_113",
-    title: "What scares me most",
-    date: "2025-07-17",
-    category: "Fear",
-    privacy: "Private",
-    mediaType: "text",
-    transcriptSnippet: "Not being remembered for who I really was. The idea that my children might only know fragments…",
-  },
-  {
-    id: "e_112",
-    title: "My mother's advice",
-    date: "2025-07-10",
-    category: "Family",
-    privacy: "Legacy",
-    mediaType: "audio",
-    duration: "05:32",
-    transcriptSnippet: "She always said: 'mijo, the world doesn't owe you anything'…",
-  },
-  {
-    id: "e_111",
-    title: "Why I started Matter",
-    date: "2025-07-03",
-    category: "Work",
-    privacy: "Share",
-    mediaType: "video",
-    thumbnail: "https://i.pravatar.cc/400?img=13",
-    duration: "06:18",
-    transcriptSnippet: "I realized after my grandfather passed that I barely knew him…",
-  },
-];
-
 const TABS = [
   { id: "grid", icon: Grid3X3, label: "All" },
   { id: "saved", icon: Bookmark, label: "Saved" },
@@ -146,14 +57,17 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("grid");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
+  // Empty entries for new users - will be populated from database later
+  const entries: any[] = [];
+  
   const filtered = useMemo(() => {
-    return MOCK_ENTRIES.filter((e) => {
+    return entries.filter((e) => {
       const q = query.trim().toLowerCase();
       if (activeTab === "legacy" && e.privacy !== "Legacy") return false;
       if (!q) return true;
       return e.title.toLowerCase().includes(q) || e.category.toLowerCase().includes(q);
     });
-  }, [query, activeTab]);
+  }, [query, activeTab, entries]);
 
   // Loading state
   if (loading) {
@@ -239,21 +153,8 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Circles Row */}
+          {/* Circles Row - Empty state for new users */}
           <div className="mt-6 flex items-center gap-4 overflow-x-auto pb-2">
-            {MOCK_CIRCLES.map((circle) => (
-              <motion.button
-                key={circle.id}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex flex-col items-center gap-1 min-w-[72px]"
-              >
-                <div className="w-16 h-16 rounded-full ring-2 ring-border overflow-hidden">
-                  <img src={circle.avatar} alt={circle.name} className="w-full h-full object-cover" />
-                </div>
-                <span className="text-xs text-muted-foreground truncate max-w-[72px]">{circle.name}</span>
-              </motion.button>
-            ))}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -349,7 +250,7 @@ export default function ProfilePage() {
               <p className="text-sm text-muted-foreground">Choose one and respond with text, audio, or video.</p>
             </CardHeader>
             <CardContent className="space-y-3">
-              {MOCK_PROMPTS.map((prompt, i) => (
+              {SAMPLE_PROMPTS.map((prompt, i) => (
                 <motion.button
                   key={prompt.id}
                   initial={{ opacity: 0, x: -10 }}
@@ -429,7 +330,8 @@ export default function ProfilePage() {
           {filtered.length === 0 ? (
             <div className="py-16 text-center text-muted-foreground">
               <Archive className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p>No entries found</p>
+              <p className="font-medium text-foreground mb-2">Your archive is empty</p>
+              <p className="text-sm">Answer your first weekly question above to start building your legacy.</p>
             </div>
           ) : viewMode === "grid" ? (
             <motion.div 
