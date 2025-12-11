@@ -57,13 +57,9 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
               transition={{ duration: 1 }}
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-primary-foreground leading-[1.2] mb-6">
-                Your stories. Your voice.<br />
-                Your wisdom.
+                Your story. Your voice —<br />
+                <span className="text-matter-gold">kept alive.</span>
               </h1>
-              
-              <p className="text-2xl md:text-3xl text-matter-gold font-serif mb-8">
-                Here, forever.
-              </p>
 
               <p className="text-lg text-primary-foreground/80 mb-10 max-w-xl">
                 Answer one meaningful question each week. Over time, Matter learns your voice, your reasoning, and your story — and preserves it for the people who love you.
