@@ -96,7 +96,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
             <div className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12 space-y-4">
               <p>Each week, Matter sends you one meaningful question by text or email — no apps or logins needed.</p>
               <p>Reply in your voice or in writing, and Matter quietly turns those answers into your digital legacy.</p>
-              <p>Over time, your responses form a beautifully curated profile — your story and your voice, preserved for the people who matter most.</p>
+              <p>Over time, your responses become a beautifully curated profile — your story and your voice, preserved for the people who matter most to you.</p>
             </div>
             
             <div className="bg-primary/5 rounded-3xl p-10 max-w-2xl mx-auto">
