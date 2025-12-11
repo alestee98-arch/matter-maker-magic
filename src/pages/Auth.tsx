@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Sprout, ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
 
@@ -288,11 +289,20 @@ export default function Auth() {
               type="button" 
               variant="outline" 
               className="w-full h-12 text-base gap-3"
-              onClick={() => {
-                toast({
-                  title: 'Coming soon',
-                  description: 'Google sign in will be available soon.'
+              onClick={async () => {
+                const { error } = await supabase.auth.signInWithOAuth({
+                  provider: 'google',
+                  options: {
+                    redirectTo: `${window.location.origin}/`
+                  }
                 });
+                if (error) {
+                  toast({
+                    variant: 'destructive',
+                    title: 'Google sign in failed',
+                    description: error.message
+                  });
+                }
               }}
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
