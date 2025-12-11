@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   Search, 
   Play, 
@@ -19,26 +21,10 @@ import {
   FileText,
   Download,
   Share,
-  ChevronRight
+  ChevronRight,
+  Sprout
 } from "lucide-react";
 import { motion } from "framer-motion";
-
-const MOCK_PROFILE = {
-  id: "user_001",
-  name: "Alex Martinez",
-  handle: "@alexmartinez",
-  avatar: "https://i.pravatar.cc/160?img=13",
-  bio: "Building MATTER — preserving essence through time. Lover of wellness, AI, and good questions.",
-  stats: {
-    answers: 87,
-    streakWeeks: 12,
-    categories: 9
-  },
-  privacyDefault: "Private",
-  legacyExecutor: "Maria Martinez",
-  voiceCloned: true,
-  aiTwinProgress: 78,
-};
 
 const MOCK_PROMPTS = [
   {
@@ -71,7 +57,6 @@ const MOCK_ENTRIES = [
     category: "Lessons",
     privacy: "Private",
     mediaType: "video",
-    // Selfie-style video thumbnail
     thumbnail: "https://i.pravatar.cc/400?img=13",
     duration: "02:34",
     transcriptSnippet: "Failing didn't break me; it taught me to listen more…",
@@ -155,6 +140,8 @@ const TABS = [
 ];
 
 export default function ProfilePage() {
+  const { user } = useAuth();
+  const { profile, loading } = useProfile();
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("grid");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -167,6 +154,24 @@ export default function ProfilePage() {
       return e.title.toLowerCase().includes(q) || e.category.toLowerCase().includes(q);
     });
   }, [query, activeTab]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse">
+          <Sprout className="w-12 h-12 text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  // Derive display values from real profile or fallbacks
+  const displayName = profile?.display_name || user?.email?.split('@')[0] || 'New User';
+  const handle = `@${displayName.toLowerCase().replace(/\s+/g, '')}`;
+  const avatarUrl = profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${displayName}`;
+  const bio = profile?.bio || "Start answering questions to build your legacy.";
+  const legacyStatus = profile?.legacy_status || 'active';
 
   return (
     <div className="min-h-screen bg-background">
@@ -183,44 +188,42 @@ export default function ProfilePage() {
             >
               <div className="w-32 h-32 md:w-36 md:h-36 rounded-full overflow-hidden ring-4 ring-border">
                 <img
-                  src={MOCK_PROFILE.avatar}
-                  alt={MOCK_PROFILE.name}
+                  src={avatarUrl}
+                  alt={displayName}
                   className="w-full h-full object-cover"
                 />
               </div>
-              {/* AI Twin Indicator */}
-              {MOCK_PROFILE.voiceCloned && (
-                <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-2">
-                  <Mic className="w-4 h-4" />
-                </div>
-              )}
+              {/* AI Twin Indicator - show when user has entries */}
+              <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-2">
+                <Mic className="w-4 h-4" />
+              </div>
             </motion.div>
 
             {/* Info */}
             <div className="flex-1 text-center md:text-left">
               <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 mb-3">
-                <h1 className="text-2xl font-normal font-sans tracking-tight">{MOCK_PROFILE.name}</h1>
-                <span className="text-muted-foreground">{MOCK_PROFILE.handle}</span>
+                <h1 className="text-2xl font-normal font-sans tracking-tight">{displayName}</h1>
+                <span className="text-muted-foreground">{handle}</span>
               </div>
 
               {/* Stats Row */}
               <div className="flex justify-center md:justify-start gap-8 mb-4">
                 <div className="text-center md:text-left">
-                  <span className="font-semibold">{MOCK_PROFILE.stats.answers}</span>
+                  <span className="font-semibold">0</span>
                   <span className="text-muted-foreground ml-1">entries</span>
                 </div>
                 <div className="text-center md:text-left">
-                  <span className="font-semibold">{MOCK_PROFILE.stats.streakWeeks}</span>
+                  <span className="font-semibold">0</span>
                   <span className="text-muted-foreground ml-1">week streak</span>
                 </div>
                 <div className="text-center md:text-left">
-                  <span className="font-semibold">{MOCK_PROFILE.stats.categories}</span>
+                  <span className="font-semibold">0</span>
                   <span className="text-muted-foreground ml-1">topics</span>
                 </div>
               </div>
 
               {/* Bio */}
-              <p className="text-foreground max-w-md mb-4">{MOCK_PROFILE.bio}</p>
+              <p className="text-foreground max-w-md mb-4">{bio}</p>
 
               {/* Action Buttons */}
               <div className="flex flex-wrap justify-center md:justify-start gap-2">
@@ -284,15 +287,15 @@ export default function ProfilePage() {
                   <div className="flex-1">
                     <p className="font-medium">AI Twin</p>
                     <p className="text-sm text-muted-foreground">
-                      {MOCK_PROFILE.voiceCloned ? "Voice cloned" : "Voice not cloned"} • Building personality
+                      Building your digital presence
                     </p>
                   </div>
-                  <span className="text-lg font-semibold text-primary">{MOCK_PROFILE.aiTwinProgress}%</span>
+                  <span className="text-lg font-semibold text-primary">0%</span>
                 </div>
                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${MOCK_PROFILE.aiTwinProgress}%` }}
+                    animate={{ width: "0%" }}
                     transition={{ duration: 1, ease: "easeOut" }}
                     className="h-full bg-primary rounded-full"
                   />
@@ -314,11 +317,13 @@ export default function ProfilePage() {
               <CardContent className="pt-6 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Legacy executor</span>
-                  <span className="font-medium">{MOCK_PROFILE.legacyExecutor}</span>
+                  <span className="font-medium text-muted-foreground">Not set</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Status</span>
-                  <Badge className="bg-emerald-500/20 text-emerald-600">Encrypted & backed up</Badge>
+                  <Badge className="bg-emerald-500/20 text-emerald-600">
+                    {legacyStatus === 'active' ? 'Active' : legacyStatus}
+                  </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Export</span>
