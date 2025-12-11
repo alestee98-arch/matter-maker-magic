@@ -61,9 +61,11 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
                 <span className="text-matter-gold">kept alive.</span>
               </h1>
 
-              <p className="text-lg text-primary-foreground/80 mb-10 max-w-xl">
-                Matter builds your digital legacy — preserving your story and your voice, one simple question at a time.
-              </p>
+              <div className="text-lg text-primary-foreground/80 mb-10 max-w-xl space-y-4">
+                <p>Each week, Matter sends you one meaningful question by text or email — no apps or logins needed.</p>
+                <p>Reply in your voice or in writing, and Matter quietly turns those answers into your digital legacy.</p>
+                <p>Over time, your responses form a beautifully curated profile — your story and your voice, preserved for the people who matter most.</p>
+              </div>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-12">
                 <Button 
