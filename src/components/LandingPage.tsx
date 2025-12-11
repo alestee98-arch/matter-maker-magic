@@ -62,7 +62,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
               </h1>
 
               <p className="text-lg text-primary-foreground/80 mb-10 max-w-xl">
-                Answer one meaningful question each week. Over time, Matter learns your voice, your reasoning, and your story — and preserves it for the people who love you.
+                Matter builds your digital legacy — preserving your story and your voice, one simple question at a time.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-12">
