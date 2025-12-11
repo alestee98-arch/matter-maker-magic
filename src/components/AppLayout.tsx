@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Home, Archive, User, Settings, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MatterLogo from '@/components/MatterLogo';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -23,6 +25,12 @@ const navigation: Array<{
 
 export default function AppLayout({ children, currentView, onViewChange, onBack }: AppLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
+  const { profile } = useProfile();
+
+  // Get real user data
+  const displayName = profile?.display_name || user?.email?.split('@')[0] || 'User';
+  const avatarUrl = profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${displayName}`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -34,7 +42,7 @@ export default function AppLayout({ children, currentView, onViewChange, onBack 
             <div className="flex items-center gap-3">
               {onBack && (
                 <Button variant="ghost" size="sm" onClick={onBack} className="mr-2">
-                  ← Back
+                  ← Sign out
                 </Button>
               )}
               <MatterLogo size="md" />
@@ -61,13 +69,12 @@ export default function AppLayout({ children, currentView, onViewChange, onBack 
             {/* User Menu */}
             <div className="flex items-center gap-3">
               <div className="hidden sm:block text-right">
-                <div className="text-sm font-medium text-foreground">John Doe</div>
-                <div className="text-xs text-muted-foreground">12 stories</div>
+                <div className="text-sm font-medium text-foreground">{displayName}</div>
               </div>
               <button className="h-10 w-10 overflow-hidden rounded-full bg-secondary border-2 border-border">
                 <img 
-                  src="https://i.pravatar.cc/40?img=13" 
-                  alt="User" 
+                  src={avatarUrl} 
+                  alt={displayName} 
                   className="h-full w-full object-cover"
                 />
               </button>
