@@ -132,9 +132,9 @@ export default function Auth() {
         } else {
           toast({
             title: 'Account created!',
-            description: 'Welcome to Matter. Your legacy begins now.'
+            description: 'Let\'s complete your profile.'
           });
-          navigate('/');
+          navigate('/onboarding');
         }
       }
     } finally {
