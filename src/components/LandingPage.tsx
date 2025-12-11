@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Play, Mic, Check, Star, MessageCircle, Shield, Lock, Volume2, Phone, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ interface LandingPageProps {
 }
 
 export default function LandingPage({ onStartJourney, onTryDemo }: LandingPageProps) {
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
@@ -28,7 +30,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
           </div>
           
           <div className="flex items-center gap-3">
-            <Button variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10">Sign In</Button>
+            <Button variant="ghost" onClick={() => navigate('/auth')} className="text-primary-foreground hover:bg-primary-foreground/10">Sign In</Button>
             <Button onClick={onStartJourney} className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 rounded-full px-6">
               Begin
             </Button>
