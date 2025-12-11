@@ -91,7 +91,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
             viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-4xl font-serif text-foreground leading-tight mb-8">
-              Each week, Matter asks you one question.
+              One story, one question at a time.
             </h2>
             <div className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12 space-y-4">
               <p>Each week, Matter sends you one meaningful question by text or email — no apps or logins needed.</p>
