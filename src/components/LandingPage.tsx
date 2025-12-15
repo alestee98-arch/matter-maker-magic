@@ -45,19 +45,12 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card mb-8">
-                <span className="w-2 h-2 rounded-full bg-matter-coral" />
-                <span className="text-sm text-muted-foreground uppercase tracking-wider">
-                  Answer by text, voice, or video
-                </span>
-              </div>
-
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-foreground leading-[1.15] mb-6">
-                Your story. Your voice — kept alive.
+                Your story. Your voice - kept alive.
               </h1>
 
               <p className="text-lg text-muted-foreground mb-10 max-w-lg leading-relaxed">
-                Each week, Matter sends you one meaningful question by text or email. Reply in text, voice, or selfie video — and we'll quietly turn those answers into your digital legacy.
+                Each week, Matter sends you one meaningful question by text or email. Reply through Video, Voice recordings, or text - and we'll quietly turn those answers into your digital legacy.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-6">
