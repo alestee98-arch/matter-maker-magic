@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Camera, Mic, Square } from "lucide-react";
-import selfieVideoImage from "@/assets/hero-selfie-video.png";
-import voiceRecordingImage from "@/assets/hero-voice-recording.png";
+import selfieVideoImage from "@/assets/hero-selfie-video.jpg";
+import voiceRecordingImage from "@/assets/hero-voice-recording.jpg";
 
 interface CarouselSlide {
   type: "text" | "video" | "voice";
