@@ -1,39 +1,18 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { 
-  Search, 
-  Play, 
-  Edit, 
-  Lock, 
-  Users, 
-  Archive,
-  Grid3X3,
-  Bookmark,
   Settings,
-  Plus,
-  Mic,
-  Video,
-  FileText,
-  Download,
   ChevronRight,
-  Sprout,
-  Clock,
+  Mic,
+  FileText,
+  Video,
+  Play,
   Loader2
 } from "lucide-react";
 import { motion } from "framer-motion";
-
-interface Question {
-  id: string;
-  question: string;
-  category: string;
-  depth: string | null;
-}
 
 interface Response {
   id: string;
@@ -49,33 +28,28 @@ interface Response {
   } | null;
 }
 
-const TABS = [
-  { id: "grid", icon: Grid3X3, label: "All" },
-  { id: "saved", icon: Bookmark, label: "Saved" },
-  { id: "legacy", icon: Archive, label: "Legacy" },
-];
+interface Question {
+  id: string;
+  question: string;
+  category: string;
+  depth: string | null;
+}
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
-  const [query, setQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("grid");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
-  // Data state
   const [entries, setEntries] = useState<Response[]>([]);
   const [weeklyQuestions, setWeeklyQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({ entries: 0, streak: 0, topics: 0 });
 
-  // Fetch user data
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
       
       setIsLoading(true);
       try {
-        // Fetch responses
         const { data: responsesData } = await supabase
           .from('responses')
           .select(`
@@ -92,11 +66,16 @@ export default function ProfilePage() {
             )
           `)
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(6);
         
         setEntries(responsesData || []);
         
-        // Calculate stats
+        const { count } = await supabase
+          .from('responses')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+        
         const uniqueCategories = new Set<string>();
         responsesData?.forEach(entry => {
           if (entry.questions?.category) {
@@ -105,12 +84,11 @@ export default function ProfilePage() {
         });
         
         setStats({
-          entries: responsesData?.length || 0,
-          streak: 0, // TODO: Calculate actual streak
+          entries: count || 0,
+          streak: 0,
           topics: uniqueCategories.size
         });
         
-        // Fetch unanswered questions for weekly prompts
         const answeredIds = responsesData?.map(r => r.question_id).filter(Boolean) || [];
         
         const { data: questionsData } = await supabase
@@ -120,7 +98,6 @@ export default function ProfilePage() {
         
         if (questionsData) {
           const unanswered = questionsData.filter(q => !answeredIds.includes(q.id));
-          // Get 3 questions with different depths if possible
           const selected: Question[] = [];
           const depths = ['surface', 'medium', 'deep'];
           
@@ -131,7 +108,6 @@ export default function ProfilePage() {
             }
           }
           
-          // Fill remaining slots
           while (selected.length < 3 && questionsData.length > selected.length) {
             const q = questionsData.find(q => !selected.find(s => s.id === q.id));
             if (q) selected.push(q);
@@ -150,414 +126,185 @@ export default function ProfilePage() {
     fetchData();
   }, [user]);
 
-  const filtered = useMemo(() => {
-    return entries.filter((e) => {
-      const q = query.trim().toLowerCase();
-      if (activeTab === "legacy" && e.privacy !== "legacy") return false;
-      if (!q) return true;
-      const question = e.questions?.question || '';
-      return question.toLowerCase().includes(q) || e.content.toLowerCase().includes(q);
-    });
-  }, [query, activeTab, entries]);
-
-  // Loading state
   if (profileLoading || isLoading) {
     return (
-      <div className="min-h-[400px] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-muted-foreground/20 border-t-foreground animate-spin" />
       </div>
     );
   }
 
-  // Derive display values
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'New User';
-  const handle = `@${displayName.toLowerCase().replace(/\s+/g, '')}`;
   const avatarUrl = profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${displayName}`;
   const bio = profile?.bio || "Start answering questions to build your legacy.";
-  const legacyStatus = profile?.legacy_status || 'active';
-
-  const getDepthStyle = (depth: string | null) => {
-    switch (depth) {
-      case 'surface': return 'bg-[#4a8f6a]/10 text-[#4a8f6a] border-[#4a8f6a]/20';
-      case 'medium': return 'bg-[#b5a48b]/10 text-[#b5a48b] border-[#b5a48b]/20';
-      case 'deep': return 'bg-matter-coral/10 text-matter-coral border-matter-coral/20';
-      default: return 'bg-secondary text-secondary-foreground';
-    }
-  };
-
-  const getDepthLabel = (depth: string | null) => {
-    switch (depth) {
-      case 'surface': return 'Light';
-      case 'medium': return 'Medium';
-      case 'deep': return 'Deep';
-      default: return 'Reflect';
-    }
-  };
-
-  const getMediaIcon = (mediaType: string | null) => {
-    switch (mediaType) {
-      case 'text': return <FileText className="h-4 w-4" />;
-      case 'audio': return <Mic className="h-4 w-4" />;
-      case 'video': return <Video className="h-4 w-4" />;
-      default: return <FileText className="h-4 w-4" />;
-    }
-  };
-
-  const getPrivacyIcon = (privacy: string | null) => {
-    switch (privacy) {
-      case 'private': return <Lock className="h-3 w-3" />;
-      case 'share': return <Users className="h-3 w-3" />;
-      case 'legacy': return <Clock className="h-3 w-3" />;
-      default: return <Lock className="h-3 w-3" />;
-    }
-  };
+  const aiProgress = Math.min(stats.entries * 2, 100);
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-[calc(100vh-8rem)] max-w-3xl mx-auto">
       {/* Profile Header */}
-      <div className="bg-card rounded-2xl border border-border p-6">
-        <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-          {/* Avatar */}
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="relative"
-          >
-            <div className="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden ring-4 ring-border">
-              <img
-                src={avatarUrl}
-                alt={displayName}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            {stats.entries > 0 && (
-              <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground rounded-full p-1.5">
-                <Mic className="w-3.5 h-3.5" />
-              </div>
-            )}
-          </motion.div>
-
-          {/* Info */}
-          <div className="flex-1 text-center md:text-left">
-            <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 mb-2">
-              <h1 className="text-xl font-semibold">{displayName}</h1>
-              <span className="text-sm text-muted-foreground">{handle}</span>
-            </div>
-
-            {/* Stats */}
-            <div className="flex justify-center md:justify-start gap-6 mb-3">
-              <div className="text-center md:text-left">
-                <span className="font-semibold">{stats.entries}</span>
-                <span className="text-muted-foreground text-sm ml-1">entries</span>
-              </div>
-              <div className="text-center md:text-left">
-                <span className="font-semibold">{stats.streak}</span>
-                <span className="text-muted-foreground text-sm ml-1">week streak</span>
-              </div>
-              <div className="text-center md:text-left">
-                <span className="font-semibold">{stats.topics}</span>
-                <span className="text-muted-foreground text-sm ml-1">topics</span>
-              </div>
-            </div>
-
-            {/* Bio */}
-            <p className="text-sm text-foreground max-w-md mb-3">{bio}</p>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap justify-center md:justify-start gap-2">
-              <Button variant="secondary" size="sm">
-                <Edit className="w-3.5 h-3.5 mr-1.5" />
-                Edit profile
-              </Button>
-              <Button variant="secondary" size="sm">
-                <Settings className="w-3.5 h-3.5 mr-1.5" />
-                Settings
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Circles */}
-        <div className="mt-5 pt-5 border-t border-border">
-          <div className="flex items-center gap-3 overflow-x-auto pb-1">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">Circles</span>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex flex-col items-center gap-1 min-w-[56px]"
-            >
-              <div className="w-12 h-12 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
-                <Plus className="w-5 h-5 text-muted-foreground" />
-              </div>
-              <span className="text-[10px] text-muted-foreground">New</span>
-            </motion.button>
-          </div>
-        </div>
-      </div>
-
-      {/* AI Twin + Legacy Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* AI Twin Progress */}
-        <Card>
-          <CardContent className="pt-5">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                <Mic className="w-4 h-4 text-primary" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium text-sm">AI Twin</p>
-                <p className="text-xs text-muted-foreground">Building your digital presence</p>
-              </div>
-              <span className="text-base font-semibold text-primary">{Math.min(stats.entries * 2, 100)}%</span>
-            </div>
-            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(stats.entries * 2, 100)}%` }}
-              />
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-2">
-              {stats.entries === 0 
-                ? "Start answering questions to build your AI Twin."
-                : "Continue answering to strengthen your AI Twin."}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Legacy Status */}
-        <Card>
-          <CardContent className="pt-5 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Legacy executor</span>
-              <span className="text-sm text-muted-foreground">Not set</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Status</span>
-              <Badge className="bg-[#4a8f6a]/20 text-[#4a8f6a] text-xs">
-                {legacyStatus === 'active' ? 'Active' : legacyStatus}
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Export</span>
-              <Button variant="outline" size="sm" className="h-7 text-xs">
-                <Download className="w-3 h-3 mr-1" />
-                Download
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Weekly Question */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold">This week's question</CardTitle>
-          <p className="text-xs text-muted-foreground">Choose one and respond with text, audio, or video.</p>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {weeklyQuestions.map((prompt, i) => (
-            <motion.button
-              key={prompt.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="w-full flex items-start gap-2.5 p-3 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors text-left group"
-            >
-              <Badge variant="outline" className={`text-[10px] shrink-0 ${getDepthStyle(prompt.depth)}`}>
-                {getDepthLabel(prompt.depth)}
-              </Badge>
-              <span className="flex-1 text-sm leading-relaxed">{prompt.question}</span>
-              <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity mt-0.5" />
-            </motion.button>
-          ))}
-          <div className="flex gap-2 pt-1">
-            <Button className="flex-1 h-9">Answer now</Button>
-            <Button variant="outline" className="h-9">Schedule</Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Archive Section */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold">Your Archive</h2>
-          <div className="flex gap-1">
-            <Button
-              variant={viewMode === "grid" ? "secondary" : "ghost"}
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={() => setViewMode("grid")}
-            >
-              <Grid3X3 className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "secondary" : "ghost"}
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={() => setViewMode("list")}
-            >
-              <FileText className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search your archive..."
-            className="pl-10 h-9"
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center mb-12"
+      >
+        <div className="relative inline-block mb-6">
+          <img
+            src={avatarUrl}
+            alt={displayName}
+            className="w-28 h-28 rounded-full object-cover ring-4 ring-background shadow-lg"
           />
-        </div>
-
-        {/* Tabs */}
-        <div className="flex border-b border-border mb-3">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                  isActive 
-                    ? "border-primary text-foreground" 
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Content */}
-        {filtered.length === 0 ? (
-          <div className="py-12 text-center">
-            <Archive className="w-10 h-10 mx-auto mb-3 text-muted-foreground/30" />
-            <p className="font-medium text-foreground text-sm mb-1">Your archive is empty</p>
-            <p className="text-xs text-muted-foreground">Answer your first question to start building your legacy.</p>
-          </div>
-        ) : viewMode === "grid" ? (
-          <div className="grid grid-cols-3 gap-1">
-            {filtered.map((entry, i) => (
-              <EntryTile key={entry.id} entry={entry} index={i} />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {filtered.map((entry, i) => (
-              <EntryListItem key={entry.id} entry={entry} index={i} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function EntryTile({ entry, index }: { entry: Response; index: number }) {
-  const isVideo = entry.content_type === "video";
-  const isAudio = entry.content_type === "audio";
-  const isText = entry.content_type === "text" || !entry.content_type;
-
-  return (
-    <motion.button
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.02 }}
-      className="relative aspect-square overflow-hidden bg-muted group rounded-sm"
-    >
-      {/* AUDIO: Waveform visualization */}
-      {isAudio && (
-        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex flex-col items-center justify-center p-3">
-          <div className="flex items-end justify-center gap-[2px] h-8 mb-2">
-            {[0.4, 0.7, 0.5, 1, 0.6, 0.8, 0.4, 0.9, 0.5].map((h, i) => (
-              <div
-                key={i}
-                className="w-1 bg-primary rounded-full"
-                style={{ height: `${h * 100}%` }}
-              />
-            ))}
-          </div>
-          <Mic className="w-3 h-3 text-primary" />
-        </div>
-      )}
-
-      {/* VIDEO: placeholder */}
-      {isVideo && (
-        <div className="w-full h-full bg-gradient-to-br from-matter-coral/20 to-matter-coral/5 flex flex-col items-center justify-center">
-          <Play className="w-6 h-6 text-matter-coral fill-matter-coral" />
-        </div>
-      )}
-
-      {/* TEXT: Text preview */}
-      {isText && (
-        <div className="w-full h-full bg-card p-2 flex flex-col">
-          <p className="text-[9px] leading-relaxed text-foreground/80 line-clamp-5 flex-1">
-            {entry.content}
-          </p>
-          <FileText className="w-3 h-3 text-muted-foreground mt-1" />
-        </div>
-      )}
-      
-      {/* Overlay on hover */}
-      <div className="absolute inset-0 bg-foreground/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-        <div className="text-center text-background px-2">
-          <p className="text-[10px] font-medium line-clamp-2">{entry.questions?.question || 'Reflection'}</p>
-        </div>
-      </div>
-
-      {/* Legacy indicator */}
-      {entry.privacy === "legacy" && (
-        <div className="absolute top-1 left-1 z-10">
-          <Badge className="text-[8px] px-1 py-0 bg-[#b5a48b] text-white">
-            <Archive className="w-2 h-2" />
-          </Badge>
-        </div>
-      )}
-    </motion.button>
-  );
-}
-
-function EntryListItem({ entry, index }: { entry: Response; index: number }) {
-  const getMediaIcon = (mediaType: string | null) => {
-    switch (mediaType) {
-      case 'audio': return <Mic className="h-4 w-4" />;
-      case 'video': return <Video className="h-4 w-4" />;
-      default: return <FileText className="h-4 w-4" />;
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 5 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.02 }}
-      className="flex items-start gap-3 p-3 rounded-xl border border-border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
-    >
-      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground shrink-0">
-        {getMediaIcon(entry.content_type)}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground line-clamp-1">
-          {entry.questions?.question || 'Reflection'}
-        </p>
-        <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-          {entry.content}
-        </p>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="text-[10px] text-muted-foreground">
-            {entry.created_at ? new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recently'}
-          </span>
-          {entry.privacy === 'legacy' && (
-            <Badge className="text-[8px] px-1 py-0 bg-[#b5a48b]/20 text-[#b5a48b]">Legacy</Badge>
+          {stats.entries > 0 && (
+            <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-foreground flex items-center justify-center shadow-md">
+              <Mic className="w-4 h-4 text-background" />
+            </div>
           )}
         </div>
-      </div>
-    </motion.div>
+        
+        <h1 className="text-2xl font-serif text-foreground mb-1">{displayName}</h1>
+        <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">{bio}</p>
+        
+        {/* Stats */}
+        <div className="flex justify-center gap-10 mb-6">
+          <div className="text-center">
+            <p className="text-2xl font-semibold text-foreground">{stats.entries}</p>
+            <p className="text-xs text-muted-foreground">Reflections</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-semibold text-foreground">{stats.streak}</p>
+            <p className="text-xs text-muted-foreground">Week Streak</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-semibold text-foreground">{stats.topics}</p>
+            <p className="text-xs text-muted-foreground">Topics</p>
+          </div>
+        </div>
+        
+        <Button variant="outline" size="sm" className="rounded-full">
+          <Settings className="w-4 h-4 mr-2" />
+          Edit Profile
+        </Button>
+      </motion.section>
+
+      {/* AI Twin Progress */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-card rounded-3xl p-6 border border-border mb-8"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="font-medium text-foreground">AI Twin</h2>
+            <p className="text-sm text-muted-foreground">Building your digital presence</p>
+          </div>
+          <span className="text-2xl font-semibold text-foreground">{aiProgress}%</span>
+        </div>
+        <div className="h-2 bg-secondary rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${aiProgress}%` }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="h-full bg-foreground rounded-full"
+          />
+        </div>
+        <p className="text-xs text-muted-foreground mt-3">
+          {stats.entries === 0 
+            ? "Answer your first question to start building your AI Twin."
+            : `${50 - stats.entries > 0 ? `${50 - stats.entries} more reflections` : 'Keep going'} to strengthen your AI Twin.`}
+        </p>
+      </motion.section>
+
+      {/* Weekly Questions */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="mb-10"
+      >
+        <h2 className="text-lg font-serif text-foreground mb-4">This week's questions</h2>
+        <div className="space-y-3">
+          {weeklyQuestions.map((question, i) => (
+            <button
+              key={question.id}
+              className="w-full flex items-center justify-between p-4 bg-card rounded-2xl border border-border hover:border-foreground/20 transition-all duration-200 text-left group hover-lift"
+            >
+              <div className="flex items-center gap-4">
+                <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-medium ${
+                  question.depth === 'surface' ? 'bg-matter-sage/10 text-matter-sage' :
+                  question.depth === 'medium' ? 'bg-matter-gold/10 text-matter-gold' :
+                  'bg-matter-coral/10 text-matter-coral'
+                }`}>
+                  {question.depth === 'surface' ? 'L' : question.depth === 'medium' ? 'M' : 'D'}
+                </span>
+                <span className="text-sm text-foreground leading-relaxed">{question.question}</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* Recent Reflections */}
+      {entries.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-serif text-foreground">Recent reflections</h2>
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              View all
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-2">
+            {entries.slice(0, 6).map((entry, i) => (
+              <motion.button
+                key={entry.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 + i * 0.05 }}
+                className="aspect-square rounded-2xl overflow-hidden bg-card border border-border hover:border-foreground/20 transition-all group relative"
+              >
+                {entry.content_type === 'video' && (
+                  <div className="w-full h-full bg-gradient-to-br from-matter-coral/10 to-matter-coral/5 flex items-center justify-center">
+                    <Play className="w-8 h-8 text-matter-coral fill-matter-coral" />
+                  </div>
+                )}
+                
+                {entry.content_type === 'audio' && (
+                  <div className="w-full h-full bg-gradient-to-br from-accent/10 to-accent/5 flex flex-col items-center justify-center p-4">
+                    <div className="flex items-end gap-0.5 h-8 mb-2">
+                      {[0.4, 0.7, 0.5, 1, 0.6, 0.8, 0.4].map((h, i) => (
+                        <div key={i} className="w-1 bg-accent rounded-full" style={{ height: `${h * 100}%` }} />
+                      ))}
+                    </div>
+                    <Mic className="w-4 h-4 text-accent" />
+                  </div>
+                )}
+                
+                {(!entry.content_type || entry.content_type === 'text') && (
+                  <div className="w-full h-full p-4 flex flex-col">
+                    <p className="text-xs leading-relaxed text-muted-foreground line-clamp-5 flex-1">
+                      {entry.content}
+                    </p>
+                    <FileText className="w-4 h-4 text-muted-foreground/50 mt-2" />
+                  </div>
+                )}
+                
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-foreground/90 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-3">
+                  <p className="text-xs text-background text-center line-clamp-4">
+                    {entry.questions?.question || 'Reflection'}
+                  </p>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </motion.section>
+      )}
+    </div>
   );
 }
