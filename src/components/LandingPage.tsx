@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Check, MessageSquare, Mic, Video, ChevronRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MatterLogo from '@/components/MatterLogo';
-
+import HeroCarousel from '@/components/HeroCarousel';
 interface LandingPageProps {
   onStartJourney: () => void;
   onTryDemo: () => void;
@@ -84,31 +84,14 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
               </div>
             </motion.div>
 
-            {/* Right - Hero Image/Card placeholder */}
+            {/* Right - Hero Carousel */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
               className="relative"
             >
-              <div className="bg-card rounded-3xl border border-border shadow-lg p-8">
-                <div className="bg-muted/50 rounded-2xl p-6 mb-4">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">This week's question</p>
-                  <p className="text-xl font-serif text-foreground">Who taught you how to love?</p>
-                </div>
-                <div className="flex gap-3">
-                  {[
-                    { icon: MessageSquare, label: 'Text' },
-                    { icon: Mic, label: 'Voice' },
-                    { icon: Video, label: 'Video' },
-                  ].map(({ icon: Icon, label }) => (
-                    <div key={label} className="flex-1 flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/30 border border-border">
-                      <Icon className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">{label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <HeroCarousel />
             </motion.div>
           </div>
         </div>
