@@ -115,8 +115,8 @@ export default function ArchivePage() {
   const getPrivacyStyle = (privacy: string | null) => {
     switch (privacy) {
       case 'private': return 'bg-muted text-muted-foreground';
-      case 'share': return 'bg-primary/10 text-primary';
-      case 'legacy': return 'bg-amber-500/10 text-amber-600';
+      case 'share': return 'bg-[#4a8f6a]/10 text-[#4a8f6a]';
+      case 'legacy': return 'bg-[#b5a48b]/10 text-[#b5a48b]';
       default: return 'bg-muted text-muted-foreground';
     }
   };
@@ -141,9 +141,9 @@ export default function ArchivePage() {
 
   const getDepthStyle = (depth: string | null) => {
     switch (depth) {
-      case 'surface': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
-      case 'medium': return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
-      case 'deep': return 'bg-rose-500/10 text-rose-600 border-rose-500/20';
+      case 'surface': return 'bg-[#4a8f6a]/10 text-[#4a8f6a] border-[#4a8f6a]/20';
+      case 'medium': return 'bg-[#b5a48b]/10 text-[#b5a48b] border-[#b5a48b]/20';
+      case 'deep': return 'bg-matter-coral/10 text-matter-coral border-matter-coral/20';
       default: return 'bg-secondary text-secondary-foreground';
     }
   };
@@ -332,8 +332,8 @@ function GridTile({ entry, index }: { entry: Response; index: number }) {
       )}
 
       {isVideo && (
-        <div className="w-full h-full bg-gradient-to-br from-amber-500/10 to-amber-500/5 flex items-center justify-center">
-          <Play className="w-8 h-8 text-amber-600 fill-amber-600" />
+        <div className="w-full h-full bg-gradient-to-br from-matter-coral/10 to-matter-coral/5 flex items-center justify-center">
+          <Play className="w-8 h-8 text-matter-coral fill-matter-coral" />
         </div>
       )}
 
@@ -356,7 +356,7 @@ function GridTile({ entry, index }: { entry: Response; index: number }) {
 
       {entry.privacy === "legacy" && (
         <div className="absolute top-2 left-2 z-10">
-          <Badge className="text-[10px] px-1.5 py-0.5 bg-amber-500/90 text-white">
+          <Badge className="text-[10px] px-1.5 py-0.5 bg-[#b5a48b] text-white">
             <Archive className="w-3 h-3 mr-0.5" />
             Legacy
           </Badge>

@@ -199,9 +199,9 @@ export default function HomePage() {
 
   const getDepthStyle = (depth: string | null) => {
     switch (depth) {
-      case 'surface': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
-      case 'medium': return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
-      case 'deep': return 'bg-rose-500/10 text-rose-600 border-rose-500/20';
+      case 'surface': return 'bg-[#4a8f6a]/10 text-[#4a8f6a] border-[#4a8f6a]/20';
+      case 'medium': return 'bg-[#b5a48b]/10 text-[#b5a48b] border-[#b5a48b]/20';
+      case 'deep': return 'bg-matter-coral/10 text-matter-coral border-matter-coral/20';
       default: return 'bg-secondary text-secondary-foreground';
     }
   };
@@ -227,8 +227,8 @@ export default function HomePage() {
   const getPrivacyStyle = (privacy: string | null) => {
     switch (privacy) {
       case 'private': return 'bg-muted text-muted-foreground';
-      case 'share': return 'bg-primary/10 text-primary';
-      case 'legacy': return 'bg-amber-500/10 text-amber-600';
+      case 'share': return 'bg-[#4a8f6a]/10 text-[#4a8f6a]';
+      case 'legacy': return 'bg-[#b5a48b]/10 text-[#b5a48b]';
       default: return 'bg-muted text-muted-foreground';
     }
   };

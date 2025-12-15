@@ -1,11 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Check, MessageSquare, Mic, Video, ChevronRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Check, MessageSquare, Mic, Video, ChevronRight, Sparkles, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MatterLogo from '@/components/MatterLogo';
-import VoiceDemo from '@/components/VoiceDemo';
-import HeroCarousel from '@/components/HeroCarousel';
+import grandpaPhoto from '@/assets/grandpa-robert.jpg';
 
 interface LandingPageProps {
   onStartJourney: () => void;
@@ -24,7 +23,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
           
           <div className="hidden md:flex items-center gap-8">
             <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors text-sm">How it Works</a>
-            <a href="#demo" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Experience</a>
+            <a href="#questions" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Questions</a>
             <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Pricing</a>
           </div>
           
@@ -48,7 +47,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
               transition={{ duration: 0.8 }}
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card mb-8">
-                <span className="w-2 h-2 rounded-full bg-primary" />
+                <span className="w-2 h-2 rounded-full bg-matter-coral" />
                 <span className="text-sm text-muted-foreground uppercase tracking-wider">
                   Answer by text, voice, or video
                 </span>
@@ -81,19 +80,36 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
               </div>
 
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Sparkles className="w-4 h-4 text-amber-500" />
+                <Sparkles className="w-4 h-4 text-matter-coral" />
                 <span>7 day free trial · No credit card required</span>
               </div>
             </motion.div>
 
-            {/* Right - Carousel */}
+            {/* Right - Hero Image/Card placeholder */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative lg:pl-8"
+              className="relative"
             >
-              <HeroCarousel />
+              <div className="bg-card rounded-3xl border border-border shadow-lg p-8">
+                <div className="bg-muted/50 rounded-2xl p-6 mb-4">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">This week's question</p>
+                  <p className="text-xl font-serif text-foreground">Who taught you how to love?</p>
+                </div>
+                <div className="flex gap-3">
+                  {[
+                    { icon: MessageSquare, label: 'Text' },
+                    { icon: Mic, label: 'Voice' },
+                    { icon: Video, label: 'Video' },
+                  ].map(({ icon: Icon, label }) => (
+                    <div key={label} className="flex-1 flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/30 border border-border">
+                      <Icon className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>
@@ -259,7 +275,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
       </section>
 
       {/* Questions That Matter Section */}
-      <section className="py-24 px-6 bg-background">
+      <section id="questions" className="py-24 px-6 bg-background">
         <div className="max-w-3xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
@@ -306,31 +322,100 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
         </div>
       </section>
 
-      {/* The Demo - Voice Conversation */}
-      <section id="demo" className="py-24 px-6 bg-primary">
+      {/* Voice Demo Section - Deep Green */}
+      <section className="py-24 px-6 bg-[#2d4a3e]">
         <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            {/* Profile */}
+            <div className="flex flex-col items-center mb-8">
+              <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-white/20 mb-4">
+                <img src={grandpaPhoto} alt="Grandpa Robert" className="w-full h-full object-cover" />
+              </div>
+              <h2 className="text-3xl font-serif text-white mb-2">Grandpa Robert</h2>
+              <p className="text-white/70">1942 - 2021 • 847 responses preserved</p>
+            </div>
+          </motion.div>
+
+          {/* Conversation */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="bg-[#1e2a3a] rounded-3xl p-8"
           >
-            <p className="text-matter-gold font-medium mb-4 uppercase tracking-wide text-sm">The Experience</p>
-            <h2 className="text-4xl md:text-5xl font-serif text-primary-foreground mb-6">
-              A conversation with Grandpa Robert.
-            </h2>
-            <p className="text-xl text-primary-foreground/80">
-              He passed three years ago. But today, his granddaughter called him.
+            {/* Emma's message */}
+            <div className="mb-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-matter-coral flex items-center justify-center text-white font-medium">
+                  E
+                </div>
+                <span className="text-white">Emma, 16</span>
+              </div>
+              <div className="bg-[#3a4a5a] rounded-2xl p-4 flex items-center gap-4 ml-13">
+                <button className="w-12 h-12 rounded-full bg-matter-coral flex items-center justify-center flex-shrink-0">
+                  <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                </button>
+                <div className="flex-1">
+                  <div className="flex items-center gap-1 h-8 mb-1">
+                    {Array.from({ length: 20 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-1 bg-matter-coral rounded-full"
+                        style={{ height: `${Math.random() * 100}%`, minHeight: '4px' }}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-white/70 text-sm italic">
+                    "Grandpa, I'm scared about going to college. Did you ever feel like you didn't belong?"
+                  </p>
+                </div>
+                <span className="text-white/50 text-sm">0:08</span>
+              </div>
+            </div>
+
+            {/* Grandpa's response */}
+            <div className="mb-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden">
+                  <img src={grandpaPhoto} alt="Grandpa Robert" className="w-full h-full object-cover" />
+                </div>
+                <span className="text-white">Grandpa Robert</span>
+                <span className="px-2 py-0.5 rounded text-xs bg-[#4a8f6a] text-white">AI Voice</span>
+              </div>
+              <div className="bg-[#3a5a4a] rounded-2xl p-4 flex items-center gap-4 ml-13">
+                <button className="w-12 h-12 rounded-full bg-[#4a8f6a] flex items-center justify-center flex-shrink-0">
+                  <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                </button>
+                <div className="flex-1">
+                  <div className="flex items-center gap-1 h-8 mb-1">
+                    {Array.from({ length: 25 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-1 bg-[#4a8f6a] rounded-full"
+                        style={{ height: `${Math.random() * 100}%`, minHeight: '4px' }}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-white/70 text-sm italic">
+                    "Oh honey, let me tell you something. The day I walked onto that Navy base in '62, I was terrified..."
+                  </p>
+                </div>
+                <span className="text-white/50 text-sm">0:38</span>
+              </div>
+            </div>
+
+            <p className="text-white/50 text-sm flex items-center gap-2">
+              <Mic className="w-4 h-4" />
+              Synthesized from Robert's actual voice • Based on his interview from March 2019
             </p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <VoiceDemo onTryDemo={onTryDemo} />
-          </motion.div>
+          <p className="text-center text-white/60 mt-8">Click play on either message to hear the conversation</p>
         </div>
       </section>
 
@@ -389,18 +474,18 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-32 px-6 bg-primary">
+      {/* Final CTA - Deep Green */}
+      <section className="py-32 px-6 bg-[#2d4a3e]">
         <div className="max-w-3xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-primary-foreground mb-8 leading-tight">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white mb-8 leading-tight">
               One day, someone you love will wish they could hear your voice one more time.
             </h2>
-            <p className="text-xl text-primary-foreground/80 mb-10">
+            <p className="text-xl text-white/70 mb-10">
               Make sure they can.
             </p>
             <Button 
@@ -415,11 +500,11 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-6 bg-matter-navy">
+      {/* Footer - Navy */}
+      <footer className="py-12 px-6 bg-[#1e2a3a]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <MatterLogo size="sm" className="text-white" />
-          <p className="text-white/60 text-sm max-w-md text-center">The emotional infrastructure of families — where identity is stored, preserved, and experienced across generations.</p>
+          <p className="text-white/50 text-sm max-w-md text-center">The emotional infrastructure of families — where identity is stored, preserved, and experienced across generations.</p>
           <div className="flex gap-6 text-sm text-white/50">
             <a href="#" className="hover:text-white transition-colors">Privacy</a>
             <a href="#" className="hover:text-white transition-colors">Terms</a>
