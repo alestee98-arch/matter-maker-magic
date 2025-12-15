@@ -122,42 +122,41 @@ export default function HomePage() {
 
   const weekNumber = Math.floor(entriesCount / 1) + 1;
 
+  const [showSavedConfirmation, setShowSavedConfirmation] = useState(false);
+
+  const handleSubmitWithConfirmation = async () => {
+    await handleSubmit();
+    if (!isSubmitting) {
+      setShowSavedConfirmation(true);
+      setTimeout(() => setShowSavedConfirmation(false), 3000);
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-8rem)] flex flex-col">
-      {/* Journey Context Strip - softer framing for new users */}
+      {/* Header with contextual framing */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex items-center justify-between mb-8 pb-6 border-b border-border/50"
+        className="mb-8"
       >
-        <div className="text-left">
-          <p className="text-lg font-serif text-foreground">
-            {entriesCount === 0 ? 'Your journey starts here' : `Week ${weekNumber} of your journey`}
-          </p>
-          {entriesCount > 0 && (
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {entriesCount} {entriesCount === 1 ? 'reflection' : 'reflections'} saved
-            </p>
-          )}
-        </div>
+        <p className="text-sm text-muted-foreground mb-1">
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+        </p>
+        <h1 className="text-3xl md:text-4xl text-foreground font-serif">
+          Week {weekNumber} of your journey
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">This week's reflection</p>
+        
+        {/* Quiet progress indicator */}
+        <p className="text-xs text-muted-foreground/60 mt-3">
+          {entriesCount === 0 
+            ? `Week ${weekNumber} · Your journey starts here`
+            : `Week ${weekNumber} · ${entriesCount} ${entriesCount === 1 ? 'entry' : 'entries'}`
+          }
+        </p>
       </motion.div>
-
-      {/* Header */}
-      <div className="mb-8">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <p className="text-sm text-muted-foreground mb-1">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-          </p>
-          <h1 className="text-3xl md:text-4xl text-foreground font-serif">
-            {entriesCount === 0 ? 'Begin your story' : 'Continue your story'}
-          </h1>
-        </motion.div>
-      </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col max-w-2xl">
@@ -210,7 +209,7 @@ export default function HomePage() {
                 </h2>
               </div>
 
-              {/* Response Type Selector - Write emphasized as default */}
+              {/* Response Type Selector - Write emphasized as primary */}
               <div className="flex gap-2 mb-6">
                 <button
                   onClick={() => setResponseType('text')}
@@ -228,7 +227,7 @@ export default function HomePage() {
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
                     responseType === 'audio'
                       ? 'bg-foreground text-background shadow-md'
-                      : 'border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30'
+                      : 'border border-border/60 text-muted-foreground hover:text-foreground hover:border-foreground/40 hover:bg-secondary/30'
                   }`}
                 >
                   <Mic className="w-4 h-4" />
@@ -239,7 +238,7 @@ export default function HomePage() {
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
                     responseType === 'video'
                       ? 'bg-foreground text-background shadow-md'
-                      : 'border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30'
+                      : 'border border-border/40 text-muted-foreground/80 hover:text-foreground hover:border-foreground/30 hover:bg-secondary/20'
                   }`}
                 >
                   <Video className="w-4 h-4" />
@@ -255,7 +254,7 @@ export default function HomePage() {
                       placeholder="Take your time. Share what comes to mind..."
                       value={response}
                       onChange={(e) => setResponse(e.target.value)}
-                      className="min-h-[200px] bg-transparent border-0 border-b border-border rounded-none resize-none text-lg leading-relaxed placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-foreground px-0 py-4"
+                      className="min-h-[200px] bg-secondary/30 border border-border/50 rounded-2xl resize-none text-lg leading-relaxed placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-foreground/30 focus-visible:bg-secondary/50 focus-visible:shadow-sm px-4 py-4 transition-all duration-200"
                     />
                     
                     {/* Privacy reassurance - prominent placement */}
@@ -270,11 +269,30 @@ export default function HomePage() {
                     </p>
                     
                     <div className="flex items-center justify-between pt-4">
-                      <span className="text-sm text-muted-foreground">{wordCount} words</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm text-muted-foreground">{wordCount} words</span>
+                        <AnimatePresence>
+                          {showSavedConfirmation && (
+                            <motion.span
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: -10 }}
+                              className="text-sm text-foreground/70 flex items-center gap-1.5"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                              Saved to your archive
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </div>
                       <Button 
-                        onClick={handleSubmit}
+                        onClick={handleSubmitWithConfirmation}
                         disabled={!response.trim() || isSubmitting}
-                        className="rounded-full px-8 h-12 bg-foreground text-background hover:bg-foreground/90 font-medium text-base shadow-lg shadow-foreground/10 transition-all hover:shadow-xl hover:shadow-foreground/15"
+                        className={`rounded-full px-8 h-12 font-medium text-base transition-all duration-200 ${
+                          response.trim()
+                            ? 'bg-foreground text-background hover:bg-foreground/90 shadow-lg shadow-foreground/10 hover:shadow-xl hover:shadow-foreground/15'
+                            : 'bg-muted text-muted-foreground cursor-not-allowed'
+                        }`}
                       >
                         {isSubmitting ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
