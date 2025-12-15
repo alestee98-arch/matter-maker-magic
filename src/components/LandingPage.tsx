@@ -1,13 +1,66 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Check, MessageSquare, Mic, Video, ChevronRight, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Check, MessageSquare, Mic, Video, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MatterLogo from '@/components/MatterLogo';
 import HeroCarousel from '@/components/HeroCarousel';
 interface LandingPageProps {
   onStartJourney: () => void;
   onTryDemo: () => void;
+}
+
+const step1Questions = [
+  "Who taught you how to love?",
+  "What belief have you changed your mind about?",
+  "What does home mean to you?",
+  "What are you certain about now that you weren't ten years ago?",
+  "What do you hope your loved ones inherit from you?",
+];
+
+function Step1QuestionCarousel() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % step1Questions.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      className="grid md:grid-cols-2 gap-12 items-center"
+    >
+      <div>
+        <p className="text-[#b5a48b] text-sm uppercase tracking-wider mb-4">Step 1</p>
+        <h3 className="text-3xl font-serif text-white mb-4">Get a question by text or email</h3>
+        <p className="text-white/70 leading-relaxed">
+          Every week, Matter sends you one thoughtfully curated question. No apps to download, no logins to remember — just a simple text or email when it's time to reflect.
+        </p>
+      </div>
+      <div className="flex justify-center md:justify-end">
+        <div className="bg-[#2a2a2a] rounded-2xl p-6 w-full max-w-sm border border-white/10 min-h-[100px]">
+          <p className="text-white/50 text-xs uppercase tracking-wider mb-2">questions that Matter</p>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={currentIndex}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="text-white text-lg"
+            >
+              {step1Questions[currentIndex]}
+            </motion.p>
+          </AnimatePresence>
+        </div>
+      </div>
+    </motion.div>
+  );
 }
 
 export default function LandingPage({ onStartJourney, onTryDemo }: LandingPageProps) {
@@ -104,26 +157,7 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
 
           <div className="space-y-24">
             {/* Step 1 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="grid md:grid-cols-2 gap-12 items-center"
-            >
-              <div>
-                <p className="text-[#b5a48b] text-sm uppercase tracking-wider mb-4">Step 1</p>
-                <h3 className="text-3xl font-serif text-white mb-4">Get a question by text or email</h3>
-                <p className="text-white/70 leading-relaxed">
-                  Every week, Matter sends you one thoughtfully curated question. No apps to download, no logins to remember — just a simple text or email when it's time to reflect.
-                </p>
-              </div>
-              <div className="flex justify-center md:justify-end">
-                <div className="bg-[#2a2a2a] rounded-2xl p-6 w-full max-w-sm border border-white/10">
-                  <p className="text-white/50 text-xs uppercase tracking-wider mb-2">Question #12</p>
-                  <p className="text-white text-lg">Who taught you how to love?</p>
-                </div>
-              </div>
-            </motion.div>
+            <Step1QuestionCarousel />
 
             {/* Step 2 */}
             <motion.div
@@ -249,53 +283,6 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
         </div>
       </section>
 
-      {/* Questions That Matter Section */}
-      <section id="questions" className="py-24 px-6 bg-background">
-        <div className="max-w-3xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-serif text-foreground mb-4">Questions that matter</h2>
-            <p className="text-lg text-muted-foreground">Thoughtfully curated to capture your essence</p>
-          </motion.div>
-
-          <div className="space-y-4">
-            {[
-              { category: 'Growth', question: 'What belief have you changed your mind about?' },
-              { category: 'Relationships', question: 'Who taught you how to love?' },
-              { category: 'Identity', question: 'What does home mean to you?' },
-              { category: 'Wisdom', question: "What are you certain about now that you weren't ten years ago?", highlight: true },
-              { category: 'Legacy', question: 'What do you hope your loved ones inherit from you?' },
-            ].map((item, idx) => (
-              <motion.button
-                key={idx}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.05 }}
-                className={`w-full flex items-center justify-between p-6 rounded-2xl border transition-all text-left group ${
-                  item.highlight 
-                    ? 'bg-[#b5a48b]/10 border-[#b5a48b]/30' 
-                    : 'bg-card border-border hover:border-border/80'
-                }`}
-              >
-                <div>
-                  <span className="inline-block px-3 py-1 rounded-full bg-foreground text-background text-xs uppercase tracking-wider mb-2">
-                    {item.category}
-                  </span>
-                  <p className="text-lg text-foreground">{item.question}</p>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ChevronRight className="w-5 h-5 text-background" />
-                </div>
-              </motion.button>
-            ))}
-          </div>
-        </div>
-      </section>
 
 
       {/* Pricing Section */}
