@@ -178,9 +178,9 @@ export default function ProfilePage() {
 
   const getDepthStyle = (depth: string | null) => {
     switch (depth) {
-      case 'surface': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
-      case 'medium': return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
-      case 'deep': return 'bg-rose-500/10 text-rose-600 border-rose-500/20';
+      case 'surface': return 'bg-[#4a8f6a]/10 text-[#4a8f6a] border-[#4a8f6a]/20';
+      case 'medium': return 'bg-[#b5a48b]/10 text-[#b5a48b] border-[#b5a48b]/20';
+      case 'deep': return 'bg-matter-coral/10 text-matter-coral border-matter-coral/20';
       default: return 'bg-secondary text-secondary-foreground';
     }
   };
@@ -333,7 +333,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">Status</span>
-              <Badge className="bg-emerald-500/20 text-emerald-600 text-xs">
+              <Badge className="bg-[#4a8f6a]/20 text-[#4a8f6a] text-xs">
                 {legacyStatus === 'active' ? 'Active' : legacyStatus}
               </Badge>
             </div>
@@ -489,8 +489,8 @@ function EntryTile({ entry, index }: { entry: Response; index: number }) {
 
       {/* VIDEO: placeholder */}
       {isVideo && (
-        <div className="w-full h-full bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex flex-col items-center justify-center">
-          <Play className="w-6 h-6 text-amber-600 fill-amber-600" />
+        <div className="w-full h-full bg-gradient-to-br from-matter-coral/20 to-matter-coral/5 flex flex-col items-center justify-center">
+          <Play className="w-6 h-6 text-matter-coral fill-matter-coral" />
         </div>
       )}
 
@@ -514,7 +514,7 @@ function EntryTile({ entry, index }: { entry: Response; index: number }) {
       {/* Legacy indicator */}
       {entry.privacy === "legacy" && (
         <div className="absolute top-1 left-1 z-10">
-          <Badge className="text-[8px] px-1 py-0 bg-amber-500/90 text-white">
+          <Badge className="text-[8px] px-1 py-0 bg-[#b5a48b] text-white">
             <Archive className="w-2 h-2" />
           </Badge>
         </div>
@@ -554,7 +554,7 @@ function EntryListItem({ entry, index }: { entry: Response; index: number }) {
             {entry.created_at ? new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Recently'}
           </span>
           {entry.privacy === 'legacy' && (
-            <Badge className="text-[8px] px-1 py-0 bg-amber-500/20 text-amber-600">Legacy</Badge>
+            <Badge className="text-[8px] px-1 py-0 bg-[#b5a48b]/20 text-[#b5a48b]">Legacy</Badge>
           )}
         </div>
       </div>
