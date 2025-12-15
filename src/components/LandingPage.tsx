@@ -136,9 +136,9 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
                 <div className="bg-gradient-to-br from-[#b5a48b]/30 to-[#8a7a6a]/20 rounded-2xl p-8 w-full max-w-sm border border-[#b5a48b]/20">
                   <div className="flex justify-center gap-6 mb-6">
                     {[
-                      { icon: MessageSquare, label: 'Text' },
-                      { icon: Mic, label: 'Voice' },
                       { icon: Video, label: 'Video' },
+                      { icon: Mic, label: 'Voice' },
+                      { icon: MessageSquare, label: 'Text' },
                     ].map(({ icon: Icon, label }) => (
                       <div key={label} className="flex flex-col items-center gap-2">
                         <div className="w-14 h-14 rounded-xl bg-[#2a2a2a] flex items-center justify-center">
@@ -153,9 +153,9 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
               </div>
               <div className="order-1 md:order-2">
                 <p className="text-[#b5a48b] text-sm uppercase tracking-wider mb-4">Step 2</p>
-                <h3 className="text-3xl font-serif text-white mb-4">Answer in text, voice, or selfie video</h3>
+                <h3 className="text-3xl font-serif text-white mb-4">Answer in video, voice, or text</h3>
                 <p className="text-white/70 leading-relaxed">
-                  Choose how you want to share your story. Type it out, record your voice, or capture a selfie video. Take 5 minutes or an hour — it's your moment to preserve.
+                  Choose how you want to share your story. Capture a video, record your voice, or type it out. Take 5 minutes or an hour - it's your moment to preserve.
                 </p>
               </div>
             </motion.div>
