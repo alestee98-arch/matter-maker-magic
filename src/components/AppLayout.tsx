@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Archive, User, Settings, Menu, X, LogOut } from 'lucide-react';
+import { Home, User, Settings, Menu, X, LogOut } from 'lucide-react';
 import MatterLogo from '@/components/MatterLogo';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -7,18 +7,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  currentView: 'home' | 'archive' | 'profile' | 'settings' | 'voice-clone';
-  onViewChange: (view: 'home' | 'archive' | 'profile' | 'settings' | 'voice-clone') => void;
+  currentView: 'home' | 'profile' | 'settings' | 'voice-clone';
+  onViewChange: (view: 'home' | 'profile' | 'settings' | 'voice-clone') => void;
   onBack?: () => void;
 }
 
 const navigation: Array<{
-  id: 'home' | 'archive' | 'profile' | 'settings';
+  id: 'home' | 'profile' | 'settings';
   label: string;
   icon: any;
 }> = [
   { id: 'home', label: 'Home', icon: Home },
-  { id: 'archive', label: 'Archive', icon: Archive },
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];

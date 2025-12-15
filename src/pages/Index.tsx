@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth';
 import LandingPage from '@/components/LandingPage';
 import InteractiveDemo from '@/components/InteractiveDemo';
 import HomePage from '@/components/HomePage';
-import ArchivePage from '@/components/ArchivePage';
 import ProfilePage from '@/components/ProfilePage';
 import VoiceCloning from '@/components/VoiceCloning';
 import AppLayout from '@/components/AppLayout';
@@ -15,7 +14,7 @@ export default function Index() {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<'landing' | 'demo' | 'app'>('landing');
-  const [appView, setAppView] = useState<'home' | 'archive' | 'profile' | 'settings' | 'voice-clone'>('home');
+  const [appView, setAppView] = useState<'home' | 'profile' | 'settings' | 'voice-clone'>('home');
 
   // Show loading state
   if (loading) {
@@ -75,8 +74,6 @@ export default function Index() {
         }}
       >
         {appView === 'home' && <HomePage />}
-        
-        {appView === 'archive' && <ArchivePage />}
         
         {appView === 'profile' && <ProfilePage />}
         
