@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Camera, Mic, Square, Video } from "lucide-react";
+import { Camera, Mic, Square } from "lucide-react";
+import selfieVideoImage from "@/assets/hero-selfie-video.png";
+import voiceRecordingImage from "@/assets/hero-voice-recording.png";
 
 interface CarouselSlide {
   type: "text" | "video" | "voice";
@@ -166,13 +168,15 @@ function TextSlide({ slide }: { slide: CarouselSlide }) {
 function VideoSlide({ slide }: { slide: CarouselSlide }) {
   return (
     <div className="p-4">
-      <div
-        className="aspect-[4/5] bg-cover bg-center relative rounded-2xl overflow-hidden"
-        style={{
-          backgroundImage:
-            "url(https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=900&q=80)",
-        }}
-      >
+      <div className="aspect-[4/5] relative rounded-2xl overflow-hidden">
+        <img
+          src={selfieVideoImage}
+          alt="Selfie video response preview showing someone recording a weekly question answer"
+          className="absolute inset-0 h-full w-full object-cover"
+          loading="eager"
+          decoding="async"
+        />
+
         <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-transparent to-foreground/80" />
 
         <div className="absolute top-6 left-6 right-20">
@@ -190,7 +194,7 @@ function VideoSlide({ slide }: { slide: CarouselSlide }) {
         <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-8">
           <button
             className="w-12 h-12 rounded-full bg-foreground/30 backdrop-blur-sm flex items-center justify-center text-background hover:bg-foreground/40 transition-colors border border-background/20"
-            aria-label="Flip camera"
+            aria-label="Camera"
             type="button"
           >
             <Camera className="w-5 h-5" />
@@ -206,7 +210,7 @@ function VideoSlide({ slide }: { slide: CarouselSlide }) {
 
           <button
             className="w-12 h-12 rounded-full bg-foreground/30 backdrop-blur-sm flex items-center justify-center text-background hover:bg-foreground/40 transition-colors border border-background/20"
-            aria-label="Settings"
+            aria-label="Flip camera"
             type="button"
           >
             <svg
@@ -216,8 +220,12 @@ function VideoSlide({ slide }: { slide: CarouselSlide }) {
               stroke="currentColor"
               strokeWidth="2"
             >
-              <circle cx="12" cy="12" r="3" />
-              <path d="M12 3v1m0 16v1M5.6 5.6l.7.7m11.4 11.4l.7.7M3 12h1m16 0h1M5.6 18.4l.7-.7m11.4-11.4l.7-.7" />
+              <path d="M16 3h5v5" />
+              <path d="M21 3l-6 6" />
+              <path d="M8 21H3v-5" />
+              <path d="M3 21l6-6" />
+              <path d="M12 7a5 5 0 015 5" />
+              <path d="M12 17a5 5 0 01-5-5" />
             </svg>
           </button>
         </div>
@@ -238,13 +246,15 @@ function VoiceSlide({ slide }: { slide: CarouselSlide }) {
 
   return (
     <div className="p-4">
-      <div
-        className="aspect-[4/5] bg-cover bg-center relative rounded-2xl overflow-hidden"
-        style={{
-          backgroundImage:
-            "url(https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=900&q=80)",
-        }}
-      >
+      <div className="aspect-[4/5] relative rounded-2xl overflow-hidden">
+        <img
+          src={voiceRecordingImage}
+          alt="Voice response preview showing someone recording an audio answer to a weekly question"
+          className="absolute inset-0 h-full w-full object-cover"
+          loading="lazy"
+          decoding="async"
+        />
+
         <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-foreground/30 to-foreground/85" />
 
         <div className="absolute top-6 left-6 right-6">
