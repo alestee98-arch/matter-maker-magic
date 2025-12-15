@@ -507,9 +507,12 @@ export default function Auth() {
       {/* Right Side - Decorative (hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#1a1a1a] items-center justify-center p-12">
         <div className="max-w-md text-center">
-          <blockquote className="text-3xl font-serif text-white leading-relaxed mb-8">
-            "Your story deserves to be remembered. Your voice deserves to be heard - forever."
-          </blockquote>
+          <p className="text-3xl font-serif text-white leading-relaxed mb-2">
+            Your story deserves to be remembered.
+          </p>
+          <p className="text-3xl font-serif text-white leading-relaxed mb-8">
+            Your voice deserves to be heard - forever.
+          </p>
           <div className="flex items-center justify-center gap-4">
             <div className="w-12 h-12 rounded-full bg-[#b5a48b]/20 flex items-center justify-center">
               <span className="text-[#b5a48b] font-serif text-lg">M</span>
