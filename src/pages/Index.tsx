@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import LandingPage from '@/components/LandingPage';
 import InteractiveDemo from '@/components/InteractiveDemo';
-import WeeklyQuestion from '@/components/WeeklyQuestion';
-import PersonalArchive from '@/components/PersonalArchive';
+import HomePage from '@/components/HomePage';
+import ArchivePage from '@/components/ArchivePage';
 import ProfilePage from '@/components/ProfilePage';
 import VoiceCloning from '@/components/VoiceCloning';
 import AppLayout from '@/components/AppLayout';
@@ -74,14 +74,9 @@ export default function Index() {
           setCurrentView('landing');
         }}
       >
-        {appView === 'home' && (
-          <div className="grid gap-8 lg:grid-cols-2">
-            <WeeklyQuestion />
-            <PersonalArchive />
-          </div>
-        )}
+        {appView === 'home' && <HomePage />}
         
-        {appView === 'archive' && <PersonalArchive />}
+        {appView === 'archive' && <ArchivePage />}
         
         {appView === 'profile' && <ProfilePage />}
         
