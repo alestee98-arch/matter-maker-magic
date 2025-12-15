@@ -120,14 +120,39 @@ export default function HomePage() {
 
   const wordCount = response.trim().split(/\s+/).filter(Boolean).length;
 
+  const weekNumber = Math.floor(entriesCount / 1) + 1;
+
   return (
     <div className="min-h-[calc(100vh-8rem)] flex flex-col">
+      {/* Journey Context Strip */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex items-center justify-between mb-8 pb-6 border-b border-border/50"
+      >
+        <div className="flex items-center gap-6">
+          <div className="text-center">
+            <p className="text-2xl font-serif text-foreground">{entriesCount}</p>
+            <p className="text-xs text-muted-foreground">reflections saved</p>
+          </div>
+          <div className="w-px h-8 bg-border/50" />
+          <div className="text-center">
+            <p className="text-2xl font-serif text-foreground">Week {weekNumber}</p>
+            <p className="text-xs text-muted-foreground">of your journey</p>
+          </div>
+        </div>
+        <p className="text-sm text-muted-foreground/80 max-w-[200px] text-right hidden sm:block">
+          Saved privately for you — and for those who matter most.
+        </p>
+      </motion.div>
+
       {/* Header */}
       <div className="mb-8">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
         >
           <p className="text-sm text-muted-foreground mb-1">
             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -167,8 +192,8 @@ export default function HomePage() {
               >
                 <Check className="w-8 h-8 text-background" />
               </motion.div>
-              <h2 className="text-2xl font-serif text-foreground mb-2">Beautiful</h2>
-              <p className="text-muted-foreground">Your reflection has been preserved.</p>
+              <h2 className="text-2xl font-serif text-foreground mb-2">Preserved</h2>
+              <p className="text-muted-foreground">This moment is now part of your legacy.</p>
             </motion.div>
           ) : currentQuestion ? (
             <motion.div
@@ -214,14 +239,20 @@ export default function HomePage() {
               {/* Response Area */}
               <div className="flex-1">
                 {responseType === 'text' && (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <Textarea
                       placeholder="Take your time. Share what comes to mind..."
                       value={response}
                       onChange={(e) => setResponse(e.target.value)}
                       className="min-h-[200px] bg-transparent border-0 border-b border-border rounded-none resize-none text-lg leading-relaxed placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-foreground px-0 py-4"
                     />
-                    <div className="flex items-center justify-between">
+                    
+                    {/* Micro-prompt reassurance */}
+                    <p className="text-sm text-muted-foreground/60 italic">
+                      You don't need the perfect words. Start anywhere — you can always come back.
+                    </p>
+                    
+                    <div className="flex items-center justify-between pt-2">
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span>{wordCount} words</span>
                         <span className="flex items-center gap-1">
@@ -232,14 +263,13 @@ export default function HomePage() {
                       <Button 
                         onClick={handleSubmit}
                         disabled={!response.trim() || isSubmitting}
-                        className="rounded-full px-6 h-11 bg-foreground text-background hover:bg-foreground/90"
+                        className="rounded-full px-8 h-12 bg-foreground text-background hover:bg-foreground/90 font-medium text-base shadow-lg shadow-foreground/10 transition-all hover:shadow-xl hover:shadow-foreground/15"
                       >
                         {isSubmitting ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                           <>
-                            Save
-                            <ArrowRight className="w-4 h-4 ml-2" />
+                            Keep this
                           </>
                         )}
                       </Button>
