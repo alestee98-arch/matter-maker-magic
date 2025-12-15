@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Play, Mic, Check, Star, MessageCircle, Shield, Lock, Volume2, Phone, Pause } from 'lucide-react';
+import { ArrowRight, Play, Mic, Check, Star, MessageCircle, Shield, Lock, Volume2, Phone, Pause, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MatterLogo from '@/components/MatterLogo';
 import VoiceDemo from '@/components/VoiceDemo';
+import HeroCarousel from '@/components/HeroCarousel';
 import heroImage from '@/assets/hero-legacy.jpg';
 import grandpaPhoto from '@/assets/grandpa-robert.jpg';
 
@@ -19,64 +20,83 @@ export default function LandingPage({ onStartJourney, onTryDemo }: LandingPagePr
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-primary">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <MatterLogo size="md" className="text-primary-foreground" />
+          <MatterLogo size="md" className="text-foreground" />
           
           <div className="hidden md:flex items-center gap-8">
-            <a href="#how-it-works" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">How it Works</a>
-            <a href="#demo" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">Experience</a>
-            <a href="#pricing" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">Pricing</a>
+            <a href="#how-it-works" className="text-muted-foreground hover:text-foreground transition-colors text-sm">How it Works</a>
+            <a href="#demo" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Experience</a>
+            <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors text-sm">Pricing</a>
           </div>
           
           <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={() => navigate('/auth?mode=login')} className="text-primary-foreground hover:bg-primary-foreground/10">Sign In</Button>
-            <Button onClick={() => navigate('/auth?mode=signup')} className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 rounded-full px-6">
+            <Button variant="ghost" onClick={() => navigate('/auth?mode=login')} className="text-muted-foreground hover:text-foreground">Sign In</Button>
+            <Button onClick={() => navigate('/auth?mode=signup')} className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-6">
               Begin
             </Button>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative min-h-screen bg-primary">
-        <div className="absolute inset-0">
-          <img 
-            src={heroImage} 
-            alt="A woman hearing a beloved voice"
-            className="w-full h-full object-cover"
-          />
-          <div className="hero-overlay absolute inset-0" />
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-20 min-h-screen flex items-center">
-          <div className="max-w-2xl">
+      {/* Hero Section - Clean & Modern */}
+      <section className="relative min-h-screen bg-background pt-16">
+        <div className="max-w-7xl mx-auto px-6 py-20 lg:py-32">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            {/* Left Content */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1 }}
+              transition={{ duration: 0.8 }}
             >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-primary-foreground leading-[1.2] mb-6">
-                Your story. Your voice —<br />
-                <span className="text-matter-gold">kept alive.</span>
-              </h1>
-
-              <div className="text-lg text-primary-foreground/80 mb-10 max-w-xl space-y-4">
-                <p>Each week, Matter sends you one meaningful question by text or email — no apps or logins needed.</p>
-                <p>Reply in your voice or in writing, and Matter quietly turns those answers into your digital legacy.</p>
-                <p>Over time, your responses form a beautifully curated profile — your story and your voice, preserved for the people who matter most.</p>
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card mb-8">
+                <span className="w-2 h-2 rounded-full bg-primary" />
+                <span className="text-sm text-muted-foreground uppercase tracking-wider">
+                  Answer by text, voice, or video
+                </span>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 mb-12">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-foreground leading-[1.15] mb-6">
+                Your story. Your voice — kept alive.
+              </h1>
+
+              <p className="text-lg text-muted-foreground mb-10 max-w-lg leading-relaxed">
+                Each week, Matter sends you one meaningful question by text or email. Reply in text, voice, or selfie video — and we'll quietly turn those answers into your digital legacy.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 <Button 
                   onClick={onStartJourney}
                   size="lg" 
-                  className="bg-matter-coral hover:bg-matter-coral/90 text-white rounded-full text-lg px-8 h-14 shadow-lg"
+                  className="bg-foreground text-background hover:bg-foreground/90 rounded-full text-base px-8 h-12"
                 >
-                  Start Your Legacy
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  Start your story
+                </Button>
+                <Button 
+                  variant="outline"
+                  size="lg" 
+                  onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="rounded-full text-base px-8 h-12 border-border"
+                >
+                  How it works
                 </Button>
               </div>
+
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                <span>7 day free trial · No credit card required</span>
+              </div>
+            </motion.div>
+
+            {/* Right - Carousel */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative lg:pl-8"
+            >
+              <HeroCarousel />
             </motion.div>
           </div>
         </div>
