@@ -124,27 +124,23 @@ export default function HomePage() {
 
   return (
     <div className="min-h-[calc(100vh-8rem)] flex flex-col">
-      {/* Journey Context Strip */}
+      {/* Journey Context Strip - softer framing for new users */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="flex items-center justify-between mb-8 pb-6 border-b border-border/50"
       >
-        <div className="flex items-center gap-6">
-          <div className="text-center">
-            <p className="text-2xl font-serif text-foreground">{entriesCount}</p>
-            <p className="text-xs text-muted-foreground">reflections saved</p>
-          </div>
-          <div className="w-px h-8 bg-border/50" />
-          <div className="text-center">
-            <p className="text-2xl font-serif text-foreground">Week {weekNumber}</p>
-            <p className="text-xs text-muted-foreground">of your journey</p>
-          </div>
+        <div className="text-left">
+          <p className="text-lg font-serif text-foreground">
+            {entriesCount === 0 ? 'Your journey starts here' : `Week ${weekNumber} of your journey`}
+          </p>
+          {entriesCount > 0 && (
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {entriesCount} {entriesCount === 1 ? 'reflection' : 'reflections'} saved
+            </p>
+          )}
         </div>
-        <p className="text-sm text-muted-foreground/80 max-w-[200px] text-right hidden sm:block">
-          Saved privately for you — and for those who matter most.
-        </p>
       </motion.div>
 
       {/* Header */}
@@ -214,26 +210,41 @@ export default function HomePage() {
                 </h2>
               </div>
 
-              {/* Response Type Selector */}
+              {/* Response Type Selector - Write emphasized as default */}
               <div className="flex gap-2 mb-6">
-                {[
-                  { type: 'text' as const, icon: PenTool, label: 'Write' },
-                  { type: 'audio' as const, icon: Mic, label: 'Record' },
-                  { type: 'video' as const, icon: Video, label: 'Video' },
-                ].map(({ type, icon: Icon, label }) => (
-                  <button
-                    key={type}
-                    onClick={() => setResponseType(type)}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                      responseType === type
-                        ? 'bg-foreground text-background'
-                        : 'bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {label}
-                  </button>
-                ))}
+                <button
+                  onClick={() => setResponseType('text')}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                    responseType === 'text'
+                      ? 'bg-foreground text-background shadow-md'
+                      : 'bg-foreground/10 text-foreground hover:bg-foreground/20'
+                  }`}
+                >
+                  <PenTool className="w-4 h-4" />
+                  Write
+                </button>
+                <button
+                  onClick={() => setResponseType('audio')}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                    responseType === 'audio'
+                      ? 'bg-foreground text-background shadow-md'
+                      : 'border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30'
+                  }`}
+                >
+                  <Mic className="w-4 h-4" />
+                  Record
+                </button>
+                <button
+                  onClick={() => setResponseType('video')}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                    responseType === 'video'
+                      ? 'bg-foreground text-background shadow-md'
+                      : 'border border-border text-muted-foreground hover:text-foreground hover:border-foreground/30'
+                  }`}
+                >
+                  <Video className="w-4 h-4" />
+                  Video
+                </button>
               </div>
 
               {/* Response Area */}
@@ -247,19 +258,19 @@ export default function HomePage() {
                       className="min-h-[200px] bg-transparent border-0 border-b border-border rounded-none resize-none text-lg leading-relaxed placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-foreground px-0 py-4"
                     />
                     
+                    {/* Privacy reassurance - prominent placement */}
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground/70 py-2">
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>Saved privately — only visible to you unless you choose otherwise</span>
+                    </div>
+                    
                     {/* Micro-prompt reassurance */}
-                    <p className="text-sm text-muted-foreground/60 italic">
+                    <p className="text-sm text-muted-foreground/50 italic">
                       You don't need the perfect words. Start anywhere — you can always come back.
                     </p>
                     
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>{wordCount} words</span>
-                        <span className="flex items-center gap-1">
-                          <Lock className="w-3.5 h-3.5" />
-                          Private
-                        </span>
-                      </div>
+                    <div className="flex items-center justify-between pt-4">
+                      <span className="text-sm text-muted-foreground">{wordCount} words</span>
                       <Button 
                         onClick={handleSubmit}
                         disabled={!response.trim() || isSubmitting}
@@ -268,9 +279,7 @@ export default function HomePage() {
                         {isSubmitting ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <>
-                            Keep this
-                          </>
+                          'Save response'
                         )}
                       </Button>
                     </div>
