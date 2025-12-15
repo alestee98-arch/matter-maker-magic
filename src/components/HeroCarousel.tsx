@@ -13,7 +13,7 @@ interface CarouselSlide {
 
 const typeLabels: Record<CarouselSlide["type"], string> = {
   text: "Text",
-  video: "Selfie Video",
+  video: "Video",
   voice: "Voice",
 };
 
