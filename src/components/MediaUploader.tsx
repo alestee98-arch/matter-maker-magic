@@ -8,14 +8,16 @@ import {
   Square,
   Trash2,
   Loader2,
-  Check
+  Check,
+  Image as ImageIcon,
+  Camera
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
 interface MediaUploaderProps {
-  type: 'audio' | 'video';
+  type: 'audio' | 'video' | 'photo';
   onUpload: (url: string) => void;
   onClear: () => void;
   mediaUrl: string | null;
@@ -27,12 +29,15 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
   const [isRecording, setIsRecording] = useState(false);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const startRecording = async () => {
     try {
@@ -87,6 +92,51 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
     }
   };
 
+  // Photo-specific functions
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'user' } 
+      });
+      streamRef.current = stream;
+      
+      if (videoPreviewRef.current) {
+        videoPreviewRef.current.srcObject = stream;
+        videoPreviewRef.current.play();
+      }
+      setIsCameraActive(true);
+    } catch (error) {
+      console.error('Error starting camera:', error);
+    }
+  };
+
+  const capturePhoto = () => {
+    if (videoPreviewRef.current && canvasRef.current) {
+      const video = videoPreviewRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Mirror the image for selfie
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        setCapturedPhoto(dataUrl);
+        stopCamera();
+      }
+    }
+  };
+
+  const stopCamera = () => {
+    streamRef.current?.getTracks().forEach(track => track.stop());
+    if (videoPreviewRef.current) {
+      videoPreviewRef.current.srcObject = null;
+    }
+    setIsCameraActive(false);
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -99,9 +149,17 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
     
     setIsUploading(true);
     try {
-      const fileExt = file instanceof File 
-        ? file.name.split('.').pop() 
-        : type === 'video' ? 'webm' : 'webm';
+      let fileExt = 'webm';
+      if (file instanceof File) {
+        fileExt = file.name.split('.').pop() || 'webm';
+      } else if (type === 'video') {
+        fileExt = 'webm';
+      } else if (type === 'audio') {
+        fileExt = 'webm';
+      } else if (type === 'photo') {
+        fileExt = 'jpg';
+      }
+      
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
       const { error: uploadError, data } = await supabase.storage
@@ -116,6 +174,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
 
       onUpload(publicUrl);
       setRecordedBlob(null);
+      setCapturedPhoto(null);
     } catch (error) {
       console.error('Error uploading file:', error);
     } finally {
@@ -129,8 +188,18 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
     }
   };
 
+  const handleUploadPhoto = async () => {
+    if (capturedPhoto) {
+      // Convert data URL to blob
+      const response = await fetch(capturedPhoto);
+      const blob = await response.blob();
+      await uploadFile(blob);
+    }
+  };
+
   const clearRecording = () => {
     setRecordedBlob(null);
+    setCapturedPhoto(null);
     setRecordingDuration(0);
     onClear();
   };
@@ -141,7 +210,8 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const Icon = type === 'video' ? Video : Mic;
+  const Icon = type === 'video' ? Video : type === 'photo' ? ImageIcon : Mic;
+  const acceptType = type === 'video' ? 'video/*' : type === 'photo' ? 'image/*' : 'audio/*';
 
   // Already uploaded state
   if (mediaUrl) {
@@ -155,6 +225,12 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
           <video 
             src={mediaUrl} 
             controls 
+            className="w-full aspect-video object-cover"
+          />
+        ) : type === 'photo' ? (
+          <img 
+            src={mediaUrl} 
+            alt="Uploaded photo"
             className="w-full aspect-video object-cover"
           />
         ) : (
@@ -174,6 +250,79 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
         <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-foreground/90 text-background text-xs font-medium flex items-center gap-1.5">
           <Check className="w-3 h-3" />
           Ready to save
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Photo captured state
+  if (capturedPhoto) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="rounded-2xl overflow-hidden bg-secondary/50"
+      >
+        <img 
+          src={capturedPhoto} 
+          alt="Captured"
+          className="w-full aspect-video object-cover"
+        />
+        <div className="p-4 flex items-center justify-between border-t border-border/30">
+          <button
+            onClick={() => { setCapturedPhoto(null); startCamera(); }}
+            className="px-4 py-2 rounded-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Camera className="w-4 h-4 inline mr-2" />
+            Retake
+          </button>
+          <Button
+            onClick={handleUploadPhoto}
+            disabled={isUploading}
+            className="rounded-full bg-foreground text-background hover:bg-foreground/90"
+          >
+            {isUploading ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <Check className="w-4 h-4 mr-2" />
+            )}
+            Use this photo
+          </Button>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Camera active state (photo)
+  if (isCameraActive && type === 'photo') {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="relative rounded-2xl overflow-hidden bg-secondary/50"
+      >
+        <video 
+          ref={videoPreviewRef}
+          muted
+          playsInline
+          className="w-full aspect-video object-cover scale-x-[-1]"
+        />
+        <canvas ref={canvasRef} className="hidden" />
+        
+        {/* Capture button */}
+        <div className="absolute bottom-4 inset-x-0 flex justify-center gap-4">
+          <button
+            onClick={stopCamera}
+            className="w-12 h-12 rounded-full bg-background/80 flex items-center justify-center hover:bg-background transition-colors"
+          >
+            <Trash2 className="w-5 h-5 text-muted-foreground" />
+          </button>
+          <button
+            onClick={capturePhoto}
+            className="w-16 h-16 rounded-full bg-white border-4 border-foreground flex items-center justify-center hover:scale-105 transition-transform shadow-xl"
+          >
+            <div className="w-12 h-12 rounded-full bg-foreground" />
+          </button>
         </div>
       </motion.div>
     );
@@ -304,37 +453,64 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
       </div>
       
       <p className="text-foreground font-medium mb-1">
-        {type === 'video' ? 'Record a video' : 'Record your voice'}
+        {type === 'video' ? 'Record a video' : type === 'photo' ? 'Take or upload a photo' : 'Record your voice'}
       </p>
       <p className="text-sm text-muted-foreground mb-6">
-        Share your story in your own {type === 'video' ? 'way' : 'voice'}
+        {type === 'video' 
+          ? 'Share your story in your own way' 
+          : type === 'photo' 
+          ? 'Capture a moment that matters'
+          : 'Share your story in your own voice'}
       </p>
       
       <div className="flex gap-3">
-        <Button
-          onClick={startRecording}
-          size="lg"
-          className="rounded-full bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-        >
-          <Icon className="w-4 h-4 mr-2" />
-          Start recording
-        </Button>
-        
-        <Button
-          onClick={() => fileInputRef.current?.click()}
-          variant="outline"
-          size="lg"
-          className="rounded-full border-border/60"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          Upload file
-        </Button>
+        {type === 'photo' ? (
+          <>
+            <Button
+              onClick={startCamera}
+              size="lg"
+              className="rounded-full bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+            >
+              <Camera className="w-4 h-4 mr-2" />
+              Take photo
+            </Button>
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              variant="outline"
+              size="lg"
+              className="rounded-full border-border/60"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              onClick={startRecording}
+              size="lg"
+              className="rounded-full bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+            >
+              <Icon className="w-4 h-4 mr-2" />
+              Start recording
+            </Button>
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              variant="outline"
+              size="lg"
+              className="rounded-full border-border/60"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload file
+            </Button>
+          </>
+        )}
       </div>
       
       <input
         ref={fileInputRef}
         type="file"
-        accept={type === 'video' ? 'video/*' : 'audio/*'}
+        accept={acceptType}
         onChange={handleFileSelect}
         className="hidden"
       />

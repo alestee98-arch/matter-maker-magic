@@ -14,7 +14,8 @@ import {
   Video,
   Play,
   ArrowRight,
-  Edit3
+  Edit3,
+  Image as ImageIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -29,6 +30,7 @@ interface Response {
   question_id: string | null;
   audio_url?: string | null;
   video_url?: string | null;
+  photo_url?: string | null;
   questions?: {
     question: string;
     category: string;
@@ -78,6 +80,7 @@ export default function ProfilePage() {
             question_id,
             audio_url,
             video_url,
+            photo_url,
             questions (
               question,
               category,
@@ -364,6 +367,7 @@ function LegacyCard({
   
   const isVideo = entry.content_type === 'video';
   const isAudio = entry.content_type === 'audio';
+  const isPhoto = entry.content_type === 'photo';
   const isText = !entry.content_type || entry.content_type === 'text';
   
   const formattedDate = entry.created_at 
@@ -419,8 +423,9 @@ function LegacyCard({
               {isText && <Type className="w-3.5 h-3.5" strokeWidth={2} />}
               {isAudio && <Mic className="w-3.5 h-3.5" strokeWidth={2} />}
               {isVideo && <Video className="w-3.5 h-3.5" strokeWidth={2} />}
+              {isPhoto && <ImageIcon className="w-3.5 h-3.5" strokeWidth={2} />}
               <span className="text-[11px] font-semibold uppercase tracking-wide">
-                {isText ? 'Text' : isAudio ? 'Voice' : 'Video'}
+                {isText ? 'Text' : isAudio ? 'Voice' : isVideo ? 'Video' : 'Photo'}
               </span>
             </div>
           </div>
@@ -456,6 +461,16 @@ function LegacyCard({
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {isPhoto && entry.photo_url && (
+            <div className="relative aspect-[4/3] bg-secondary rounded-xl overflow-hidden mb-5">
+              <img 
+                src={entry.photo_url} 
+                alt="Photo response"
+                className="w-full h-full object-cover"
+              />
             </div>
           )}
 
@@ -518,8 +533,9 @@ function LegacyCard({
                 {isText && <Type className="w-3 h-3" />}
                 {isAudio && <Mic className="w-3 h-3" />}
                 {isVideo && <Video className="w-3 h-3" />}
+                {isPhoto && <ImageIcon className="w-3 h-3" />}
                 <span className="text-[11px] font-semibold uppercase">
-                  {isText ? 'Text' : isAudio ? 'Voice' : 'Video'}
+                  {isText ? 'Text' : isAudio ? 'Voice' : isVideo ? 'Video' : 'Photo'}
                 </span>
               </div>
             </div>
