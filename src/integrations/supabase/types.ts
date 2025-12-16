@@ -276,6 +276,7 @@ export type Database = {
           extracted_emotions: string[] | null
           extracted_values: string[] | null
           id: string
+          photo_url: string | null
           privacy: string | null
           question_id: string | null
           summary: string | null
@@ -294,6 +295,7 @@ export type Database = {
           extracted_emotions?: string[] | null
           extracted_values?: string[] | null
           id?: string
+          photo_url?: string | null
           privacy?: string | null
           question_id?: string | null
           summary?: string | null
@@ -312,6 +314,7 @@ export type Database = {
           extracted_emotions?: string[] | null
           extracted_values?: string[] | null
           id?: string
+          photo_url?: string | null
           privacy?: string | null
           question_id?: string | null
           summary?: string | null

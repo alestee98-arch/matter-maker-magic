@@ -8,7 +8,8 @@ import {
   Lock, 
   Loader2,
   Check,
-  Sparkles
+  Sparkles,
+  Image as ImageIcon
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,7 +30,7 @@ export default function HomePage() {
   
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [response, setResponse] = useState('');
-  const [responseType, setResponseType] = useState<'text' | 'audio' | 'video'>('text');
+  const [responseType, setResponseType] = useState<'text' | 'audio' | 'video' | 'photo'>('text');
   const [isLoadingQuestion, setIsLoadingQuestion] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -89,7 +90,7 @@ export default function HomePage() {
     
     // For text, require content. For media, require mediaUrl
     if (responseType === 'text' && !response.trim()) return;
-    if ((responseType === 'audio' || responseType === 'video') && !mediaUrl) return;
+    if ((responseType === 'audio' || responseType === 'video' || responseType === 'photo') && !mediaUrl) return;
     
     setIsSubmitting(true);
     try {
@@ -111,6 +112,10 @@ export default function HomePage() {
       
       if (responseType === 'video' && mediaUrl) {
         insertData.video_url = mediaUrl;
+      }
+      
+      if (responseType === 'photo' && mediaUrl) {
+        insertData.photo_url = mediaUrl;
       }
       
       const { error } = await supabase
@@ -232,7 +237,7 @@ export default function HomePage() {
               </div>
 
               {/* Response Type Selector */}
-              <div className="flex gap-2 mb-6">
+              <div className="flex gap-2 mb-6 flex-wrap">
                 <button
                   onClick={() => setResponseType('text')}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
@@ -265,6 +270,17 @@ export default function HomePage() {
                 >
                   <Video className="w-4 h-4" />
                   Video
+                </button>
+                <button
+                  onClick={() => setResponseType('photo')}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
+                    responseType === 'photo'
+                      ? 'bg-foreground text-background shadow-md'
+                      : 'border border-border/40 text-muted-foreground/80 hover:text-foreground hover:border-foreground/30 hover:bg-secondary/20'
+                  }`}
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  Photo
                 </button>
               </div>
 
@@ -360,6 +376,38 @@ export default function HomePage() {
                   <div className="space-y-4">
                     <MediaUploader
                       type="video"
+                      onUpload={setMediaUrl}
+                      onClear={() => setMediaUrl(null)}
+                      mediaUrl={mediaUrl}
+                    />
+                    
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground/70 py-2">
+                      <Lock className="w-3.5 h-3.5" />
+                      <span>Saved privately — only visible to you unless you choose otherwise</span>
+                    </div>
+                    
+                    {mediaUrl && (
+                      <div className="flex justify-end pt-4">
+                        <Button 
+                          onClick={handleSubmitWithConfirmation}
+                          disabled={isSubmitting}
+                          className="rounded-full px-8 h-12 font-medium text-base bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                        >
+                          {isSubmitting ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            'Save response'
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {responseType === 'photo' && (
+                  <div className="space-y-4">
+                    <MediaUploader
+                      type="photo"
                       onUpload={setMediaUrl}
                       onClear={() => setMediaUrl(null)}
                       mediaUrl={mediaUrl}
