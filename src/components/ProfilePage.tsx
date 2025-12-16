@@ -245,6 +245,10 @@ export default function ProfilePage() {
 
 // Response Card - Full content display with proper visual weight
 function ResponseCard({ entry, index }: { entry: Response; index: number }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+  const audioRef = React.useRef<HTMLAudioElement>(null);
+  
   const isVideo = entry.content_type === 'video';
   const isAudio = entry.content_type === 'audio';
   const isText = !entry.content_type || entry.content_type === 'text';
@@ -252,6 +256,25 @@ function ResponseCard({ entry, index }: { entry: Response; index: number }) {
   const formattedDate = entry.created_at 
     ? format(new Date(entry.created_at), 'MMM d, yyyy')
     : '';
+
+  const togglePlay = () => {
+    if (isVideo && videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+    if (isAudio && audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
 
   return (
     <motion.article
@@ -285,47 +308,68 @@ function ResponseCard({ entry, index }: { entry: Response; index: number }) {
       <div className="p-6">
         {/* VIDEO */}
         {isVideo && (
-          <div className="relative aspect-video bg-secondary rounded-xl overflow-hidden cursor-pointer group">
+          <div 
+            className="relative aspect-video bg-secondary rounded-xl overflow-hidden cursor-pointer group"
+            onClick={togglePlay}
+          >
             {entry.video_url ? (
               <video 
+                ref={videoRef}
                 src={entry.video_url} 
                 className="w-full h-full object-cover"
-                muted
                 playsInline
+                onEnded={() => setIsPlaying(false)}
               />
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-matter-sage/20 to-matter-cream/30" />
             )}
-            <div className="absolute inset-0 flex items-center justify-center bg-foreground/0 group-hover:bg-foreground/10 transition-colors">
-              <div className="w-16 h-16 rounded-full bg-background/95 flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
-                <Play className="w-7 h-7 text-foreground fill-foreground ml-1" />
+            {!isPlaying && (
+              <div className="absolute inset-0 flex items-center justify-center bg-foreground/0 group-hover:bg-foreground/10 transition-colors">
+                <div className="w-16 h-16 rounded-full bg-background/95 flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                  <Play className="w-7 h-7 text-foreground fill-foreground ml-1" />
+                </div>
               </div>
-            </div>
-            <div className="absolute bottom-4 right-4 bg-background/90 backdrop-blur-sm px-3 py-1 rounded-full">
-              <span className="text-xs font-medium text-foreground">0:30</span>
-            </div>
+            )}
           </div>
         )}
 
         {/* AUDIO */}
         {isAudio && (
-          <div className="bg-gradient-to-r from-secondary/60 to-secondary/30 rounded-xl p-6 cursor-pointer group hover:from-secondary/80 hover:to-secondary/50 transition-all">
+          <div 
+            className="bg-gradient-to-r from-secondary/60 to-secondary/30 rounded-xl p-6 cursor-pointer group hover:from-secondary/80 hover:to-secondary/50 transition-all"
+            onClick={togglePlay}
+          >
             <div className="flex items-center gap-5">
               <button className="w-14 h-14 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-lg">
-                <Play className="w-5 h-5 text-background fill-background ml-0.5" />
+                {isPlaying ? (
+                  <div className="w-4 h-4 bg-background rounded-sm" />
+                ) : (
+                  <Play className="w-5 h-5 text-background fill-background ml-0.5" />
+                )}
               </button>
               <div className="flex-1">
+                {entry.audio_url ? (
+                  <audio 
+                    ref={audioRef}
+                    src={entry.audio_url} 
+                    onEnded={() => setIsPlaying(false)}
+                    className="hidden"
+                  />
+                ) : null}
                 <div className="flex items-end gap-[3px] h-10">
                   {[0.3, 0.5, 0.7, 0.4, 1, 0.8, 0.6, 0.9, 0.5, 0.7, 0.4, 0.8, 0.6, 0.5, 0.3, 0.6, 0.8, 0.5, 0.4, 0.6, 0.7, 0.5, 0.4, 0.3, 0.5, 0.6, 0.4].map((h, i) => (
                     <div 
                       key={i} 
-                      className="flex-1 bg-foreground/20 rounded-full transition-all group-hover:bg-foreground/35" 
+                      className={`flex-1 rounded-full transition-all ${
+                        isPlaying 
+                          ? 'bg-foreground/60 animate-pulse' 
+                          : 'bg-foreground/20 group-hover:bg-foreground/35'
+                      }`}
                       style={{ height: `${h * 100}%` }} 
                     />
                   ))}
                 </div>
               </div>
-              <span className="text-sm font-medium text-muted-foreground">1:24</span>
             </div>
           </div>
         )}
