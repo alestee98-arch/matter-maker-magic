@@ -88,21 +88,27 @@ export default function HomePage() {
   const handleSubmit = async () => {
     if (!currentQuestion || !user) return;
     
-    // For text, require content. For media, require mediaUrl
-    if (responseType === 'text' && !response.trim()) return;
+    // For text, require content OR mediaUrl. For media modes, require mediaUrl
+    if (responseType === 'text' && !response.trim() && !mediaUrl) return;
     if ((responseType === 'audio' || responseType === 'video' || responseType === 'photo') && !mediaUrl) return;
     
     setIsSubmitting(true);
     try {
+      // Determine content_type based on what's being submitted
+      let contentType = responseType;
+      if (responseType === 'text' && mediaUrl && !response.trim()) {
+        contentType = 'photo';
+      }
+      
       const insertData: any = {
         user_id: user.id,
         question_id: currentQuestion.id,
-        content: responseType === 'text' ? response.trim() : `${responseType} response`,
-        content_type: responseType,
+        content: response.trim() || `${contentType} response`,
+        content_type: contentType,
         privacy: 'private'
       };
       
-      if (responseType === 'text') {
+      if (response.trim()) {
         insertData.word_count = response.trim().split(/\s+/).length;
       }
       
@@ -114,7 +120,8 @@ export default function HomePage() {
         insertData.video_url = mediaUrl;
       }
       
-      if (responseType === 'photo' && mediaUrl) {
+      // Handle photo attachment in text mode or photo mode
+      if ((responseType === 'photo' || responseType === 'text') && mediaUrl) {
         insertData.photo_url = mediaUrl;
       }
       
@@ -289,11 +296,66 @@ export default function HomePage() {
                 {responseType === 'text' && (
                   <div className="space-y-3">
                     <Textarea
-                      placeholder="Take your time. Share what comes to mind..."
+                      placeholder="Say or add a photo that captures/explains this moment..."
                       value={response}
                       onChange={(e) => setResponse(e.target.value)}
                       className="min-h-[200px] bg-secondary/30 border border-border/50 rounded-2xl resize-none text-lg leading-relaxed placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-foreground/30 focus-visible:bg-secondary/50 focus-visible:shadow-sm px-4 py-4 transition-all duration-200"
                     />
+                    
+                    {/* Photo attachment option */}
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-2 px-4 py-2 rounded-full border border-border/50 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-secondary/30 cursor-pointer transition-all duration-200">
+                        <ImageIcon className="w-4 h-4" />
+                        <span>Add photo</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file || !user) return;
+                            
+                            const fileExt = file.name.split('.').pop();
+                            const fileName = `${user.id}/photo_${Date.now()}.${fileExt}`;
+                            
+                            const { data, error } = await supabase.storage
+                              .from('user-media')
+                              .upload(fileName, file);
+                            
+                            if (error) {
+                              toast({
+                                variant: 'destructive',
+                                title: 'Upload failed',
+                                description: error.message
+                              });
+                              return;
+                            }
+                            
+                            const { data: { publicUrl } } = supabase.storage
+                              .from('user-media')
+                              .getPublicUrl(fileName);
+                            
+                            setMediaUrl(publicUrl);
+                          }}
+                        />
+                      </label>
+                      
+                      {mediaUrl && (
+                        <div className="relative">
+                          <img 
+                            src={mediaUrl} 
+                            alt="Attached" 
+                            className="h-12 w-12 object-cover rounded-lg border border-border/50"
+                          />
+                          <button
+                            onClick={() => setMediaUrl(null)}
+                            className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-xs hover:bg-destructive/90"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     
                     <div className="flex items-center gap-2 text-sm text-muted-foreground/70 py-2">
                       <Lock className="w-3.5 h-3.5" />
@@ -323,9 +385,9 @@ export default function HomePage() {
                       </div>
                       <Button 
                         onClick={handleSubmitWithConfirmation}
-                        disabled={!response.trim() || isSubmitting}
+                        disabled={(!response.trim() && !mediaUrl) || isSubmitting}
                         className={`rounded-full px-8 h-12 font-medium text-base transition-all duration-200 ${
-                          response.trim()
+                          (response.trim() || mediaUrl)
                             ? 'bg-foreground text-background hover:bg-foreground/90 shadow-lg shadow-foreground/10 hover:shadow-xl hover:shadow-foreground/15'
                             : 'bg-muted text-muted-foreground cursor-not-allowed'
                         }`}
