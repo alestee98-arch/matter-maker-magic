@@ -14,10 +14,9 @@ import {
   Video,
   Play,
   ArrowRight,
-  Edit3,
   Image as ImageIcon
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 
@@ -38,20 +37,6 @@ interface Response {
   } | null;
 }
 
-// Category mapping for display
-const CATEGORY_DISPLAY: Record<string, string> = {
-  'childhood': 'Childhood',
-  'relationships': 'Relationships',
-  'self': 'Self',
-  'wisdom': 'Wisdom',
-  'family': 'Family',
-  'life': 'Life',
-  'happiness': 'Joy & Humor',
-  'achievements': 'Career & Work',
-  'values': 'Values',
-  'legacy': 'Legacy',
-};
-
 export default function ProfilePage() {
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -60,7 +45,7 @@ export default function ProfilePage() {
   const [entries, setEntries] = useState<Response[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
@@ -101,19 +86,30 @@ export default function ProfilePage() {
     fetchData();
   }, [user]);
 
-  // Get unique categories from entries
-  const categories = ['all', ...Array.from(new Set(entries.map(e => e.questions?.category).filter(Boolean))) as string[]];
+  // Calculate media counts
+  const videoCount = entries.filter(e => e.content_type === 'video').length;
+  const voiceCount = entries.filter(e => e.content_type === 'audio').length;
+  const textCount = entries.filter(e => !e.content_type || e.content_type === 'text').length;
+  const photoCount = entries.filter(e => e.content_type === 'photo').length;
 
-  // Filter entries
+  // Find featured moment (prioritize video > voice > photo > text)
+  const featuredMoment = entries.find(e => e.content_type === 'video') 
+    || entries.find(e => e.content_type === 'audio')
+    || entries.find(e => e.content_type === 'photo')
+    || entries[0];
+
+  // Filter entries by media type
   const filteredEntries = entries.filter(entry => {
     const matchesSearch = searchQuery === '' || 
       entry.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
       entry.questions?.question.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesCategory = selectedCategory === 'all' || 
-      entry.questions?.category === selectedCategory;
+    let matchesFilter = true;
+    if (selectedFilter === 'video') matchesFilter = entry.content_type === 'video';
+    else if (selectedFilter === 'voice') matchesFilter = entry.content_type === 'audio';
+    else if (selectedFilter === 'text') matchesFilter = !entry.content_type || entry.content_type === 'text';
     
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesFilter;
   });
 
   // Get user initials
@@ -140,22 +136,22 @@ export default function ProfilePage() {
   return (
     <div className="min-h-[calc(100vh-8rem)]">
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* TOP HALF - Profile Header */}
+      {/* TOP - Profile Summary Block */}
       {/* ═══════════════════════════════════════════════════════════════ */}
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="py-16 md:py-24"
+        className="py-12 md:py-16"
       >
         <div className="max-w-4xl mx-auto px-4 text-center">
-          {/* Avatar with gradient */}
+          {/* Avatar */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-            className="relative mx-auto mb-8"
+            className="relative mx-auto mb-6"
           >
-            <div className="w-32 h-32 md:w-40 md:h-40 mx-auto rounded-full bg-gradient-to-br from-[hsl(var(--matter-sage))] to-[hsl(var(--matter-forest))] flex items-center justify-center shadow-[0_8px_30px_-6px_rgba(0,0,0,0.15)] ring-4 ring-background">
+            <div className="w-28 h-28 md:w-32 md:h-32 mx-auto rounded-full bg-gradient-to-br from-[hsl(var(--matter-sage))] to-[hsl(var(--matter-forest))] flex items-center justify-center shadow-[0_8px_30px_-6px_rgba(0,0,0,0.15)] ring-4 ring-background">
               {profile?.avatar_url ? (
                 <img 
                   src={profile.avatar_url} 
@@ -163,7 +159,7 @@ export default function ProfilePage() {
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <span className="font-serif text-5xl md:text-6xl text-white/90">
+                <span className="font-serif text-4xl md:text-5xl text-white/90">
                   {getInitials()}
                 </span>
               )}
@@ -174,35 +170,60 @@ export default function ProfilePage() {
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.4 }}
-            className="font-serif text-3xl md:text-4xl text-foreground mb-3"
+            transition={{ delay: 0.1, duration: 0.4 }}
+            className="font-serif text-3xl md:text-4xl text-foreground mb-2"
           >
             {displayName}
           </motion.h1>
 
-          {/* Tagline */}
+          {/* Identity sentence */}
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, duration: 0.4 }}
-            className="text-muted-foreground text-lg md:text-xl mb-8"
+            transition={{ delay: 0.15, duration: 0.4 }}
+            className="text-muted-foreground text-lg italic mb-4"
           >
-            A life told one question at a time
+            A life told one question at a time.
           </motion.p>
 
-          {/* Reflection count */}
+          {/* Media counts */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.4 }}
-            className="inline-flex items-center gap-2 text-muted-foreground"
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="text-muted-foreground/80 text-sm"
           >
-            <Edit3 className="w-4 h-4" />
-            <span className="font-medium">{entries.length}</span>
-            <span>{entries.length === 1 ? 'reflection' : 'reflections'}</span>
+            {entries.length > 0 ? (
+              <span>
+                {entries.length} moment{entries.length !== 1 ? 's' : ''}
+                {videoCount > 0 && <> · {videoCount} video{videoCount !== 1 ? 's' : ''}</>}
+                {voiceCount > 0 && <> · {voiceCount} voice recording{voiceCount !== 1 ? 's' : ''}</>}
+                {textCount > 0 && <> · {textCount} written reflection{textCount !== 1 ? 's' : ''}</>}
+                {photoCount > 0 && <> · {photoCount} photo{photoCount !== 1 ? 's' : ''}</>}
+              </span>
+            ) : (
+              <span>Begin your legacy</span>
+            )}
           </motion.div>
         </div>
       </motion.section>
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* FEATURED MOMENT */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {featuredMoment && (
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="max-w-4xl mx-auto px-4 mb-12"
+        >
+          <p className="text-sm text-muted-foreground mb-4 text-center">
+            A moment that captures {displayName.split(' ')[0]}
+          </p>
+          <FeaturedCard entry={featuredMoment} />
+        </motion.section>
+      )}
 
       {/* Subtle divider */}
       <div className="max-w-5xl mx-auto px-4">
@@ -210,14 +231,14 @@ export default function ProfilePage() {
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* BOTTOM HALF - Your Legacy */}
+      {/* YOUR LEGACY SECTION */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      <section className="max-w-5xl mx-auto px-4 py-10 pb-20">
+      <section className="max-w-5xl mx-auto px-4 py-10">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.3 }}
           className="flex items-center justify-between mb-8"
         >
           <div className="flex items-center gap-2.5">
@@ -253,7 +274,7 @@ export default function ProfilePage() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
+          transition={{ delay: 0.35 }}
           className="mb-6"
         >
           <div className="relative">
@@ -267,24 +288,27 @@ export default function ProfilePage() {
           </div>
         </motion.div>
 
-        {/* Category Filters */}
+        {/* Simplified Filters: All, Video, Voice, Text */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="flex gap-2 overflow-x-auto pb-4 mb-8 scrollbar-hide -mx-1 px-1"
+          transition={{ delay: 0.4 }}
+          className="flex gap-2 mb-8"
         >
-          {categories.map((category) => (
+          {['all', 'video', 'voice', 'text'].map((filter) => (
             <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                selectedCategory === category
+              key={filter}
+              onClick={() => setSelectedFilter(filter)}
+              className={`px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 ${
+                selectedFilter === filter
                   ? 'bg-foreground text-background shadow-sm'
                   : 'bg-secondary/50 border border-border/40 text-foreground hover:bg-secondary'
               }`}
             >
-              {category === 'all' ? 'All' : CATEGORY_DISPLAY[category] || category}
+              {filter === 'video' && <Video className="w-3.5 h-3.5" />}
+              {filter === 'voice' && <Mic className="w-3.5 h-3.5" />}
+              {filter === 'text' && <Type className="w-3.5 h-3.5" />}
+              {filter.charAt(0).toUpperCase() + filter.slice(1)}
             </button>
           ))}
         </motion.div>
@@ -300,16 +324,16 @@ export default function ProfilePage() {
               <Heart className="w-8 h-8 text-muted-foreground/50" strokeWidth={1.5} />
             </div>
             <h3 className="font-serif text-2xl text-foreground mb-3">
-              {searchQuery || selectedCategory !== 'all' 
+              {searchQuery || selectedFilter !== 'all' 
                 ? 'No matching entries' 
                 : 'Your legacy begins here'}
             </h3>
             <p className="text-muted-foreground mb-8 max-w-sm mx-auto leading-relaxed">
-              {searchQuery || selectedCategory !== 'all'
+              {searchQuery || selectedFilter !== 'all'
                 ? 'Try adjusting your search or filters'
                 : 'Answer your first question to start preserving your story'}
             </p>
-            {!searchQuery && selectedCategory === 'all' && (
+            {!searchQuery && selectedFilter === 'all' && (
               <Button 
                 onClick={() => navigate('/home')}
                 size="lg"
@@ -322,12 +346,12 @@ export default function ProfilePage() {
           </motion.div>
         )}
 
-        {/* Entries Grid */}
+        {/* Entries Grid with weighted card sizes */}
         {filteredEntries.length > 0 && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.55 }}
+            transition={{ delay: 0.45 }}
             className={viewMode === 'grid' 
               ? 'columns-1 md:columns-2 gap-5 space-y-5' 
               : 'space-y-4'
@@ -339,27 +363,146 @@ export default function ProfilePage() {
                 entry={entry} 
                 index={index}
                 viewMode={viewMode}
-                totalEntries={entries.length}
               />
             ))}
           </motion.div>
+        )}
+
+        {/* Closing line */}
+        {entries.length > 0 && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center text-muted-foreground/70 italic mt-16 pb-8"
+          >
+            This is a growing record of a life — shaped week by week.
+          </motion.p>
         )}
       </section>
     </div>
   );
 }
 
-// Legacy Card Component
+// Featured Card Component (large, media-first)
+function FeaturedCard({ entry }: { entry: Response }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+  const audioRef = React.useRef<HTMLAudioElement>(null);
+  
+  const isVideo = entry.content_type === 'video';
+  const isAudio = entry.content_type === 'audio';
+  const isPhoto = entry.content_type === 'photo';
+
+  const togglePlay = () => {
+    if (isVideo && videoRef.current) {
+      if (isPlaying) videoRef.current.pause();
+      else videoRef.current.play();
+      setIsPlaying(!isPlaying);
+    }
+    if (isAudio && audioRef.current) {
+      if (isPlaying) audioRef.current.pause();
+      else audioRef.current.play();
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  return (
+    <div className="bg-card rounded-2xl border border-border/30 overflow-hidden p-6">
+      {/* In response to: */}
+      <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wider">In response to:</p>
+      <h3 className="font-serif text-xl text-foreground leading-snug mb-5">
+        {entry.questions?.question || 'Reflection'}
+      </h3>
+
+      {/* Video - large */}
+      {isVideo && entry.video_url && (
+        <div 
+          className="relative aspect-video bg-secondary rounded-xl overflow-hidden cursor-pointer group"
+          onClick={togglePlay}
+        >
+          <video 
+            ref={videoRef}
+            src={entry.video_url} 
+            className="w-full h-full object-cover"
+            playsInline
+            onEnded={() => setIsPlaying(false)}
+          />
+          {!isPlaying && (
+            <div className="absolute inset-0 flex items-center justify-center bg-foreground/5">
+              <div className="w-16 h-16 rounded-full bg-background/95 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
+                <Play className="w-7 h-7 text-foreground fill-foreground ml-1" />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Audio - waveform */}
+      {isAudio && entry.audio_url && (
+        <div 
+          className="bg-secondary/40 rounded-xl p-5 cursor-pointer group"
+          onClick={togglePlay}
+        >
+          <audio 
+            ref={audioRef}
+            src={entry.audio_url} 
+            onEnded={() => setIsPlaying(false)}
+            className="hidden"
+          />
+          <div className="flex items-center gap-4">
+            <button className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+              {isPlaying ? (
+                <div className="w-3.5 h-3.5 bg-background rounded-sm" />
+              ) : (
+                <Play className="w-5 h-5 text-background fill-background ml-0.5" />
+              )}
+            </button>
+            <div className="flex-1 flex items-end gap-[3px] h-10">
+              {[0.3, 0.5, 0.7, 0.4, 1, 0.8, 0.6, 0.9, 0.5, 0.7, 0.4, 0.8, 0.6, 0.5, 0.3, 0.6, 0.8, 0.5, 0.4, 0.6, 0.7, 0.5, 0.8, 0.4].map((h, i) => (
+                <div 
+                  key={i} 
+                  className={`flex-1 rounded-full transition-all ${
+                    isPlaying ? 'bg-foreground/60 animate-pulse' : 'bg-foreground/25'
+                  }`}
+                  style={{ height: `${h * 100}%` }} 
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Photo */}
+      {isPhoto && entry.photo_url && (
+        <div className="relative aspect-video bg-secondary rounded-xl overflow-hidden">
+          <img 
+            src={entry.photo_url} 
+            alt="Photo response"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
+      {/* Text - if no media */}
+      {!isVideo && !isAudio && !isPhoto && (
+        <p className="text-muted-foreground text-lg leading-relaxed">
+          {entry.content}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// Legacy Card Component with weighted sizes
 function LegacyCard({ 
   entry, 
   index, 
-  viewMode,
-  totalEntries
+  viewMode
 }: { 
   entry: Response; 
   index: number; 
   viewMode: 'grid' | 'list';
-  totalEntries: number;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = React.useRef<HTMLVideoElement>(null);
@@ -374,51 +517,39 @@ function LegacyCard({
     ? format(new Date(entry.created_at), 'MMMM d, yyyy')
     : '';
 
-  const categoryDisplay = CATEGORY_DISPLAY[entry.questions?.category || ''] || entry.questions?.category || 'Reflection';
-  
-  // Entry number (reversed - newest gets highest number)
-  const entryNumber = totalEntries - index;
-
   const togglePlay = () => {
     if (isVideo && videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
+      if (isPlaying) videoRef.current.pause();
+      else videoRef.current.play();
       setIsPlaying(!isPlaying);
     }
     if (isAudio && audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
+      if (isPlaying) audioRef.current.pause();
+      else audioRef.current.play();
       setIsPlaying(!isPlaying);
     }
   };
+
+  // Card size classes based on content type: video = largest, voice = medium, text = smallest
+  const cardSizeClass = isVideo 
+    ? 'p-6' // Video cards get more padding
+    : isAudio || isPhoto
+    ? 'p-5' // Voice/Photo cards medium
+    : 'p-4'; // Text cards smallest
 
   return (
     <motion.article
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.4 }}
+      transition={{ delay: index * 0.03, duration: 0.4 }}
       className={`bg-card rounded-2xl border border-border/30 overflow-hidden break-inside-avoid hover:border-border/60 transition-colors ${
-        viewMode === 'list' ? 'flex gap-6 p-6' : 'p-6'
+        viewMode === 'list' ? 'flex gap-5 p-5' : cardSizeClass
       }`}
     >
       {viewMode === 'grid' ? (
         <>
-          {/* Header Row */}
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <span className="w-8 h-8 rounded-full bg-foreground text-background text-xs font-semibold flex items-center justify-center">
-                {entryNumber}
-              </span>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
-                {categoryDisplay}
-              </span>
-            </div>
+          {/* Header: Media type indicator */}
+          <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-1.5 text-muted-foreground/70">
               {isText && <Type className="w-3.5 h-3.5" strokeWidth={2} />}
               {isAudio && <Mic className="w-3.5 h-3.5" strokeWidth={2} />}
@@ -428,23 +559,25 @@ function LegacyCard({
                 {isText ? 'Text' : isAudio ? 'Voice' : isVideo ? 'Video' : 'Photo'}
               </span>
             </div>
+            <span className="text-xs text-muted-foreground/60">{formattedDate}</span>
           </div>
 
-          {/* Question */}
-          <h3 className="font-serif text-xl text-foreground leading-snug mb-4">
+          {/* In response to: Question */}
+          <p className="text-xs text-muted-foreground/70 mb-1">In response to:</p>
+          <h3 className={`font-serif text-foreground leading-snug mb-4 ${isVideo ? 'text-lg' : isAudio ? 'text-base' : 'text-sm'}`}>
             {entry.questions?.question || 'Reflection'}
           </h3>
 
-          {/* Content */}
+          {/* Content based on type */}
           {isText && (
-            <p className="text-muted-foreground text-[15px] leading-relaxed mb-5">
+            <p className="text-muted-foreground text-sm leading-relaxed">
               {entry.content}
             </p>
           )}
 
           {isVideo && entry.video_url && (
             <div 
-              className="relative aspect-[4/3] bg-secondary rounded-xl overflow-hidden cursor-pointer group mb-5"
+              className="relative aspect-video bg-secondary rounded-xl overflow-hidden cursor-pointer group"
               onClick={togglePlay}
             >
               <video 
@@ -465,7 +598,7 @@ function LegacyCard({
           )}
 
           {isPhoto && entry.photo_url && (
-            <div className="relative aspect-[4/3] bg-secondary rounded-xl overflow-hidden mb-5">
+            <div className="relative aspect-[4/3] bg-secondary rounded-xl overflow-hidden">
               <img 
                 src={entry.photo_url} 
                 alt="Photo response"
@@ -476,7 +609,7 @@ function LegacyCard({
 
           {isAudio && (
             <div 
-              className="bg-secondary/40 rounded-xl p-4 cursor-pointer group mb-5"
+              className="bg-secondary/40 rounded-xl p-4 cursor-pointer group"
               onClick={togglePlay}
             >
               {entry.audio_url && (
@@ -500,9 +633,7 @@ function LegacyCard({
                     <div 
                       key={i} 
                       className={`flex-1 rounded-full transition-all ${
-                        isPlaying 
-                          ? 'bg-foreground/60 animate-pulse' 
-                          : 'bg-foreground/25'
+                        isPlaying ? 'bg-foreground/60 animate-pulse' : 'bg-foreground/25'
                       }`}
                       style={{ height: `${h * 100}%` }} 
                     />
@@ -511,35 +642,25 @@ function LegacyCard({
               </div>
             </div>
           )}
-
-          {/* Date */}
-          <p className="text-xs text-muted-foreground/60">{formattedDate}</p>
         </>
       ) : (
         // List View
         <>
           <div className="flex-shrink-0">
-            <span className="w-10 h-10 rounded-full bg-foreground text-background text-sm font-semibold flex items-center justify-center">
-              {entryNumber}
-            </span>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              isVideo ? 'bg-foreground text-background' : 
+              isAudio ? 'bg-foreground/80 text-background' : 
+              'bg-secondary text-foreground'
+            }`}>
+              {isText && <Type className="w-4 h-4" />}
+              {isAudio && <Mic className="w-4 h-4" />}
+              {isVideo && <Video className="w-4 h-4" />}
+              {isPhoto && <ImageIcon className="w-4 h-4" />}
+            </div>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
-                {categoryDisplay}
-              </span>
-              <span className="text-muted-foreground/30">·</span>
-              <div className="flex items-center gap-1 text-muted-foreground/70">
-                {isText && <Type className="w-3 h-3" />}
-                {isAudio && <Mic className="w-3 h-3" />}
-                {isVideo && <Video className="w-3 h-3" />}
-                {isPhoto && <ImageIcon className="w-3 h-3" />}
-                <span className="text-[11px] font-semibold uppercase">
-                  {isText ? 'Text' : isAudio ? 'Voice' : isVideo ? 'Video' : 'Photo'}
-                </span>
-              </div>
-            </div>
-            <h3 className="font-serif text-lg text-foreground leading-snug mb-2">
+            <p className="text-xs text-muted-foreground/70 mb-0.5">In response to:</p>
+            <h3 className="font-serif text-base text-foreground leading-snug mb-2">
               {entry.questions?.question || 'Reflection'}
             </h3>
             {isText && (
