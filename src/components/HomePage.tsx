@@ -243,62 +243,38 @@ export default function HomePage() {
                 </h2>
               </div>
 
-              {/* Response Type Selector */}
-              <div className="flex gap-2 mb-6 flex-wrap">
-                <button
-                  onClick={() => setResponseType('text')}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                    responseType === 'text'
-                      ? 'bg-foreground text-background shadow-md'
-                      : 'bg-foreground/10 text-foreground hover:bg-foreground/20'
-                  }`}
-                >
-                  <PenTool className="w-4 h-4" />
-                  Write
-                </button>
-                <button
-                  onClick={() => setResponseType('audio')}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                    responseType === 'audio'
-                      ? 'bg-foreground text-background shadow-md'
-                      : 'border border-border/60 text-muted-foreground hover:text-foreground hover:border-foreground/40 hover:bg-secondary/30'
-                  }`}
-                >
-                  <Mic className="w-4 h-4" />
-                  Record
-                </button>
-                <button
-                  onClick={() => setResponseType('video')}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                    responseType === 'video'
-                      ? 'bg-foreground text-background shadow-md'
-                      : 'border border-border/40 text-muted-foreground/80 hover:text-foreground hover:border-foreground/30 hover:bg-secondary/20'
-                  }`}
-                >
-                  <Video className="w-4 h-4" />
-                  Video
-                </button>
-                <button
-                  onClick={() => setResponseType('photo')}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                    responseType === 'photo'
-                      ? 'bg-foreground text-background shadow-md'
-                      : 'border border-border/40 text-muted-foreground/80 hover:text-foreground hover:border-foreground/30 hover:bg-secondary/20'
-                  }`}
-                >
-                  <ImageIcon className="w-4 h-4" />
-                  Photo
-                </button>
+              {/* Response Type Tabs - Segmented Control */}
+              <div className="inline-flex bg-secondary/50 p-1 rounded-xl mb-6 border border-border/30">
+                {[
+                  { key: 'text', label: 'Write', icon: PenTool },
+                  { key: 'audio', label: 'Record', icon: Mic },
+                  { key: 'video', label: 'Video', icon: Video },
+                  { key: 'photo', label: 'Photo', icon: ImageIcon },
+                ].map(({ key, label, icon: Icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => setResponseType(key as typeof responseType)}
+                    className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      responseType === key
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {label}
+                  </button>
+                ))}
               </div>
 
               {/* Response Area */}
               <div className="flex-1">
                 {responseType === 'text' && (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <Textarea
-                      placeholder="Say or add a photo that captures/explains this moment..."
+                      placeholder="Start answering the question..."
                       value={response}
                       onChange={(e) => setResponse(e.target.value)}
+                      autoFocus
                       className="min-h-[200px] bg-secondary/30 border border-border/50 rounded-2xl resize-none text-lg leading-relaxed placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-foreground/30 focus-visible:bg-secondary/50 focus-visible:shadow-sm px-4 py-4 transition-all duration-200"
                     />
                     
@@ -357,32 +333,13 @@ export default function HomePage() {
                       )}
                     </div>
                     
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground/70 py-2">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground/70">
                       <Lock className="w-3.5 h-3.5" />
-                      <span>Saved privately — only visible to you unless you choose otherwise</span>
+                      <span>Private by default</span>
                     </div>
                     
-                    <p className="text-sm text-muted-foreground/50 italic">
-                      You don't need the perfect words. Start anywhere — you can always come back.
-                    </p>
-                    
-                    <div className="flex items-center justify-between pt-4">
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm text-muted-foreground">{wordCount} words</span>
-                        <AnimatePresence>
-                          {showSavedConfirmation && (
-                            <motion.span
-                              initial={{ opacity: 0, x: -10 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              exit={{ opacity: 0, x: -10 }}
-                              className="text-sm text-foreground/70 flex items-center gap-1.5"
-                            >
-                              <Check className="w-3.5 h-3.5" />
-                              Saved to your archive
-                            </motion.span>
-                          )}
-                        </AnimatePresence>
-                      </div>
+                    <div className="flex items-center justify-between pt-2">
+                      <span className="text-sm text-muted-foreground">{wordCount} words</span>
                       <Button 
                         onClick={handleSubmitWithConfirmation}
                         disabled={(!response.trim() && !mediaUrl) || isSubmitting}
@@ -403,97 +360,127 @@ export default function HomePage() {
                 )}
 
                 {responseType === 'audio' && (
-                  <div className="space-y-4">
-                    <MediaUploader
-                      type="audio"
-                      onUpload={setMediaUrl}
-                      onClear={() => setMediaUrl(null)}
-                      mediaUrl={mediaUrl}
-                    />
-                    
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground/70 py-2">
-                      <Lock className="w-3.5 h-3.5" />
-                      <span>Saved privately — only visible to you unless you choose otherwise</span>
-                    </div>
-                    
-                    {mediaUrl && (
-                      <div className="flex justify-end pt-4">
-                        <Button 
-                          onClick={handleSubmitWithConfirmation}
-                          disabled={isSubmitting}
-                          className="rounded-full px-8 h-12 font-medium text-base bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                        >
-                          {isSubmitting ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            'Save response'
-                          )}
-                        </Button>
+                  <div className="space-y-6">
+                    {!mediaUrl ? (
+                      <div className="text-center py-12 bg-secondary/30 rounded-2xl border border-border/50">
+                        <Mic className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                        <MediaUploader
+                          type="audio"
+                          onUpload={setMediaUrl}
+                          onClear={() => setMediaUrl(null)}
+                          mediaUrl={mediaUrl}
+                        />
                       </div>
+                    ) : (
+                      <>
+                        <MediaUploader
+                          type="audio"
+                          onUpload={setMediaUrl}
+                          onClear={() => setMediaUrl(null)}
+                          mediaUrl={mediaUrl}
+                        />
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground/70">
+                            <Lock className="w-3.5 h-3.5" />
+                            <span>Private by default</span>
+                          </div>
+                          <Button 
+                            onClick={handleSubmitWithConfirmation}
+                            disabled={isSubmitting}
+                            className="rounded-full px-8 h-12 font-medium text-base bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                          >
+                            {isSubmitting ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              'Save recording'
+                            )}
+                          </Button>
+                        </div>
+                      </>
                     )}
                   </div>
                 )}
 
                 {responseType === 'video' && (
-                  <div className="space-y-4">
-                    <MediaUploader
-                      type="video"
-                      onUpload={setMediaUrl}
-                      onClear={() => setMediaUrl(null)}
-                      mediaUrl={mediaUrl}
-                    />
-                    
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground/70 py-2">
-                      <Lock className="w-3.5 h-3.5" />
-                      <span>Saved privately — only visible to you unless you choose otherwise</span>
-                    </div>
-                    
-                    {mediaUrl && (
-                      <div className="flex justify-end pt-4">
-                        <Button 
-                          onClick={handleSubmitWithConfirmation}
-                          disabled={isSubmitting}
-                          className="rounded-full px-8 h-12 font-medium text-base bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                        >
-                          {isSubmitting ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            'Save response'
-                          )}
-                        </Button>
+                  <div className="space-y-6">
+                    {!mediaUrl ? (
+                      <div className="text-center py-12 bg-secondary/30 rounded-2xl border border-border/50">
+                        <Video className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                        <MediaUploader
+                          type="video"
+                          onUpload={setMediaUrl}
+                          onClear={() => setMediaUrl(null)}
+                          mediaUrl={mediaUrl}
+                        />
                       </div>
+                    ) : (
+                      <>
+                        <MediaUploader
+                          type="video"
+                          onUpload={setMediaUrl}
+                          onClear={() => setMediaUrl(null)}
+                          mediaUrl={mediaUrl}
+                        />
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground/70">
+                            <Lock className="w-3.5 h-3.5" />
+                            <span>Private by default</span>
+                          </div>
+                          <Button 
+                            onClick={handleSubmitWithConfirmation}
+                            disabled={isSubmitting}
+                            className="rounded-full px-8 h-12 font-medium text-base bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                          >
+                            {isSubmitting ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              'Save video'
+                            )}
+                          </Button>
+                        </div>
+                      </>
                     )}
                   </div>
                 )}
 
                 {responseType === 'photo' && (
-                  <div className="space-y-4">
-                    <MediaUploader
-                      type="photo"
-                      onUpload={setMediaUrl}
-                      onClear={() => setMediaUrl(null)}
-                      mediaUrl={mediaUrl}
-                    />
-                    
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground/70 py-2">
-                      <Lock className="w-3.5 h-3.5" />
-                      <span>Saved privately — only visible to you unless you choose otherwise</span>
-                    </div>
-                    
-                    {mediaUrl && (
-                      <div className="flex justify-end pt-4">
-                        <Button 
-                          onClick={handleSubmitWithConfirmation}
-                          disabled={isSubmitting}
-                          className="rounded-full px-8 h-12 font-medium text-base bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                        >
-                          {isSubmitting ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            'Save response'
-                          )}
-                        </Button>
+                  <div className="space-y-6">
+                    {!mediaUrl ? (
+                      <div className="text-center py-12 bg-secondary/30 rounded-2xl border border-border/50">
+                        <ImageIcon className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                        <MediaUploader
+                          type="photo"
+                          onUpload={setMediaUrl}
+                          onClear={() => setMediaUrl(null)}
+                          mediaUrl={mediaUrl}
+                        />
                       </div>
+                    ) : (
+                      <>
+                        <MediaUploader
+                          type="photo"
+                          onUpload={setMediaUrl}
+                          onClear={() => setMediaUrl(null)}
+                          mediaUrl={mediaUrl}
+                        />
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground/70">
+                            <Lock className="w-3.5 h-3.5" />
+                            <span>Private by default</span>
+                          </div>
+                          <Button 
+                            onClick={handleSubmitWithConfirmation}
+                            disabled={isSubmitting}
+                            className="rounded-full px-8 h-12 font-medium text-base bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                          >
+                            {isSubmitting ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              'Save photo'
+                            )}
+                          </Button>
+                        </div>
+                      </>
                     )}
                   </div>
                 )}
