@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.clone-voice]
 verify_jwt = false
+
+[functions.send-weekly-question]
+verify_jwt = false

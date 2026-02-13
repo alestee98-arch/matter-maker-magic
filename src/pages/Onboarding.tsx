@@ -58,11 +58,14 @@ export default function Onboarding() {
     try {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
       
+      const updateData: Record<string, any> = { display_name: displayName };
+      if (phoneNumber) {
+        updateData.phone = phoneNumber;
+      }
+      
       const { error } = await supabase
         .from('profiles')
-        .update({ 
-          display_name: displayName,
-        })
+        .update(updateData)
         .eq('id', user?.id);
       
       if (error) {
