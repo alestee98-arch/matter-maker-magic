@@ -216,6 +216,9 @@ export type Database = {
           id: string
           legacy_activated_at: string | null
           legacy_status: string | null
+          notify_email: boolean | null
+          notify_sms: boolean | null
+          phone: string | null
           updated_at: string | null
         }
         Insert: {
@@ -227,6 +230,9 @@ export type Database = {
           id: string
           legacy_activated_at?: string | null
           legacy_status?: string | null
+          notify_email?: boolean | null
+          notify_sms?: boolean | null
+          phone?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -238,6 +244,9 @@ export type Database = {
           id?: string
           legacy_activated_at?: string | null
           legacy_status?: string | null
+          notify_email?: boolean | null
+          notify_sms?: boolean | null
+          phone?: string | null
           updated_at?: string | null
         }
         Relationships: []
