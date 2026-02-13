@@ -7,8 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  currentView: 'home' | 'profile' | 'settings' | 'voice-clone';
-  onViewChange: (view: 'home' | 'profile' | 'settings' | 'voice-clone') => void;
+  currentView: 'home' | 'profile' | 'settings';
+  onViewChange: (view: 'home' | 'profile' | 'settings') => void;
   onBack?: () => void;
 }
 

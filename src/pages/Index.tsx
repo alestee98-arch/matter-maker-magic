@@ -5,7 +5,6 @@ import LandingPage from '@/components/LandingPage';
 import InteractiveDemo from '@/components/InteractiveDemo';
 import HomePage from '@/components/HomePage';
 import ProfilePage from '@/components/ProfilePage';
-import VoiceCloning from '@/components/VoiceCloning';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Sprout } from 'lucide-react';
@@ -14,7 +13,7 @@ export default function Index() {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<'landing' | 'demo' | 'app'>('landing');
-  const [appView, setAppView] = useState<'home' | 'profile' | 'settings' | 'voice-clone'>('home');
+  const [appView, setAppView] = useState<'home' | 'profile' | 'settings'>('home');
 
   // Show loading state
   if (loading) {
@@ -81,33 +80,49 @@ export default function Index() {
           <div className="space-y-8">
             <div className="text-center">
               <h2 className="text-2xl font-serif text-foreground mb-2">Settings</h2>
-              <p className="text-muted-foreground">Manage your Matter profile and preferences</p>
+              <p className="text-muted-foreground">Manage your account and preferences</p>
             </div>
             
             <div className="grid gap-4 max-w-xl mx-auto">
-              <button
-                onClick={() => setAppView('voice-clone')}
-                className="flex items-center gap-4 p-4 bg-card rounded-xl border border-border hover:border-primary/50 transition-colors text-left"
-              >
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-2xl">🎙️</span>
-                </div>
+              {/* Account */}
+              <div className="p-5 bg-card rounded-xl border border-border">
+                <h3 className="font-medium text-foreground mb-1">Account</h3>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
+              </div>
+
+              {/* Notifications */}
+              <div className="p-5 bg-card rounded-xl border border-border flex items-center justify-between">
                 <div>
-                  <h3 className="font-medium text-foreground">Voice Cloning</h3>
-                  <p className="text-sm text-muted-foreground">Create your personalized AI voice</p>
+                  <h3 className="font-medium text-foreground">Weekly reminders</h3>
+                  <p className="text-sm text-muted-foreground">Get notified when a new question arrives</p>
                 </div>
+                <div className="w-10 h-6 bg-primary rounded-full relative cursor-pointer">
+                  <div className="absolute right-0.5 top-0.5 w-5 h-5 bg-primary-foreground rounded-full shadow-sm" />
+                </div>
+              </div>
+
+              {/* Privacy */}
+              <div className="p-5 bg-card rounded-xl border border-border flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium text-foreground">Profile visibility</h3>
+                  <p className="text-sm text-muted-foreground">Who can view your legacy profile</p>
+                </div>
+                <span className="text-sm text-muted-foreground">Invited only</span>
+              </div>
+
+              {/* Sign out */}
+              <button
+                onClick={async () => {
+                  await signOut();
+                  setCurrentView('landing');
+                }}
+                className="p-5 bg-card rounded-xl border border-border text-left hover:border-destructive/50 transition-colors"
+              >
+                <h3 className="font-medium text-destructive">Sign out</h3>
+                <p className="text-sm text-muted-foreground">Log out of your account</p>
               </button>
             </div>
           </div>
-        )}
-        
-        {appView === 'voice-clone' && (
-          <VoiceCloning 
-            onBack={() => setAppView('settings')}
-            onVoiceCreated={(voiceId, name) => {
-              console.log('Voice created:', voiceId, name);
-            }}
-          />
         )}
       </AppLayout>
     );
