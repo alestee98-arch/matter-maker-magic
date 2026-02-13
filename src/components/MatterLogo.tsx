@@ -1,4 +1,5 @@
 import React from 'react';
+import matterSprout from '@/assets/matter-sprout.png';
 
 interface MatterLogoProps {
   className?: string;
@@ -17,33 +18,13 @@ export default function MatterLogo({ className = '', showText = true, size = 'md
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      {/* Sprout Icon - matching the user's design */}
-      <svg
+      <img
+        src={matterSprout}
+        alt="Matter"
         width={icon}
         height={icon}
-        viewBox="0 0 32 32"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
         className="flex-shrink-0"
-      >
-        {/* Left leaf */}
-        <path
-          d="M16 20C16 20 8 18 4 8C4 8 14 6 16 20Z"
-          fill="currentColor"
-        />
-        {/* Right leaf */}
-        <path
-          d="M16 14C16 14 22 10 28 2C28 2 30 14 16 14Z"
-          fill="currentColor"
-        />
-        {/* Stem */}
-        <path
-          d="M16 14V28"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-        />
-      </svg>
+      />
       
       {showText && (
         <span className={`font-semibold ${text} tracking-tight`}>
