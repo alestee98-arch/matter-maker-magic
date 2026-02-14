@@ -8,6 +8,7 @@ import InteractiveDemo from '@/components/InteractiveDemo';
 import HomePage from '@/components/HomePage';
 import ProfilePage from '@/components/ProfilePage';
 import AppLayout from '@/components/AppLayout';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sprout, Check, Phone } from 'lucide-react';
@@ -21,6 +22,7 @@ export default function Index() {
   const [appView, setAppView] = useState<'home' | 'profile' | 'settings'>('home');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [savingPhone, setSavingPhone] = useState(false);
+  const [phoneSaved, setPhoneSaved] = useState(false);
 
   useEffect(() => {
     if (profile?.phone) setPhoneNumber(profile.phone);
@@ -102,18 +104,32 @@ export default function Index() {
               </div>
 
                {/* Phone number */}
-              <div className="p-5 bg-card rounded-xl border border-border">
+              <div className={`p-5 bg-card rounded-xl border transition-colors duration-500 ${phoneSaved ? 'border-green-500/50 bg-green-50/5' : 'border-border'}`}>
                 <h3 className="font-medium text-foreground mb-1 flex items-center gap-2">
                   <Phone className="w-4 h-4" />
                   Phone number
+                  {phoneSaved && (
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-xs font-normal text-green-600 bg-green-100/80 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full"
+                    >
+                      ✓ Saved
+                    </motion.span>
+                  )}
                 </h3>
-                <p className="text-sm text-muted-foreground mb-3">For SMS question reminders</p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  {phoneSaved ? "You'll receive weekly questions via text 📱" : "For SMS question reminders"}
+                </p>
                 <div className="flex gap-2">
                   <Input
                     type="tel"
                     placeholder="(555) 123-4567"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d()-\s+]/g, ''))}
+                    onChange={(e) => {
+                      setPhoneNumber(e.target.value.replace(/[^\d()-\s+]/g, ''));
+                      setPhoneSaved(false);
+                    }}
                     className="flex-1"
                   />
                   <Button
@@ -121,17 +137,17 @@ export default function Index() {
                     disabled={savingPhone || phoneNumber === (profile?.phone || '')}
                     onClick={async () => {
                       setSavingPhone(true);
-                      // Strip to digits only for storage
                       const digits = phoneNumber.replace(/\D/g, '');
                       const { error } = await updateProfile({ phone: digits || null });
                       setSavingPhone(false);
                       if (error) {
                         toast.error('Failed to save phone number');
                       } else {
-                        toast.success('Phone number saved');
+                        setPhoneSaved(true);
+                        toast.success('Phone number saved! 🎉');
                       }
                     }}
-                    className="rounded-full"
+                    className={`rounded-full transition-colors ${phoneSaved ? 'bg-green-600 hover:bg-green-700' : ''}`}
                   >
                     {savingPhone ? '...' : <Check className="w-4 h-4" />}
                   </Button>
