@@ -25,7 +25,10 @@ export default function Index() {
   const [phoneSaved, setPhoneSaved] = useState(false);
 
   useEffect(() => {
-    if (profile?.phone) setPhoneNumber(profile.phone);
+    if (profile?.phone) {
+      setPhoneNumber(profile.phone);
+      setPhoneSaved(true);
+    }
   }, [profile?.phone]);
 
   // Show loading state
