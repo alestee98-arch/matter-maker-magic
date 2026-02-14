@@ -55,7 +55,7 @@ serve(async (req) => {
       const pool = unanswered.length > 0 ? unanswered : allQuestions;
       const question = pool[Math.floor(Math.random() * pool.length)];
 
-      const appUrl = Deno.env.get('APP_URL') || `${supabaseUrl.replace('.supabase.co', '')}.lovable.app`;
+      const appUrl = Deno.env.get('APP_URL') || 'https://mattermore.xyz';
       const answerLink = `${appUrl}/answer?q=${question.id}`;
       const firstName = profile.display_name?.split(' ')[0] || 'there';
 
@@ -86,6 +86,8 @@ serve(async (req) => {
           });
           const emailBody = await emailRes.text();
           results.push({ userId: profile.id, email: authUser.email, status: emailRes.ok ? 'email_sent' : `email_failed: ${emailBody}` });
+          // Rate limit: Resend allows 2 req/sec
+          await new Promise(resolve => setTimeout(resolve, 600));
         } catch (emailError) {
           results.push({ userId: profile.id, email: authUser.email, status: `email_error: ${emailError}` });
         }

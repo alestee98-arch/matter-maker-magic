@@ -17,6 +17,7 @@ const passwordSchema = z.string().min(6, 'Password must be at least 6 characters
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode');
+  const redirectTo = searchParams.get('redirect') || '/';
   const [isLogin, setIsLogin] = useState(mode !== 'signup');
   const [step, setStep] = useState<'email' | 'password' | 'forgot' | 'forgot-sent'>('email');
   const [email, setEmail] = useState('');
@@ -58,7 +59,7 @@ export default function Auth() {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate('/');
+      navigate(redirectTo);
     }
   }, [user, loading, navigate]);
 
@@ -117,7 +118,7 @@ export default function Auth() {
             title: `Welcome back, ${displayNameToShow}!`,
             description: 'You have successfully logged in.'
           });
-          navigate('/');
+          navigate(redirectTo);
         }
       } else {
         const { error } = await signUp(email, password, displayName);
@@ -141,7 +142,7 @@ export default function Auth() {
             title: 'Account created!',
             description: "Let's complete your profile."
           });
-          navigate('/onboarding');
+          navigate(redirectTo !== '/' ? `/onboarding?redirect=${encodeURIComponent(redirectTo)}` : '/onboarding');
         }
       }
     } finally {
