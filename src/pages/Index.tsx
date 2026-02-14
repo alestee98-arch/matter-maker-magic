@@ -1,19 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
+import { supabase } from '@/integrations/supabase/client';
 import LandingPage from '@/components/LandingPage';
 import InteractiveDemo from '@/components/InteractiveDemo';
 import HomePage from '@/components/HomePage';
 import ProfilePage from '@/components/ProfilePage';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
-import { Sprout } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Sprout, Check, Phone } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function Index() {
   const { user, loading, signOut } = useAuth();
+  const { profile, updateProfile } = useProfile();
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<'landing' | 'demo' | 'app'>('landing');
   const [appView, setAppView] = useState<'home' | 'profile' | 'settings'>('home');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [savingPhone, setSavingPhone] = useState(false);
+
+  useEffect(() => {
+    if (profile?.phone) setPhoneNumber(profile.phone);
+  }, [profile?.phone]);
 
   // Show loading state
   if (loading) {
@@ -88,6 +99,44 @@ export default function Index() {
               <div className="p-5 bg-card rounded-xl border border-border">
                 <h3 className="font-medium text-foreground mb-1">Account</h3>
                 <p className="text-sm text-muted-foreground">{user?.email}</p>
+              </div>
+
+               {/* Phone number */}
+              <div className="p-5 bg-card rounded-xl border border-border">
+                <h3 className="font-medium text-foreground mb-1 flex items-center gap-2">
+                  <Phone className="w-4 h-4" />
+                  Phone number
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">For SMS question reminders</p>
+                <div className="flex gap-2">
+                  <Input
+                    type="tel"
+                    placeholder="(555) 123-4567"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d()-\s+]/g, ''))}
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    disabled={savingPhone || phoneNumber === (profile?.phone || '')}
+                    onClick={async () => {
+                      setSavingPhone(true);
+                      // Strip to digits only for storage
+                      const digits = phoneNumber.replace(/\D/g, '');
+                      const { error } = await updateProfile({ phone: digits || null });
+                      setSavingPhone(false);
+                      if (error) {
+                        toast.error('Failed to save phone number');
+                      } else {
+                        toast.success('Phone number saved');
+                      }
+                    }}
+                    className="rounded-full"
+                  >
+                    {savingPhone ? '...' : <Check className="w-4 h-4" />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground/60 mt-2">US numbers only. We'll text your weekly question.</p>
               </div>
 
               {/* Notifications */}
