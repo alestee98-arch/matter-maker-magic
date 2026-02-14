@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,8 @@ export default function Onboarding() {
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [onboardingParams] = useSearchParams();
+  const onboardingRedirect = onboardingParams.get('redirect') || '/';
 
   // Redirect if not logged in
   useEffect(() => {
@@ -79,7 +81,7 @@ export default function Onboarding() {
           title: 'Welcome to Matter!',
           description: 'Your account is all set up.'
         });
-        navigate('/');
+        navigate(onboardingRedirect);
       }
     } finally {
       setIsLoading(false);
