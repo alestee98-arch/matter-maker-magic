@@ -104,23 +104,12 @@ export default function Index() {
               </div>
 
                {/* Phone number */}
-              <div className={`p-5 bg-card rounded-xl border transition-colors duration-500 ${phoneSaved ? 'border-green-500/50 bg-green-50/5' : 'border-border'}`}>
+              <div className={`p-5 bg-card rounded-xl border transition-all duration-500 ${phoneSaved ? 'border-primary/40' : 'border-border'}`}>
                 <h3 className="font-medium text-foreground mb-1 flex items-center gap-2">
                   <Phone className="w-4 h-4" />
                   Phone number
-                  {phoneSaved && (
-                    <motion.span
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-xs font-normal text-green-600 bg-green-100/80 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded-full"
-                    >
-                      ✓ Saved
-                    </motion.span>
-                  )}
                 </h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {phoneSaved ? "You'll receive weekly questions via text 📱" : "For SMS question reminders"}
-                </p>
+                <p className="text-sm text-muted-foreground mb-3">For SMS question reminders</p>
                 <div className="flex gap-2">
                   <Input
                     type="tel"
@@ -147,12 +136,33 @@ export default function Index() {
                         toast.success('Phone number saved! 🎉');
                       }
                     }}
-                    className={`rounded-full transition-colors ${phoneSaved ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                    className="rounded-full"
                   >
                     {savingPhone ? '...' : <Check className="w-4 h-4" />}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground/60 mt-2">US numbers only. We'll text your weekly question.</p>
+
+                {/* Prominent success badge */}
+                {phoneSaved && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: 'auto' }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                    className="mt-4 flex items-center gap-3 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <Check className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Phone number saved</p>
+                      <p className="text-xs text-muted-foreground">You'll receive weekly questions via text 📱</p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {!phoneSaved && (
+                  <p className="text-xs text-muted-foreground/60 mt-2">US numbers only. We'll text your weekly question.</p>
+                )}
               </div>
 
               {/* Notifications */}
