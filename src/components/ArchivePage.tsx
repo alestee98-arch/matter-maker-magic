@@ -8,13 +8,15 @@ import {
   FileText, 
   Mic, 
   Video,
-  Loader2,
   Play,
-  Archive
+  Archive,
+  X,
+  ChevronDown,
+  Image as ImageIcon
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Response {
   id: string;
@@ -23,6 +25,9 @@ interface Response {
   privacy: string | null;
   created_at: string | null;
   question_id: string | null;
+  photo_url: string | null;
+  audio_url: string | null;
+  video_url: string | null;
   questions?: {
     question: string;
     category: string;
@@ -30,7 +35,7 @@ interface Response {
   } | null;
 }
 
-const FILTERS = ['All', 'Text', 'Audio', 'Video'];
+const FILTERS = ['All', 'Text', 'Audio', 'Video', 'Photo'];
 
 export default function ArchivePage() {
   const { user } = useAuth();
@@ -38,6 +43,7 @@ export default function ArchivePage() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [entries, setEntries] = useState<Response[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedEntry, setSelectedEntry] = useState<Response | null>(null);
 
   useEffect(() => {
     const fetchResponses = async () => {
@@ -54,6 +60,9 @@ export default function ArchivePage() {
             privacy,
             created_at,
             question_id,
+            photo_url,
+            audio_url,
+            video_url,
             questions (
               question,
               category,
@@ -86,21 +95,32 @@ export default function ArchivePage() {
     });
   }, [entries, searchTerm, activeFilter]);
 
-  const getPrivacyIcon = (privacy: string | null) => {
-    switch (privacy) {
-      case 'private': return <Lock className="w-3 h-3" />;
-      case 'share': return <Users className="w-3 h-3" />;
-      case 'legacy': return <Clock className="w-3 h-3" />;
-      default: return <Lock className="w-3 h-3" />;
+  const getMediaIcon = (entry: Response) => {
+    switch (entry.content_type) {
+      case 'audio': return <Mic className="w-4 h-4" />;
+      case 'video': return <Play className="w-4 h-4 fill-current" />;
+      case 'photo': return <ImageIcon className="w-4 h-4" />;
+      default: return <FileText className="w-4 h-4" />;
     }
   };
 
-  const getMediaIcon = (mediaType: string | null) => {
-    switch (mediaType) {
-      case 'audio': return <Mic className="w-5 h-5" />;
-      case 'video': return <Video className="w-5 h-5" />;
-      default: return <FileText className="w-5 h-5" />;
+  const getMediaColor = (type: string | null) => {
+    switch (type) {
+      case 'audio': return 'bg-accent/10 text-accent';
+      case 'video': return 'bg-matter-coral/10 text-matter-coral';
+      case 'photo': return 'bg-matter-gold/10 text-matter-gold';
+      default: return 'bg-secondary text-muted-foreground';
     }
+  };
+
+  const formatDate = (date: string | null) => {
+    if (!date) return 'Recently';
+    return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const formatDateLong = (date: string | null) => {
+    if (!date) return 'Recently';
+    return new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
   };
 
   if (isLoading) {
@@ -117,10 +137,10 @@ export default function ArchivePage() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
+        className="mb-6"
       >
-        <h1 className="text-3xl md:text-4xl font-serif text-foreground mb-2">Archive</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl md:text-4xl font-serif text-foreground mb-1">Archive</h1>
+        <p className="text-sm text-muted-foreground">
           {entries.length === 0 
             ? 'Your preserved reflections will appear here' 
             : `${entries.length} ${entries.length === 1 ? 'reflection' : 'reflections'} preserved`}
@@ -129,29 +149,30 @@ export default function ArchivePage() {
 
       {entries.length > 0 && (
         <>
-          {/* Search & Filters */}
+          {/* Search */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mb-8"
+            className="mb-5"
           >
-            <div className="relative mb-4">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="relative mb-3">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search your archive..."
+                placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-11 h-12 bg-secondary/50 border-0 rounded-2xl text-base focus-visible:ring-1 focus-visible:ring-foreground"
+                className="pl-10 h-11 bg-secondary/50 border-0 rounded-xl text-sm focus-visible:ring-1 focus-visible:ring-foreground"
               />
             </div>
             
-            <div className="flex gap-2">
+            {/* Filter pills */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
               {FILTERS.map((filter) => (
                 <button
                   key={filter}
                   onClick={() => setActiveFilter(filter)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap ${
                     activeFilter === filter
                       ? 'bg-foreground text-background'
                       : 'bg-secondary text-muted-foreground hover:text-foreground'
@@ -163,68 +184,23 @@ export default function ArchivePage() {
             </div>
           </motion.div>
 
-          {/* Entries */}
+          {/* Grid */}
           {filteredEntries.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-muted-foreground">No matching reflections found.</p>
+              <p className="text-muted-foreground text-sm">No matching reflections.</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
               {filteredEntries.map((entry, index) => (
-                <motion.article
-                  key={entry.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="group bg-card rounded-2xl p-6 border border-border hover:border-foreground/20 transition-all duration-300 cursor-pointer hover-lift"
-                >
-                  <div className="flex items-start gap-5">
-                    {/* Media Icon */}
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                      entry.content_type === 'audio' ? 'bg-accent/10 text-accent' :
-                      entry.content_type === 'video' ? 'bg-matter-coral/10 text-matter-coral' :
-                      'bg-secondary text-muted-foreground'
-                    }`}>
-                      {entry.content_type === 'video' && <Play className="w-5 h-5 fill-current" />}
-                      {entry.content_type === 'audio' && (
-                        <div className="flex items-end gap-0.5 h-5">
-                          {[0.4, 0.7, 0.5, 1, 0.6].map((h, i) => (
-                            <div key={i} className="w-0.5 bg-current rounded-full" style={{ height: `${h * 100}%` }} />
-                          ))}
-                        </div>
-                      )}
-                      {(!entry.content_type || entry.content_type === 'text') && getMediaIcon(entry.content_type)}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-xs text-muted-foreground">
-                          {entry.created_at 
-                            ? new Date(entry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                            : 'Recently'}
-                        </span>
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          {getPrivacyIcon(entry.privacy)}
-                        </span>
-                      </div>
-                      
-                      <h3 className="text-base font-medium text-foreground mb-2 line-clamp-1">
-                        {entry.questions?.question || 'Reflection'}
-                      </h3>
-                      
-                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                        {entry.content}
-                      </p>
-                      
-                      {entry.questions?.category && (
-                        <span className="inline-block mt-3 text-xs text-muted-foreground capitalize">
-                          {entry.questions.category}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </motion.article>
+                <GridCard 
+                  key={entry.id} 
+                  entry={entry} 
+                  index={index}
+                  getMediaIcon={getMediaIcon}
+                  getMediaColor={getMediaColor}
+                  formatDate={formatDate}
+                  onSelect={() => setSelectedEntry(entry)}
+                />
               ))}
             </div>
           )}
@@ -241,11 +217,212 @@ export default function ArchivePage() {
             <Archive className="w-7 h-7 text-muted-foreground" />
           </div>
           <h2 className="text-xl font-serif text-foreground mb-2">Your archive is empty</h2>
-          <p className="text-muted-foreground max-w-sm">
+          <p className="text-sm text-muted-foreground max-w-sm">
             Answer your first weekly question to start building your personal archive.
           </p>
         </motion.div>
       )}
+
+      {/* Detail Sheet */}
+      <AnimatePresence>
+        {selectedEntry && (
+          <DetailSheet 
+            entry={selectedEntry} 
+            onClose={() => setSelectedEntry(null)}
+            formatDateLong={formatDateLong}
+          />
+        )}
+      </AnimatePresence>
     </div>
+  );
+}
+
+/* ─── Grid Card ─── */
+function GridCard({ 
+  entry, index, getMediaIcon, getMediaColor, formatDate, onSelect 
+}: { 
+  entry: Response; 
+  index: number;
+  getMediaIcon: (e: Response) => React.ReactNode;
+  getMediaColor: (t: string | null) => string;
+  formatDate: (d: string | null) => string;
+  onSelect: () => void;
+}) {
+  const hasPhoto = !!entry.photo_url;
+  const isMedia = entry.content_type === 'audio' || entry.content_type === 'video';
+
+  return (
+    <motion.button
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: index * 0.03, duration: 0.3 }}
+      onClick={onSelect}
+      className="relative aspect-square bg-card rounded-2xl border border-border overflow-hidden text-left group hover:border-foreground/15 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {/* Photo background */}
+      {hasPhoto && (
+        <img 
+          src={entry.photo_url!} 
+          alt="" 
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+        />
+      )}
+
+      {/* Content overlay */}
+      <div className={`absolute inset-0 flex flex-col justify-end p-3 ${
+        hasPhoto 
+          ? 'bg-gradient-to-t from-black/70 via-black/20 to-transparent' 
+          : 'bg-card'
+      }`}>
+        {/* Media badge */}
+        {isMedia && !hasPhoto && (
+          <div className={`absolute top-3 left-3 w-8 h-8 rounded-lg flex items-center justify-center ${getMediaColor(entry.content_type)}`}>
+            {getMediaIcon(entry)}
+          </div>
+        )}
+
+        {/* Question (title) */}
+        <p className={`text-xs font-medium mb-1 line-clamp-2 leading-snug ${
+          hasPhoto ? 'text-white' : 'text-foreground'
+        }`}>
+          {entry.questions?.question || 'Reflection'}
+        </p>
+
+        {/* Content preview - clipped */}
+        {!hasPhoto && (
+          <p className="text-[11px] text-muted-foreground line-clamp-3 leading-relaxed mb-2">
+            {entry.content}
+          </p>
+        )}
+
+        {/* Date */}
+        <span className={`text-[10px] ${hasPhoto ? 'text-white/70' : 'text-muted-foreground/70'}`}>
+          {formatDate(entry.created_at)}
+        </span>
+      </div>
+
+      {/* Hover indicator */}
+      <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/5 transition-colors duration-200 rounded-2xl" />
+    </motion.button>
+  );
+}
+
+/* ─── Detail Sheet (full view) ─── */
+function DetailSheet({ 
+  entry, onClose, formatDateLong 
+}: { 
+  entry: Response; 
+  onClose: () => void;
+  formatDateLong: (d: string | null) => string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const isLongText = entry.content.length > 300;
+  const displayContent = !expanded && isLongText 
+    ? entry.content.slice(0, 300) + '...' 
+    : entry.content;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
+      />
+      
+      {/* Sheet */}
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] bg-card rounded-t-3xl border-t border-border shadow-premium overflow-y-auto"
+      >
+        {/* Handle */}
+        <div className="sticky top-0 bg-card/95 backdrop-blur-sm z-10 pt-3 pb-2 px-6">
+          <div className="w-10 h-1 bg-muted-foreground/20 rounded-full mx-auto mb-4" />
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">
+              {formatDateLong(entry.created_at)}
+            </span>
+            <button 
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="px-6 pb-10">
+          {/* Photo */}
+          {entry.photo_url && (
+            <div className="mb-6 -mx-6">
+              <img 
+                src={entry.photo_url} 
+                alt="" 
+                className="w-full max-h-[50vh] object-cover"
+              />
+            </div>
+          )}
+
+          {/* Question */}
+          <h2 className="text-xl font-serif text-foreground mb-4 leading-snug">
+            {entry.questions?.question || 'Reflection'}
+          </h2>
+
+          {/* Category */}
+          {entry.questions?.category && (
+            <span className="inline-block mb-4 px-3 py-1 rounded-full bg-secondary text-xs text-muted-foreground capitalize">
+              {entry.questions.category}
+            </span>
+          )}
+
+          {/* Audio player */}
+          {entry.audio_url && (
+            <div className="mb-6">
+              <audio controls className="w-full" src={entry.audio_url}>
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+          )}
+
+          {/* Video player */}
+          {entry.video_url && (
+            <div className="mb-6 rounded-2xl overflow-hidden">
+              <video controls className="w-full" src={entry.video_url}>
+                Your browser does not support video playback.
+              </video>
+            </div>
+          )}
+
+          {/* Content */}
+          <div className="relative">
+            <p className="text-base text-foreground leading-relaxed whitespace-pre-wrap">
+              {displayContent}
+            </p>
+            
+            {isLongText && !expanded && (
+              <button
+                onClick={() => setExpanded(true)}
+                className="mt-2 flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Read more
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Privacy */}
+          <div className="mt-8 flex items-center gap-2 text-xs text-muted-foreground/60">
+            <Lock className="w-3 h-3" />
+            <span>Private</span>
+          </div>
+        </div>
+      </motion.div>
+    </>
   );
 }
