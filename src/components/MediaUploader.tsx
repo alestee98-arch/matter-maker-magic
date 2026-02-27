@@ -303,6 +303,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
       >
         <video 
           ref={videoPreviewRef}
+          autoPlay
           muted
           playsInline
           className="w-full aspect-video object-cover scale-x-[-1]"
@@ -384,6 +385,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
         {type === 'video' ? (
           <video 
             ref={videoPreviewRef}
+            autoPlay
             muted
             playsInline
             className="w-full aspect-video object-cover scale-x-[-1]"
