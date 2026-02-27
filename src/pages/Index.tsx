@@ -179,15 +179,6 @@ export default function Index() {
                 </div>
               </div>
 
-              {/* Privacy */}
-              <div className="p-5 bg-card rounded-xl border border-border flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-foreground">Profile visibility</h3>
-                  <p className="text-sm text-muted-foreground">Who can view your legacy profile</p>
-                </div>
-                <span className="text-sm text-muted-foreground">Invited only</span>
-              </div>
-
               {/* Sign out */}
               <button
                 onClick={async () => {
