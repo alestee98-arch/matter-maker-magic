@@ -4,11 +4,12 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, Loader2, Lock, ArrowLeft } from 'lucide-react';
+import { Check, Loader2, Lock, ArrowLeft, PenTool, Mic, Video, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import MatterLogo from '@/components/MatterLogo';
+import MediaUploader from '@/components/MediaUploader';
 
 export default function Answer() {
   const [searchParams] = useSearchParams();
@@ -19,6 +20,8 @@ export default function Answer() {
 
   const [question, setQuestion] = useState<{ id: string; question: string; category: string } | null>(null);
   const [response, setResponse] = useState('');
+  const [responseType, setResponseType] = useState<'text' | 'audio' | 'video' | 'photo'>('text');
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -45,7 +48,6 @@ export default function Answer() {
             .single();
 
           if (error || !data) {
-            // Fall back to random unanswered question
             await fetchRandomQuestion();
           } else {
             setQuestion(data);
@@ -83,26 +85,34 @@ export default function Answer() {
   }, [user, questionId]);
 
   const handleSubmit = async () => {
-    if (!question || !user || !response.trim()) return;
+    if (!question || !user) return;
+
+    // For text, require content; for media, require a URL
+    if (responseType === 'text' && !response.trim()) return;
+    if (responseType !== 'text' && !mediaUrl) return;
 
     setIsSubmitting(true);
     try {
+      const insertData = {
+        user_id: user.id,
+        question_id: question.id,
+        content: response.trim() || `[${responseType} response]`,
+        content_type: responseType,
+        word_count: response.trim() ? response.trim().split(/\s+/).length : 0,
+        privacy: 'private' as const,
+        audio_url: responseType === 'audio' ? mediaUrl : null,
+        video_url: responseType === 'video' ? mediaUrl : null,
+        photo_url: responseType === 'photo' ? mediaUrl : null,
+      };
+
       const { data: inserted, error } = await supabase
         .from('responses')
-        .insert({
-          user_id: user.id,
-          question_id: question.id,
-          content: response.trim(),
-          content_type: 'text',
-          word_count: response.trim().split(/\s+/).length,
-          privacy: 'private',
-        })
+        .insert(insertData)
         .select('id')
         .single();
 
       if (error) throw error;
 
-      // Fire-and-forget: silently process response in background
       if (inserted?.id) {
         triggerProcessingPipeline(inserted.id, user.id);
       }
@@ -120,6 +130,7 @@ export default function Answer() {
   };
 
   const wordCount = response.trim().split(/\s+/).filter(Boolean).length;
+  const canSubmit = responseType === 'text' ? !!response.trim() : !!mediaUrl;
 
   if (authLoading || isLoading) {
     return (
@@ -185,23 +196,55 @@ export default function Answer() {
                 </p>
 
                 {/* The question */}
-                <h1 className="text-3xl md:text-4xl font-serif text-foreground leading-snug mb-10">
+                <h1 className="text-3xl md:text-4xl font-serif text-foreground leading-snug mb-8">
                   {question.question}
                 </h1>
 
+                {/* Response type selector */}
+                <div className="flex gap-2 mb-6">
+                  {[
+                    { type: 'text' as const, icon: PenTool, label: 'Text' },
+                    { type: 'audio' as const, icon: Mic, label: 'Audio' },
+                    { type: 'video' as const, icon: Video, label: 'Video' },
+                    { type: 'photo' as const, icon: ImageIcon, label: 'Photo' },
+                  ].map(({ type, icon: Icon, label }) => (
+                    <button
+                      key={type}
+                      onClick={() => { setResponseType(type); setMediaUrl(null); }}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                        responseType === type
+                          ? 'bg-foreground text-background'
+                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
                 {/* Response area */}
-                <Textarea
-                  placeholder="Start writing..."
-                  value={response}
-                  onChange={(e) => setResponse(e.target.value)}
-                  autoFocus
-                  className="min-h-[200px] bg-transparent border border-border/50 rounded-2xl resize-none text-lg leading-relaxed placeholder:text-muted-foreground/40 focus-visible:ring-0 focus-visible:border-foreground/30 px-5 py-5 transition-all duration-200"
-                />
+                {responseType === 'text' ? (
+                  <Textarea
+                    placeholder="Start writing..."
+                    value={response}
+                    onChange={(e) => setResponse(e.target.value)}
+                    autoFocus
+                    className="min-h-[200px] bg-transparent border border-border/50 rounded-2xl resize-none text-lg leading-relaxed placeholder:text-muted-foreground/40 focus-visible:ring-0 focus-visible:border-foreground/30 px-5 py-5 transition-all duration-200"
+                  />
+                ) : (
+                  <MediaUploader
+                    type={responseType}
+                    onUpload={(url) => setMediaUrl(url)}
+                    onClear={() => setMediaUrl(null)}
+                    mediaUrl={mediaUrl}
+                  />
+                )}
 
                 {/* Footer */}
                 <div className="flex items-center justify-between mt-6">
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>{wordCount} words</span>
+                    {responseType === 'text' && <span>{wordCount} words</span>}
                     <span className="flex items-center gap-1.5">
                       <Lock className="w-3.5 h-3.5" />
                       Private
@@ -209,7 +252,7 @@ export default function Answer() {
                   </div>
                   <Button
                     onClick={handleSubmit}
-                    disabled={!response.trim() || isSubmitting}
+                    disabled={!canSubmit || isSubmitting}
                     className="rounded-full px-8 h-11 bg-foreground text-background hover:bg-foreground/90"
                   >
                     {isSubmitting ? (
