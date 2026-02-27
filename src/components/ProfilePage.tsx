@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { Play, ArrowRight, Camera } from "lucide-react";
-import { motion } from "framer-motion";
+import { Play, ArrowRight, Camera, X, ChevronDown, FileText, Mic, Video as VideoIcon, Image as ImageIcon } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState<Response | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -46,20 +47,9 @@ export default function ProfilePage() {
         const { data: responsesData } = await supabase
           .from('responses')
           .select(`
-            id,
-            content,
-            content_type,
-            privacy,
-            created_at,
-            question_id,
-            audio_url,
-            video_url,
-            photo_url,
-            questions (
-              question,
-              category,
-              depth
-            )
+            id, content, content_type, privacy, created_at, question_id,
+            audio_url, video_url, photo_url,
+            questions ( question, category, depth )
           `)
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
@@ -104,14 +94,11 @@ export default function ProfilePage() {
     }
   };
 
-  // Calculate media counts
   const videoCount = entries.filter(e => e.content_type === 'video').length;
   const voiceCount = entries.filter(e => e.content_type === 'audio').length;
   const textCount = entries.filter(e => !e.content_type || e.content_type === 'text').length;
   const photoCount = entries.filter(e => e.content_type === 'photo').length;
 
-
-  // Filter entries by media type
   const filteredEntries = entries.filter(entry => {
     if (selectedFilter === 'all') return true;
     if (selectedFilter === 'video') return entry.content_type === 'video';
@@ -120,14 +107,9 @@ export default function ProfilePage() {
     return true;
   });
 
-  // Get user initials
   const getInitials = () => {
-    if (profile?.display_name) {
-      return profile.display_name.charAt(0).toUpperCase();
-    }
-    if (user?.email) {
-      return user.email.charAt(0).toUpperCase();
-    }
+    if (profile?.display_name) return profile.display_name.charAt(0).toUpperCase();
+    if (user?.email) return user.email.charAt(0).toUpperCase();
     return 'M';
   };
 
@@ -143,25 +125,22 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-[calc(100vh-8rem)] pb-20">
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* PRESENCE - Profile Header */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* ── Profile Header ── */}
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
-        className="pt-16 pb-20 md:pt-20 md:pb-24"
+        className="pt-10 pb-8 md:pt-20 md:pb-24"
       >
         <div className="max-w-2xl mx-auto px-6 text-center">
-          {/* Avatar - soft, warm */}
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-            className="mb-8"
+            className="mb-5 md:mb-8"
           >
             <div 
-              className="relative w-32 h-32 md:w-36 md:h-36 mx-auto rounded-full bg-gradient-to-br from-[hsl(var(--matter-sage)/0.4)] to-[hsl(var(--matter-forest)/0.3)] flex items-center justify-center cursor-pointer group"
+              className="relative w-24 h-24 md:w-36 md:h-36 mx-auto rounded-full bg-gradient-to-br from-[hsl(var(--matter-sage)/0.4)] to-[hsl(var(--matter-forest)/0.3)] flex items-center justify-center cursor-pointer group"
               onClick={() => fileInputRef.current?.click()}
             >
               {profile?.avatar_url ? (
@@ -171,12 +150,12 @@ export default function ProfilePage() {
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
-                <span className="font-serif text-5xl md:text-6xl text-foreground/60">
+                <span className="font-serif text-4xl md:text-6xl text-foreground/60">
                   {getInitials()}
                 </span>
               )}
               <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
-                <Camera className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Camera className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               {isUploadingAvatar && (
                 <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
@@ -193,69 +172,56 @@ export default function ProfilePage() {
             </div>
           </motion.div>
 
-          {/* Name */}
           <motion.h1
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.5 }}
-            className="font-serif text-4xl md:text-5xl text-foreground mb-4 tracking-tight"
+            className="font-serif text-3xl md:text-5xl text-foreground mb-2 md:mb-4 tracking-tight"
           >
             {displayName}
           </motion.h1>
 
-          {/* Identity - soft, poetic */}
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25, duration: 0.5 }}
-            className="text-muted-foreground text-lg md:text-xl leading-relaxed mb-6"
+            className="text-muted-foreground text-base md:text-xl leading-relaxed mb-3 md:mb-6"
           >
             A life told one question at a time.
           </motion.p>
 
-          {/* Counts - subtle, secondary */}
           {entries.length > 0 && (
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.35, duration: 0.5 }}
-              className="text-muted-foreground/60 text-sm tracking-wide"
+              className="text-muted-foreground/60 text-xs md:text-sm tracking-wide"
             >
               {entries.length} moment{entries.length !== 1 ? 's' : ''}
-              {videoCount > 0 && <span className="mx-1.5">·</span>}
-              {videoCount > 0 && <>{videoCount} video{videoCount !== 1 ? 's' : ''}</>}
-              {voiceCount > 0 && <span className="mx-1.5">·</span>}
-              {voiceCount > 0 && <>{voiceCount} voice</>}
-              {textCount > 0 && <span className="mx-1.5">·</span>}
-              {textCount > 0 && <>{textCount} written</>}
-              {photoCount > 0 && <span className="mx-1.5">·</span>}
-              {photoCount > 0 && <>{photoCount} photo{photoCount !== 1 ? 's' : ''}</>}
+              {videoCount > 0 && <> · {videoCount} video{videoCount !== 1 ? 's' : ''}</>}
+              {voiceCount > 0 && <> · {voiceCount} voice</>}
+              {textCount > 0 && <> · {textCount} written</>}
+              {photoCount > 0 && <> · {photoCount} photo{photoCount !== 1 ? 's' : ''}</>}
             </motion.p>
           )}
         </div>
       </motion.section>
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* FEATURED MOMENT - intimate, unhurried */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
-
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* MOMENTS - calm, breathing */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      <section className="max-w-4xl mx-auto px-6">
-        {/* Minimal filters - just text, no icons */}
+      {/* ── Content ── */}
+      <section className="max-w-4xl mx-auto px-4 md:px-6">
+        {/* Filters */}
         {entries.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="flex justify-center gap-6 mb-12"
+            className="flex justify-center gap-5 md:gap-6 mb-6 md:mb-12"
           >
             {['all', 'video', 'voice', 'text'].map((filter) => (
               <button
                 key={filter}
                 onClick={() => setSelectedFilter(filter)}
-                className={`text-sm transition-all ${
+                className={`text-xs md:text-sm transition-all ${
                   selectedFilter === filter
                     ? 'text-foreground'
                     : 'text-muted-foreground/50 hover:text-muted-foreground'
@@ -267,7 +233,7 @@ export default function ProfilePage() {
           </motion.div>
         )}
 
-        {/* Empty State - inviting, not lonely */}
+        {/* Empty state */}
         {entries.length === 0 && !isLoading && (
           <motion.div
             initial={{ opacity: 0, y: 24 }}
@@ -292,44 +258,138 @@ export default function ProfilePage() {
           </motion.div>
         )}
 
-        {/* Moments Grid - generous spacing */}
+        {/* ── MOBILE: Instagram-style square grid ── */}
         {filteredEntries.length > 0 && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.55 }}
-            className="columns-2 gap-4 md:gap-8"
-          >
-            {filteredEntries.map((entry, index) => (
-              <MomentCard 
-                key={entry.id} 
-                entry={entry} 
-                index={index}
-              />
-            ))}
-          </motion.div>
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.55 }}
+              className="grid grid-cols-3 gap-[2px] md:hidden rounded-lg overflow-hidden"
+            >
+              {filteredEntries.map((entry, index) => (
+                <MobileGridCell 
+                  key={entry.id} 
+                  entry={entry} 
+                  index={index}
+                  onSelect={() => setSelectedEntry(entry)}
+                />
+              ))}
+            </motion.div>
+
+            {/* ── DESKTOP/TABLET: Masonry layout ── */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.55 }}
+              className="hidden md:block columns-2 gap-6"
+            >
+              {filteredEntries.map((entry, index) => (
+                <DesktopMomentCard 
+                  key={entry.id} 
+                  entry={entry} 
+                  index={index}
+                  onSelect={() => setSelectedEntry(entry)}
+                />
+              ))}
+            </motion.div>
+          </>
         )}
 
-        {/* Closing - anchoring meaning */}
         {entries.length > 0 && (
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="text-center text-muted-foreground/50 mt-24 mb-8 text-sm"
+            className="text-center text-muted-foreground/50 mt-16 md:mt-24 mb-8 text-xs md:text-sm"
           >
-            This is a growing record of a life — shaped week by week.
+            A growing record of a life — shaped week by week.
           </motion.p>
         )}
       </section>
+
+      {/* ── Detail Sheet ── */}
+      <AnimatePresence>
+        {selectedEntry && (
+          <EntryDetailSheet 
+            entry={selectedEntry} 
+            onClose={() => setSelectedEntry(null)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-// Moment Card - calm, weighted by type
-function MomentCard({ entry, index }: { entry: Response; index: number }) {
+/* ═══════════════════════════════════════════════════════════════ */
+/* MOBILE GRID CELL - Instagram-style square tile                 */
+/* ═══════════════════════════════════════════════════════════════ */
+function MobileGridCell({ entry, index, onSelect }: { entry: Response; index: number; onSelect: () => void }) {
+  const hasPhoto = !!entry.photo_url;
+  const isVideo = entry.content_type === 'video';
+  const isAudio = entry.content_type === 'audio';
+
+  return (
+    <motion.button
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: index * 0.02, duration: 0.3 }}
+      onClick={onSelect}
+      className="relative aspect-square bg-card overflow-hidden text-left focus:outline-none active:opacity-80 transition-opacity"
+    >
+      {/* Photo / Video thumbnail */}
+      {(hasPhoto || (isVideo && entry.video_url)) && (
+        <img 
+          src={entry.photo_url || ''} 
+          alt="" 
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+        />
+      )}
+
+      {/* Content for text-only cards */}
+      {!hasPhoto && !isVideo && (
+        <div className="absolute inset-0 p-3 flex flex-col justify-between bg-card">
+          <p className="text-[11px] leading-tight text-foreground line-clamp-5 font-serif">
+            {entry.questions?.question || 'Reflection'}
+          </p>
+          {isAudio && (
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded-full bg-foreground flex items-center justify-center">
+                <Play className="w-2.5 h-2.5 text-background fill-background ml-[1px]" />
+              </div>
+              <span className="text-[9px] text-muted-foreground">Audio</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Overlay for photo/video cards */}
+      {(hasPhoto || isVideo) && (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex flex-col justify-end p-2.5">
+          {isVideo && (
+            <div className="absolute top-2 right-2">
+              <VideoIcon className="w-3.5 h-3.5 text-white/80" />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Audio badge on photo cards */}
+      {isAudio && hasPhoto && (
+        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center">
+          <Mic className="w-2.5 h-2.5 text-white" />
+        </div>
+      )}
+    </motion.button>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* DESKTOP MASONRY CARD - kept from original, with click handler  */
+/* ═══════════════════════════════════════════════════════════════ */
+function DesktopMomentCard({ entry, index, onSelect }: { entry: Response; index: number; onSelect: () => void }) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [expanded, setExpanded] = useState(false);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const audioRef = React.useRef<HTMLAudioElement>(null);
   
@@ -338,28 +398,13 @@ function MomentCard({ entry, index }: { entry: Response; index: number }) {
   const isPhoto = entry.content_type === 'photo';
   const isText = !entry.content_type || entry.content_type === 'text';
   
-  const TEXT_LIMIT = 150;
+  const TEXT_LIMIT = 180;
   const isLong = isText && entry.content.length > TEXT_LIMIT;
-  const displayContent = !expanded && isLong
-    ? entry.content.slice(0, TEXT_LIMIT).trimEnd() + '…'
-    : entry.content;
+  const displayContent = isLong ? entry.content.slice(0, TEXT_LIMIT).trimEnd() + '…' : entry.content;
 
   const formattedDate = entry.created_at 
     ? format(new Date(entry.created_at), 'MMMM yyyy')
     : '';
-
-  const togglePlay = () => {
-    if (isVideo && videoRef.current) {
-      if (isPlaying) videoRef.current.pause();
-      else videoRef.current.play();
-      setIsPlaying(!isPlaying);
-    }
-    if (isAudio && audioRef.current) {
-      if (isPlaying) audioRef.current.pause();
-      else audioRef.current.play();
-      setIsPlaying(!isPlaying);
-    }
-  };
 
   const paddingClass = isVideo ? 'p-7' : isAudio || isPhoto ? 'p-6' : 'p-5';
 
@@ -368,7 +413,8 @@ function MomentCard({ entry, index }: { entry: Response; index: number }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-      className={`bg-card rounded-2xl overflow-hidden break-inside-avoid mb-4 md:mb-8 ${paddingClass}`}
+      onClick={onSelect}
+      className={`bg-card rounded-2xl overflow-hidden break-inside-avoid mb-6 cursor-pointer hover:bg-secondary/30 transition-colors ${paddingClass}`}
     >
       <p className="text-muted-foreground/40 text-xs mb-1.5">In response to</p>
       <h3 className={`font-serif text-foreground leading-snug mb-5 ${
@@ -383,76 +429,39 @@ function MomentCard({ entry, index }: { entry: Response; index: number }) {
             {displayContent}
           </p>
           {isLong && (
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="mt-1.5 text-xs font-medium text-muted-foreground/60 hover:text-foreground transition-colors"
-            >
-              {expanded ? 'Show less' : 'Read more'}
-            </button>
+            <span className="mt-1.5 inline-block text-xs font-medium text-muted-foreground/60">
+              Read more
+            </span>
           )}
         </div>
       )}
 
       {isVideo && entry.video_url && (
-        <div 
-          className="relative aspect-video bg-secondary/30 rounded-xl overflow-hidden cursor-pointer group"
-          onClick={togglePlay}
-        >
-          <video 
-            ref={videoRef}
-            src={entry.video_url} 
-            className="w-full h-full object-cover"
-            playsInline
-            onEnded={() => setIsPlaying(false)}
-          />
-          {!isPlaying && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 rounded-full bg-background/90 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                <Play className="w-5 h-5 text-foreground fill-foreground ml-0.5" />
-              </div>
+        <div className="relative aspect-video bg-secondary/30 rounded-xl overflow-hidden">
+          <video src={entry.video_url} className="w-full h-full object-cover" playsInline />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-background/90 flex items-center justify-center shadow-md">
+              <Play className="w-5 h-5 text-foreground fill-foreground ml-0.5" />
             </div>
-          )}
+          </div>
         </div>
       )}
 
       {isPhoto && entry.photo_url && (
         <div className="relative aspect-[4/3] bg-secondary/30 rounded-xl overflow-hidden">
-          <img 
-            src={entry.photo_url} 
-            alt=""
-            className="w-full h-full object-cover"
-          />
+          <img src={entry.photo_url} alt="" className="w-full h-full object-cover" />
         </div>
       )}
 
       {isAudio && entry.audio_url && (
-        <div 
-          className="bg-secondary/20 rounded-xl p-4 cursor-pointer group"
-          onClick={togglePlay}
-        >
-          <audio 
-            ref={audioRef}
-            src={entry.audio_url} 
-            onEnded={() => setIsPlaying(false)}
-            className="hidden"
-          />
+        <div className="bg-secondary/20 rounded-xl p-4">
           <div className="flex items-center gap-4">
-            <button className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-              {isPlaying ? (
-                <div className="w-3 h-3 bg-background rounded-sm" />
-              ) : (
-                <Play className="w-4 h-4 text-background fill-background ml-0.5" />
-              )}
-            </button>
+            <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center flex-shrink-0">
+              <Play className="w-4 h-4 text-background fill-background ml-0.5" />
+            </div>
             <div className="flex-1 flex items-end gap-[2px] h-8">
               {[0.3, 0.5, 0.7, 0.4, 1, 0.8, 0.6, 0.9, 0.5, 0.7, 0.4, 0.8, 0.6, 0.5, 0.3, 0.6, 0.8, 0.5].map((h, i) => (
-                <div 
-                  key={i} 
-                  className={`flex-1 rounded-full transition-all ${
-                    isPlaying ? 'bg-foreground/50' : 'bg-foreground/20'
-                  }`}
-                  style={{ height: `${h * 100}%` }} 
-                />
+                <div key={i} className="flex-1 bg-foreground/20 rounded-full" style={{ height: `${h * 100}%` }} />
               ))}
             </div>
           </div>
@@ -461,5 +470,172 @@ function MomentCard({ entry, index }: { entry: Response; index: number }) {
 
       <p className="text-muted-foreground/40 text-xs mt-4">{formattedDate}</p>
     </motion.article>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* ENTRY DETAIL SHEET - full view on tap (Instagram-style)        */
+/* ═══════════════════════════════════════════════════════════════ */
+function EntryDetailSheet({ entry, onClose }: { entry: Response; onClose: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const isText = !entry.content_type || entry.content_type === 'text';
+  const isLong = entry.content.length > 300;
+  const displayContent = !expanded && isLong 
+    ? entry.content.slice(0, 300).trimEnd() + '…' 
+    : entry.content;
+
+  const formattedDate = entry.created_at 
+    ? format(new Date(entry.created_at), 'EEEE, MMMM d, yyyy')
+    : 'Recently';
+
+  const togglePlay = () => {
+    if (entry.content_type === 'video' && videoRef.current) {
+      if (isPlaying) videoRef.current.pause();
+      else videoRef.current.play();
+      setIsPlaying(!isPlaying);
+    }
+    if (entry.content_type === 'audio' && audioRef.current) {
+      if (isPlaying) audioRef.current.pause();
+      else audioRef.current.play();
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  return (
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
+      />
+      
+      {/* Sheet */}
+      <motion.div
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        className="fixed inset-x-0 bottom-0 z-50 max-h-[92vh] bg-card rounded-t-3xl border-t border-border overflow-y-auto"
+        style={{ boxShadow: '0 -10px 40px rgba(0,0,0,0.1)' }}
+      >
+        {/* Handle + close */}
+        <div className="sticky top-0 bg-card/95 backdrop-blur-sm z-10 pt-3 pb-2 px-5">
+          <div className="w-10 h-1 bg-muted-foreground/20 rounded-full mx-auto mb-4" />
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">{formattedDate}</span>
+            <button 
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="px-5 pb-10">
+          {/* Photo */}
+          {entry.photo_url && (
+            <div className="mb-6 -mx-5">
+              <img src={entry.photo_url} alt="" className="w-full max-h-[50vh] object-cover" />
+            </div>
+          )}
+
+          {/* Video */}
+          {entry.content_type === 'video' && entry.video_url && (
+            <div 
+              className="mb-6 -mx-5 relative aspect-video bg-black cursor-pointer"
+              onClick={togglePlay}
+            >
+              <video 
+                ref={videoRef}
+                src={entry.video_url} 
+                className="w-full h-full object-contain"
+                playsInline
+                onEnded={() => setIsPlaying(false)}
+              />
+              {!isPlaying && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                    <Play className="w-6 h-6 text-foreground fill-foreground ml-0.5" />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Question */}
+          <h2 className="text-xl md:text-2xl font-serif text-foreground mb-4 leading-snug">
+            {entry.questions?.question || 'A reflection'}
+          </h2>
+
+          {entry.questions?.category && (
+            <span className="inline-block mb-4 px-3 py-1 rounded-full bg-secondary text-xs text-muted-foreground capitalize">
+              {entry.questions.category}
+            </span>
+          )}
+
+          {/* Audio player */}
+          {entry.content_type === 'audio' && entry.audio_url && (
+            <div className="mb-6 bg-secondary/30 rounded-2xl p-5" onClick={togglePlay}>
+              <audio 
+                ref={audioRef}
+                src={entry.audio_url} 
+                onEnded={() => setIsPlaying(false)}
+                className="hidden"
+              />
+              <div className="flex items-center gap-4 cursor-pointer">
+                <button className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center flex-shrink-0">
+                  {isPlaying ? (
+                    <div className="w-3.5 h-3.5 bg-background rounded-sm" />
+                  ) : (
+                    <Play className="w-5 h-5 text-background fill-background ml-0.5" />
+                  )}
+                </button>
+                <div className="flex-1 flex items-end gap-[2px] h-10">
+                  {[0.3, 0.5, 0.7, 0.4, 1, 0.8, 0.6, 0.9, 0.5, 0.7, 0.4, 0.8, 0.6, 0.5, 0.3, 0.6, 0.8, 0.5, 0.7, 0.4].map((h, i) => (
+                    <div 
+                      key={i} 
+                      className={`flex-1 rounded-full transition-all ${isPlaying ? 'bg-foreground/50' : 'bg-foreground/20'}`}
+                      style={{ height: `${h * 100}%` }} 
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Text content */}
+          <p className="text-[15px] md:text-base text-foreground leading-relaxed whitespace-pre-wrap">
+            {displayContent}
+          </p>
+
+          {isLong && !expanded && (
+            <button
+              onClick={() => setExpanded(true)}
+              className="mt-2 flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Read more
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {isLong && expanded && (
+            <button
+              onClick={() => setExpanded(false)}
+              className="mt-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Show less
+            </button>
+          )}
+        </div>
+      </motion.div>
+    </>
   );
 }
