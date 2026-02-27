@@ -329,6 +329,7 @@ export default function ProfilePage() {
 // Moment Card - calm, weighted by type
 function MomentCard({ entry, index }: { entry: Response; index: number }) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const audioRef = React.useRef<HTMLAudioElement>(null);
   
@@ -337,6 +338,12 @@ function MomentCard({ entry, index }: { entry: Response; index: number }) {
   const isPhoto = entry.content_type === 'photo';
   const isText = !entry.content_type || entry.content_type === 'text';
   
+  const TEXT_LIMIT = 150;
+  const isLong = isText && entry.content.length > TEXT_LIMIT;
+  const displayContent = !expanded && isLong
+    ? entry.content.slice(0, TEXT_LIMIT).trimEnd() + '…'
+    : entry.content;
+
   const formattedDate = entry.created_at 
     ? format(new Date(entry.created_at), 'MMMM yyyy')
     : '';
@@ -354,7 +361,6 @@ function MomentCard({ entry, index }: { entry: Response; index: number }) {
     }
   };
 
-  // Card sizing: video = most generous, then audio/photo, then text
   const paddingClass = isVideo ? 'p-7' : isAudio || isPhoto ? 'p-6' : 'p-5';
 
   return (
@@ -362,9 +368,8 @@ function MomentCard({ entry, index }: { entry: Response; index: number }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-      className={`bg-card rounded-2xl overflow-hidden break-inside-avoid mb-8 ${paddingClass}`}
+      className={`bg-card rounded-2xl overflow-hidden break-inside-avoid mb-4 md:mb-8 ${paddingClass}`}
     >
-      {/* Question context */}
       <p className="text-muted-foreground/40 text-xs mb-1.5">In response to</p>
       <h3 className={`font-serif text-foreground leading-snug mb-5 ${
         isVideo ? 'text-xl' : isAudio || isPhoto ? 'text-lg' : 'text-base'
@@ -372,11 +377,20 @@ function MomentCard({ entry, index }: { entry: Response; index: number }) {
         {entry.questions?.question || 'A reflection'}
       </h3>
 
-      {/* Content */}
       {isText && (
-        <p className="text-muted-foreground leading-relaxed text-[15px]">
-          {entry.content}
-        </p>
+        <div>
+          <p className="text-muted-foreground leading-relaxed text-[15px]">
+            {displayContent}
+          </p>
+          {isLong && (
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="mt-1.5 text-xs font-medium text-muted-foreground/60 hover:text-foreground transition-colors"
+            >
+              {expanded ? 'Show less' : 'Read more'}
+            </button>
+          )}
+        </div>
       )}
 
       {isVideo && entry.video_url && (
@@ -445,7 +459,6 @@ function MomentCard({ entry, index }: { entry: Response; index: number }) {
         </div>
       )}
 
-      {/* Date - quiet, secondary */}
       <p className="text-muted-foreground/40 text-xs mt-4">{formattedDate}</p>
     </motion.article>
   );
