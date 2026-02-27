@@ -207,12 +207,143 @@ You must respond with a JSON object using this exact tool call format. Extract:
 
     const shouldAnalyze = count && (count % 5 === 0 || count === 1);
 
+    // Step 4: Auto voice cloning — if this response has audio, re-clone with all samples
+    let voiceCloneResult = null;
+    const hasAudio = response.content_type === 'audio' || response.content_type === 'video';
+    
+    if (hasAudio) {
+      try {
+        const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
+        if (!ELEVENLABS_API_KEY) {
+          console.log('[VoiceClone] ELEVENLABS_API_KEY not configured, skipping');
+        } else {
+          console.log('[VoiceClone] Audio response detected, gathering all audio samples...');
+
+          // Fetch all audio/video URLs for this user
+          const { data: audioResponses, error: audioErr } = await supabase
+            .from('responses')
+            .select('audio_url, video_url, content_type')
+            .eq('user_id', response.user_id)
+            .or('content_type.eq.audio,content_type.eq.video')
+            .order('created_at', { ascending: true });
+
+          if (audioErr) {
+            console.error('[VoiceClone] Failed to fetch audio responses:', audioErr.message);
+          } else {
+            const mediaUrls = (audioResponses || [])
+              .map(r => r.audio_url || r.video_url)
+              .filter(Boolean) as string[];
+
+            console.log(`[VoiceClone] Found ${mediaUrls.length} audio sample(s) for user ${response.user_id}`);
+
+            if (mediaUrls.length > 0) {
+              // Download all audio files
+              const audioFiles: File[] = [];
+              for (let i = 0; i < mediaUrls.length; i++) {
+                try {
+                  const audioResp = await fetch(mediaUrls[i]);
+                  if (!audioResp.ok) {
+                    console.warn(`[VoiceClone] Failed to download sample ${i + 1}: ${audioResp.status}`);
+                    continue;
+                  }
+                  const blob = await audioResp.blob();
+                  audioFiles.push(new File([blob], `sample_${i + 1}.webm`, { type: blob.type }));
+                } catch (dlErr) {
+                  console.warn(`[VoiceClone] Error downloading sample ${i + 1}:`, dlErr);
+                }
+              }
+
+              if (audioFiles.length > 0) {
+                // Check for existing voice profile
+                const { data: existingVoice } = await supabase
+                  .from('voice_profiles')
+                  .select('elevenlabs_voice_id')
+                  .eq('user_id', response.user_id)
+                  .eq('is_primary', true)
+                  .single();
+
+                // If there's an existing voice, delete it from ElevenLabs first
+                if (existingVoice?.elevenlabs_voice_id) {
+                  console.log(`[VoiceClone] Deleting previous voice: ${existingVoice.elevenlabs_voice_id}`);
+                  await fetch(`https://api.elevenlabs.io/v1/voices/${existingVoice.elevenlabs_voice_id}`, {
+                    method: 'DELETE',
+                    headers: { 'xi-api-key': ELEVENLABS_API_KEY },
+                  });
+                }
+
+                // Create new voice clone with all accumulated samples
+                const cloneForm = new FormData();
+                cloneForm.append('name', `matter-${response.user_id.slice(0, 8)}`);
+                cloneForm.append('description', `Auto-cloned voice from ${audioFiles.length} response(s)`);
+                for (const file of audioFiles) {
+                  cloneForm.append('files', file, file.name);
+                }
+
+                const cloneResp = await fetch('https://api.elevenlabs.io/v1/voices/add', {
+                  method: 'POST',
+                  headers: { 'xi-api-key': ELEVENLABS_API_KEY },
+                  body: cloneForm,
+                });
+
+                if (!cloneResp.ok) {
+                  const errText = await cloneResp.text();
+                  console.error('[VoiceClone] ElevenLabs error:', cloneResp.status, errText);
+                } else {
+                  const cloneResult = await cloneResp.json();
+                  console.log('[VoiceClone] Voice created:', cloneResult.voice_id);
+
+                  // Upsert voice profile in database
+                  const { error: upsertErr } = await supabase
+                    .from('voice_profiles')
+                    .upsert({
+                      user_id: response.user_id,
+                      elevenlabs_voice_id: cloneResult.voice_id,
+                      name: `matter-${response.user_id.slice(0, 8)}`,
+                      description: `Auto-cloned from ${audioFiles.length} sample(s)`,
+                      sample_count: audioFiles.length,
+                      is_primary: true,
+                    }, { onConflict: 'user_id,is_primary' });
+
+                  if (upsertErr) {
+                    // If upsert fails (no unique constraint), try delete+insert
+                    console.log('[VoiceClone] Upsert failed, trying delete+insert:', upsertErr.message);
+                    await supabase
+                      .from('voice_profiles')
+                      .delete()
+                      .eq('user_id', response.user_id)
+                      .eq('is_primary', true);
+
+                    await supabase
+                      .from('voice_profiles')
+                      .insert({
+                        user_id: response.user_id,
+                        elevenlabs_voice_id: cloneResult.voice_id,
+                        name: `matter-${response.user_id.slice(0, 8)}`,
+                        description: `Auto-cloned from ${audioFiles.length} sample(s)`,
+                        sample_count: audioFiles.length,
+                        is_primary: true,
+                      });
+                  }
+
+                  voiceCloneResult = { voice_id: cloneResult.voice_id, samples: audioFiles.length };
+                }
+              }
+            }
+          }
+        }
+      } catch (voiceErr) {
+        // Never let voice cloning errors break the pipeline
+        console.error('[VoiceClone] Unexpected error:', voiceErr);
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
         extracted,
         total_processed_responses: count,
-        should_analyze_personality: shouldAnalyze
+        should_analyze_personality: shouldAnalyze,
+        voice_clone: voiceCloneResult,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
