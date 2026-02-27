@@ -98,6 +98,7 @@ export default function WeeklyQuestion() {
         privacy: 'private' as const,
         audio_url: responseType === 'audio' ? mediaUrl : null,
         video_url: responseType === 'video' ? mediaUrl : null,
+        photo_url: responseType === 'photo' ? mediaUrl : null,
       };
 
       const { data: inserted, error } = await supabase
