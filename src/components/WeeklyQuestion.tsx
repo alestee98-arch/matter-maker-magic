@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { triggerProcessingPipeline } from '@/lib/process-pipeline';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { PenTool, Mic, Video, Sparkles, Check, Loader2 } from 'lucide-react';
+import { PenTool, Mic, Video, Image as ImageIcon, Sparkles, Check, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import MediaUploader from '@/components/MediaUploader';
 
 interface Question {
   id: string;
@@ -17,7 +18,8 @@ interface Question {
 export default function WeeklyQuestion() {
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [response, setResponse] = useState('');
-  const [responseType, setResponseType] = useState<'text' | 'audio' | 'video'>('text');
+  const [responseType, setResponseType] = useState<'text' | 'audio' | 'video' | 'photo'>('text');
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -79,20 +81,28 @@ export default function WeeklyQuestion() {
   }, [user, toast]);
 
   const handleSubmit = async () => {
-    if (!currentQuestion || !user || !response.trim()) return;
+    if (!currentQuestion || !user) return;
+    
+    // For text, require content; for media, require a URL
+    if (responseType === 'text' && !response.trim()) return;
+    if (responseType !== 'text' && !mediaUrl) return;
     
     setIsSubmitting(true);
     try {
+      const insertData = {
+        user_id: user.id,
+        question_id: currentQuestion.id,
+        content: response.trim() || `[${responseType} response]`,
+        content_type: responseType,
+        word_count: response.trim() ? response.trim().split(/\s+/).length : 0,
+        privacy: 'private' as const,
+        audio_url: responseType === 'audio' ? mediaUrl : null,
+        video_url: responseType === 'video' ? mediaUrl : null,
+      };
+
       const { data: inserted, error } = await supabase
         .from('responses')
-        .insert({
-          user_id: user.id,
-          question_id: currentQuestion.id,
-          content: response.trim(),
-          content_type: responseType,
-          word_count: response.trim().split(/\s+/).length,
-          privacy: 'private'
-        })
+        .insert(insertData)
         .select('id')
         .single();
       
@@ -112,6 +122,7 @@ export default function WeeklyQuestion() {
       // Reset after a moment
       setTimeout(() => {
         setResponse('');
+        setMediaUrl(null);
         setIsSubmitted(false);
         // Load next question
         setAnsweredQuestionIds(prev => [...prev, currentQuestion.id]);
@@ -253,6 +264,7 @@ export default function WeeklyQuestion() {
             { type: 'text' as const, icon: PenTool, label: 'Text' },
             { type: 'audio' as const, icon: Mic, label: 'Audio' },
             { type: 'video' as const, icon: Video, label: 'Video' },
+            { type: 'photo' as const, icon: ImageIcon, label: 'Photo' },
           ].map(({ type, icon: Icon, label }) => (
             <button
               key={type}
@@ -301,27 +313,30 @@ export default function WeeklyQuestion() {
           </div>
         )}
 
-        {responseType === 'audio' && (
-          <div className="rounded-2xl border-2 border-dashed border-border bg-secondary/30 p-10 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center">
-              <Mic className="h-8 w-8 text-accent" />
-            </div>
-            <p className="text-foreground font-medium mb-2">Record Your Story</p>
-            <p className="text-sm text-muted-foreground">
-              Audio recording coming soon • Up to 5 minutes
-            </p>
-          </div>
-        )}
-
-        {responseType === 'video' && (
-          <div className="rounded-2xl border-2 border-dashed border-border bg-secondary/30 p-10 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-matter-gold/10 flex items-center justify-center">
-              <Video className="h-8 w-8 text-matter-gold" />
-            </div>
-            <p className="text-foreground font-medium mb-2">Record Your Story</p>
-            <p className="text-sm text-muted-foreground">
-              Video recording coming soon • Up to 3 minutes HD
-            </p>
+        {(responseType === 'audio' || responseType === 'video' || responseType === 'photo') && (
+          <div className="space-y-4">
+            <MediaUploader
+              type={responseType}
+              onUpload={(url) => setMediaUrl(url)}
+              onClear={() => setMediaUrl(null)}
+              mediaUrl={mediaUrl}
+            />
+            {mediaUrl && (
+              <Button 
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Response'
+                )}
+              </Button>
+            )}
           </div>
         )}
       </div>
