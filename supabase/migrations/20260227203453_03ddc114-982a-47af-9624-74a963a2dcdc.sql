@@ -1,0 +1,1 @@
+CREATE POLICY "Questions are publicly readable" ON public.questions FOR SELECT TO anon USING (true);
