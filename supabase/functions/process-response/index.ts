@@ -176,13 +176,54 @@ You must respond with a JSON object using this exact tool call format. Extract:
     const extracted = JSON.parse(toolCall.function.arguments);
     console.log('Extracted:', extracted);
 
-    // Step 2: Update the response record
+    // Step 2: Generate embedding via OpenAI
+    let embedding = null;
+    try {
+      const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+      if (!OPENAI_API_KEY) {
+        console.warn('[Embedding] OPENAI_API_KEY not configured, skipping embedding');
+      } else {
+        const embeddingInput = textToAnalyze.slice(0, 8000); // limit input size
+        console.log(`[Embedding] Generating embedding for ${embeddingInput.length} chars...`);
+
+        const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${OPENAI_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'text-embedding-3-small',
+            input: embeddingInput,
+          }),
+        });
+
+        if (!embeddingResponse.ok) {
+          const errText = await embeddingResponse.text();
+          console.error('[Embedding] OpenAI error:', embeddingResponse.status, errText);
+        } else {
+          const embeddingResult = await embeddingResponse.json();
+          embedding = embeddingResult.data?.[0]?.embedding;
+          if (embedding) {
+            console.log(`[Embedding] Generated ${embedding.length}-dimension vector`);
+          }
+        }
+      }
+    } catch (embErr) {
+      console.error('[Embedding] Unexpected error:', embErr);
+    }
+
+    // Step 3: Update the response record
     const updateData: Record<string, unknown> = {
       extracted_values: extracted.values || [],
       extracted_emotions: extracted.emotions || [],
       summary: extracted.summary || '',
       word_count: textToAnalyze.split(/\s+/).filter(Boolean).length,
     };
+
+    if (embedding) {
+      updateData.embedding = JSON.stringify(embedding);
+    }
 
     // If we used content as transcript for text responses, set transcript
     if (response.content_type === 'text' && !response.transcript) {
@@ -198,7 +239,7 @@ You must respond with a JSON object using this exact tool call format. Extract:
 
     console.log(`Response ${response_id} processed successfully`);
 
-    // Step 3: Check if we should trigger personality analysis
+    // Step 4: Check if we should trigger personality analysis
     const { count } = await supabase
       .from('responses')
       .select('*', { count: 'exact', head: true })
@@ -207,7 +248,7 @@ You must respond with a JSON object using this exact tool call format. Extract:
 
     const shouldAnalyze = count && (count % 5 === 0 || count === 1);
 
-    // Step 4: Auto voice cloning — if this response has audio, re-clone with all samples
+    // Step 5: Auto voice cloning — if this response has audio, re-clone with all samples
     let voiceCloneResult = null;
     const hasAudio = response.content_type === 'audio' || response.content_type === 'video';
     
