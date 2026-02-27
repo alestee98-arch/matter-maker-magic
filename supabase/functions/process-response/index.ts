@@ -43,14 +43,60 @@ serve(async (req) => {
       // Already has a transcript (from browser speech recognition)
       textToAnalyze = response.transcript;
     } else if (response.content_type === 'audio' || response.content_type === 'video') {
-      // For audio/video without transcript, try to use the content field
-      // (which may contain a brief description) or flag for manual transcription
-      if (response.content && response.content.length > 20) {
-        textToAnalyze = response.content;
-      } else {
-        console.log('No transcript available for audio/video response. Skipping analysis.');
+      // Auto-transcribe using OpenAI Whisper
+      const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+      if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY is not configured for transcription');
+
+      const mediaUrl = response.audio_url || response.video_url;
+      if (!mediaUrl) {
         return new Response(
-          JSON.stringify({ success: false, reason: 'no_transcript', message: 'Audio/video response needs transcription first' }),
+          JSON.stringify({ success: false, reason: 'no_media_url', message: 'No audio/video URL found on this response' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log(`Downloading media from: ${mediaUrl}`);
+      const mediaResponse = await fetch(mediaUrl);
+      if (!mediaResponse.ok) throw new Error(`Failed to download media: ${mediaResponse.status}`);
+
+      const mediaBlob = await mediaResponse.blob();
+      const extension = response.content_type === 'video' ? 'mp4' : 'webm';
+      const mediaFile = new File([mediaBlob], `recording.${extension}`, { type: mediaBlob.type });
+
+      console.log(`Sending to Whisper for transcription (${(mediaBlob.size / 1024).toFixed(0)} KB)...`);
+
+      const whisperForm = new FormData();
+      whisperForm.append('file', mediaFile);
+      whisperForm.append('model', 'whisper-1');
+      whisperForm.append('response_format', 'verbose_json');
+
+      const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: whisperForm,
+      });
+
+      if (!whisperResponse.ok) {
+        const whisperError = await whisperResponse.text();
+        console.error('Whisper API error:', whisperResponse.status, whisperError);
+        throw new Error(`Whisper transcription failed: ${whisperResponse.status}`);
+      }
+
+      const whisperResult = await whisperResponse.json();
+      textToAnalyze = whisperResult.text || '';
+      console.log(`Transcription complete: ${textToAnalyze.length} chars, language: ${whisperResult.language}`);
+
+      // Save transcript immediately
+      await supabase
+        .from('responses')
+        .update({ transcript: textToAnalyze })
+        .eq('id', response_id);
+
+      if (!textToAnalyze) {
+        return new Response(
+          JSON.stringify({ success: false, reason: 'empty_transcript', message: 'Whisper returned empty transcript' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
