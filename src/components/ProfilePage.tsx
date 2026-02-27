@@ -298,7 +298,7 @@ export default function ProfilePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.55 }}
-            className="columns-1 md:columns-2 gap-8"
+            className="columns-2 gap-4 md:gap-8"
           >
             {filteredEntries.map((entry, index) => (
               <MomentCard 
