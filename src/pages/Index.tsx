@@ -168,16 +168,7 @@ export default function Index() {
                 )}
               </div>
 
-              {/* Notifications */}
-              <div className="p-5 bg-card rounded-xl border border-border flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium text-foreground">Weekly reminders</h3>
-                  <p className="text-sm text-muted-foreground">Get notified when a new question arrives</p>
-                </div>
-                <div className="w-10 h-6 bg-primary rounded-full relative cursor-pointer">
-                  <div className="absolute right-0.5 top-0.5 w-5 h-5 bg-primary-foreground rounded-full shadow-sm" />
-                </div>
-              </div>
+
 
               {/* Sign out */}
               <button
