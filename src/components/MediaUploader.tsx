@@ -39,11 +39,12 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Attach stream to video element after render when recording/camera becomes active
-  useEffect(() => {
-    if (videoPreviewRef.current && streamRef.current && (isRecording || isCameraActive)) {
-      videoPreviewRef.current.srcObject = streamRef.current;
-      videoPreviewRef.current.play().catch(() => {});
+  // Callback ref: attaches stream to video element the instant it mounts
+  const attachStream = React.useCallback((node: HTMLVideoElement | null) => {
+    videoPreviewRef.current = node;
+    if (node && streamRef.current) {
+      node.srcObject = streamRef.current;
+      node.play().catch(() => {});
     }
   }, [isRecording, isCameraActive]);
 
@@ -300,7 +301,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
         className="relative rounded-2xl overflow-hidden bg-secondary/50"
       >
         <video 
-          ref={videoPreviewRef}
+          ref={attachStream}
           autoPlay
           muted
           playsInline
@@ -382,7 +383,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
       >
         {type === 'video' ? (
           <video 
-            ref={videoPreviewRef}
+            ref={attachStream}
             autoPlay
             muted
             playsInline
