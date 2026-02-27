@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Mic, 
@@ -39,6 +39,14 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Attach stream to video element after render when recording/camera becomes active
+  useEffect(() => {
+    if (videoPreviewRef.current && streamRef.current && (isRecording || isCameraActive)) {
+      videoPreviewRef.current.srcObject = streamRef.current;
+      videoPreviewRef.current.play().catch(() => {});
+    }
+  }, [isRecording, isCameraActive]);
+
   const startRecording = async () => {
     try {
       const constraints = type === 'video' 
@@ -47,11 +55,6 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
       
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-
-      if (type === 'video' && videoPreviewRef.current) {
-        videoPreviewRef.current.srcObject = stream;
-        videoPreviewRef.current.play();
-      }
 
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
@@ -99,11 +102,6 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
         video: { facingMode: 'user' } 
       });
       streamRef.current = stream;
-      
-      if (videoPreviewRef.current) {
-        videoPreviewRef.current.srcObject = stream;
-        videoPreviewRef.current.play();
-      }
       setIsCameraActive(true);
     } catch (error) {
       console.error('Error starting camera:', error);
