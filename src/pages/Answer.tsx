@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { triggerProcessingPipeline } from '@/lib/process-pipeline';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -86,7 +87,7 @@ export default function Answer() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      const { data: inserted, error } = await supabase
         .from('responses')
         .insert({
           user_id: user.id,
@@ -95,9 +96,16 @@ export default function Answer() {
           content_type: 'text',
           word_count: response.trim().split(/\s+/).length,
           privacy: 'private',
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
+
+      // Fire-and-forget: silently process response in background
+      if (inserted?.id) {
+        triggerProcessingPipeline(inserted.id, user.id);
+      }
 
       setIsSubmitted(true);
     } catch (error: any) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { triggerProcessingPipeline } from '@/lib/process-pipeline';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { 
@@ -125,11 +126,18 @@ export default function HomePage() {
         insertData.photo_url = mediaUrl;
       }
       
-      const { error } = await supabase
+      const { data: inserted, error } = await supabase
         .from('responses')
-        .insert(insertData);
+        .insert(insertData)
+        .select('id')
+        .single();
       
       if (error) throw error;
+
+      // Fire-and-forget: silently process response in background
+      if (inserted?.id) {
+        triggerProcessingPipeline(inserted.id, user.id);
+      }
       
       setIsSubmitted(true);
       setEntriesCount(prev => prev + 1);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { triggerProcessingPipeline } from '@/lib/process-pipeline';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { PenTool, Mic, Video, Sparkles, Check, Loader2 } from 'lucide-react';
@@ -82,7 +83,7 @@ export default function WeeklyQuestion() {
     
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      const { data: inserted, error } = await supabase
         .from('responses')
         .insert({
           user_id: user.id,
@@ -91,9 +92,16 @@ export default function WeeklyQuestion() {
           content_type: responseType,
           word_count: response.trim().split(/\s+/).length,
           privacy: 'private'
-        });
+        })
+        .select('id')
+        .single();
       
       if (error) throw error;
+
+      // Fire-and-forget: silently process response in background
+      if (inserted?.id) {
+        triggerProcessingPipeline(inserted.id, user.id);
+      }
       
       setIsSubmitted(true);
       toast({
