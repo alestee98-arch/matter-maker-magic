@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { Play, ArrowRight } from "lucide-react";
+import { Play, ArrowRight, Camera } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface Response {
   id: string;
@@ -27,12 +28,14 @@ interface Response {
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const { profile } = useProfile();
+  const { profile, updateProfile } = useProfile();
   const navigate = useNavigate();
   
   const [entries, setEntries] = useState<Response[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,17 +75,41 @@ export default function ProfilePage() {
     fetchData();
   }, [user]);
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setIsUploadingAvatar(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user.id}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      await updateProfile({ avatar_url: `${publicUrl}?t=${Date.now()}` });
+      toast.success('Profile picture updated');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to upload photo');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   // Calculate media counts
   const videoCount = entries.filter(e => e.content_type === 'video').length;
   const voiceCount = entries.filter(e => e.content_type === 'audio').length;
   const textCount = entries.filter(e => !e.content_type || e.content_type === 'text').length;
   const photoCount = entries.filter(e => e.content_type === 'photo').length;
 
-  // Find featured moment (prioritize video > voice > photo > text)
-  const featuredMoment = entries.find(e => e.content_type === 'video') 
-    || entries.find(e => e.content_type === 'audio')
-    || entries.find(e => e.content_type === 'photo')
-    || entries[0];
 
   // Filter entries by media type
   const filteredEntries = entries.filter(entry => {
@@ -133,7 +160,10 @@ export default function ProfilePage() {
             transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
             className="mb-8"
           >
-            <div className="w-32 h-32 md:w-36 md:h-36 mx-auto rounded-full bg-gradient-to-br from-[hsl(var(--matter-sage)/0.4)] to-[hsl(var(--matter-forest)/0.3)] flex items-center justify-center">
+            <div 
+              className="relative w-32 h-32 md:w-36 md:h-36 mx-auto rounded-full bg-gradient-to-br from-[hsl(var(--matter-sage)/0.4)] to-[hsl(var(--matter-forest)/0.3)] flex items-center justify-center cursor-pointer group"
+              onClick={() => fileInputRef.current?.click()}
+            >
               {profile?.avatar_url ? (
                 <img 
                   src={profile.avatar_url} 
@@ -145,6 +175,21 @@ export default function ProfilePage() {
                   {getInitials()}
                 </span>
               )}
+              <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
+                <Camera className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              {isUploadingAvatar && (
+                <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
             </div>
           </motion.div>
 
@@ -193,16 +238,6 @@ export default function ProfilePage() {
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* FEATURED MOMENT - intimate, unhurried */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {featuredMoment && (
-        <motion.section
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="max-w-3xl mx-auto px-6 mb-20"
-        >
-          <FeaturedCard entry={featuredMoment} displayName={displayName} />
-        </motion.section>
-      )}
 
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* MOMENTS - calm, breathing */}
@@ -287,124 +322,6 @@ export default function ProfilePage() {
           </motion.p>
         )}
       </section>
-    </div>
-  );
-}
-
-// Featured Card - large, intimate, presence-first
-function FeaturedCard({ entry, displayName }: { entry: Response; displayName: string }) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const videoRef = React.useRef<HTMLVideoElement>(null);
-  const audioRef = React.useRef<HTMLAudioElement>(null);
-  
-  const isVideo = entry.content_type === 'video';
-  const isAudio = entry.content_type === 'audio';
-  const isPhoto = entry.content_type === 'photo';
-
-  const togglePlay = () => {
-    if (isVideo && videoRef.current) {
-      if (isPlaying) videoRef.current.pause();
-      else videoRef.current.play();
-      setIsPlaying(!isPlaying);
-    }
-    if (isAudio && audioRef.current) {
-      if (isPlaying) audioRef.current.pause();
-      else audioRef.current.play();
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  return (
-    <div className="text-center">
-      {/* Label - soft, human */}
-      <p className="text-muted-foreground/60 text-sm mb-6">
-        A moment that captures {displayName.split(' ')[0]}
-      </p>
-
-      <div className="bg-card rounded-3xl overflow-hidden">
-        {/* Question - the anchor */}
-        <div className="px-8 pt-8 pb-6">
-          <p className="text-muted-foreground/50 text-xs mb-2">In response to</p>
-          <h3 className="font-serif text-xl md:text-2xl text-foreground leading-relaxed">
-            {entry.questions?.question || 'A reflection'}
-          </h3>
-        </div>
-
-        {/* Media */}
-        <div className="px-6 pb-8">
-          {isVideo && entry.video_url && (
-            <div 
-              className="relative aspect-video bg-secondary/30 rounded-2xl overflow-hidden cursor-pointer group"
-              onClick={togglePlay}
-            >
-              <video 
-                ref={videoRef}
-                src={entry.video_url} 
-                className="w-full h-full object-cover"
-                playsInline
-                onEnded={() => setIsPlaying(false)}
-              />
-              {!isPlaying && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-background/90 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-                    <Play className="w-6 h-6 text-foreground fill-foreground ml-1" />
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {isAudio && entry.audio_url && (
-            <div 
-              className="bg-secondary/20 rounded-2xl p-6 cursor-pointer group"
-              onClick={togglePlay}
-            >
-              <audio 
-                ref={audioRef}
-                src={entry.audio_url} 
-                onEnded={() => setIsPlaying(false)}
-                className="hidden"
-              />
-              <div className="flex items-center gap-5">
-                <button className="w-14 h-14 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                  {isPlaying ? (
-                    <div className="w-4 h-4 bg-background rounded-sm" />
-                  ) : (
-                    <Play className="w-5 h-5 text-background fill-background ml-0.5" />
-                  )}
-                </button>
-                <div className="flex-1 flex items-end gap-[3px] h-12">
-                  {[0.3, 0.5, 0.7, 0.4, 1, 0.8, 0.6, 0.9, 0.5, 0.7, 0.4, 0.8, 0.6, 0.5, 0.3, 0.6, 0.8, 0.5, 0.4, 0.6, 0.7, 0.5, 0.8, 0.4].map((h, i) => (
-                    <div 
-                      key={i} 
-                      className={`flex-1 rounded-full transition-all ${
-                        isPlaying ? 'bg-foreground/50' : 'bg-foreground/20'
-                      }`}
-                      style={{ height: `${h * 100}%` }} 
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {isPhoto && entry.photo_url && (
-            <div className="relative aspect-[4/3] bg-secondary/30 rounded-2xl overflow-hidden">
-              <img 
-                src={entry.photo_url} 
-                alt=""
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-
-          {!isVideo && !isAudio && !isPhoto && (
-            <p className="text-foreground/80 text-lg md:text-xl leading-relaxed italic px-2">
-              "{entry.content}"
-            </p>
-          )}
-        </div>
-      </div>
     </div>
   );
 }
