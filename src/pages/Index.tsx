@@ -96,7 +96,7 @@ export default function Index() {
           <div className="space-y-8">
             <div className="text-center">
               <h2 className="text-2xl font-serif text-foreground mb-2">Settings</h2>
-              <p className="text-muted-foreground">Manage your account and preferences</p>
+              <p className="text-muted-foreground">Manage your contact information</p>
             </div>
             
             <div className="grid gap-4 max-w-xl mx-auto">
