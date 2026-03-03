@@ -498,8 +498,7 @@ function EntryDetailSheet({ entry, onClose }: { entry: Response; onClose: () => 
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         className="fixed inset-x-0 bottom-0 z-50 max-h-[92vh] bg-card rounded-t-3xl border-t border-border overflow-y-auto
-                   md:inset-x-auto md:left-1/2 md:bottom-auto md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2
-                   md:w-[560px] md:max-h-[85vh] md:rounded-3xl md:border md:shadow-2xl"
+                   md:inset-0 md:m-auto md:w-[580px] md:h-fit md:max-h-[88vh] md:rounded-3xl md:border md:shadow-2xl"
         style={{ boxShadow: '0 -10px 60px rgba(0,0,0,0.12)' }}
       >
         <div className="sticky top-0 bg-card/95 backdrop-blur-sm z-10 pt-3 pb-2 px-5">
@@ -514,8 +513,8 @@ function EntryDetailSheet({ entry, onClose }: { entry: Response; onClose: () => 
 
         <div className="px-5 pb-10">
           {entry.photo_url && (
-            <div className="mb-6 -mx-5">
-              <img src={entry.photo_url} alt="" className="w-full max-h-[50vh] object-cover" />
+            <div className="mb-6 -mx-5 -mt-2">
+              <img src={entry.photo_url} alt="" className="w-full max-h-[55vh] object-cover" />
             </div>
           )}
 
