@@ -59,7 +59,7 @@ serve(async (req) => {
 
     // Convert audio to base64 using Deno's built-in encoder (handles large files)
     const arrayBuffer = await response.arrayBuffer();
-    const base64Audio = base64Encode(new Uint8Array(arrayBuffer));
+    const base64Audio = base64Encode(arrayBuffer);
 
     console.log('Speech generated successfully, audio size:', arrayBuffer.byteLength);
 
@@ -72,7 +72,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in text-to-speech:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
