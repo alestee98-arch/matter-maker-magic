@@ -43,8 +43,8 @@ serve(async (req) => {
     // Build the transcript compilation
     const transcriptCompilation = responses.map((r, i) => {
       const text = r.transcript || r.content;
-      const question = r.questions?.question || 'Unknown question';
-      const category = r.questions?.category || 'general';
+      const question = (r as any).questions?.question || 'Unknown question';
+      const category = (r as any).questions?.category || 'general';
       const values = r.extracted_values?.join(', ') || 'not extracted';
       const emotions = r.extracted_emotions?.join(', ') || 'not extracted';
       
@@ -231,7 +231,7 @@ Also generate a system prompt that could be used to make an AI respond AS this p
   } catch (error) {
     console.error('Error in analyze-personality:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

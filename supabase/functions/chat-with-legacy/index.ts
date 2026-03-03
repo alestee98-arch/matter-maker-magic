@@ -61,13 +61,13 @@ serve(async (req) => {
       if (allResponses.length <= 15) {
         relevantContext = allResponses.map((r, i) => {
           const text = r.transcript || r.content;
-          const q = r.questions?.question || '';
+          const q = (r as any).questions?.question || '';
           return `[Memory ${i + 1}] Q: "${q}" → "${text}"`;
         }).join('\n\n');
       } else {
         // For many responses, use AI to select the most relevant ones
         const summaryList = allResponses.map((r, i) => 
-          `${i}: [${r.questions?.category || 'general'}] "${r.summary}" (values: ${r.extracted_values?.join(', ') || 'none'})`
+          `${i}: [${(r as any).questions?.category || 'general'}] "${(r as any).summary}" (values: ${(r as any).extracted_values?.join(', ') || 'none'})`
         ).join('\n');
 
         const selectionResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -88,13 +88,13 @@ serve(async (req) => {
         if (selectionResponse.ok) {
           const selectionResult = await selectionResponse.json();
           const selectedText = selectionResult.choices?.[0]?.message?.content || '';
-          const indices = selectedText.match(/\d+/g)?.map(Number).filter(n => n < allResponses.length) || [];
+          const indices = selectedText.match(/\d+/g)?.map(Number).filter((n: number) => n < allResponses.length) || [];
           
           const selectedResponses = indices.length > 0 
-            ? indices.map(i => allResponses[i]).filter(Boolean)
+            ? indices.map((i: number) => allResponses[i]).filter(Boolean)
             : allResponses.slice(0, 10);
 
-          relevantContext = selectedResponses.map((r, i) => {
+          relevantContext = selectedResponses.map((r: any, i: number) => {
             const text = r.transcript || r.content;
             const q = r.questions?.question || '';
             return `[Memory ${i + 1}] Q: "${q}" → "${text}"`;
@@ -254,7 +254,7 @@ ${relevantContext || 'No specific memories loaded yet.'}`;
             if (ttsResponse.ok) {
               const audioBuffer = await ttsResponse.arrayBuffer();
               const { encode: base64Encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
-              audioContent = base64Encode(new Uint8Array(audioBuffer));
+              audioContent = base64Encode(audioBuffer);
               console.log('Voice audio generated successfully');
             } else {
               console.error('TTS failed:', ttsResponse.status, await ttsResponse.text());
@@ -279,7 +279,7 @@ ${relevantContext || 'No specific memories loaded yet.'}`;
   } catch (error) {
     console.error('Error in chat-with-legacy:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
