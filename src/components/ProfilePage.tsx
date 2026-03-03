@@ -3,9 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { Play, ArrowRight, Camera, X, ChevronDown } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
-import { motion } from "framer-motion";
+import { Play, ArrowRight, Camera, X, ChevronDown, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -27,305 +26,243 @@ interface Response {
   } | null;
 }
 
+/* Category accent colors — subtle pills */
+const CAT_COLORS: Record<string, string> = {
+  childhood:    "bg-amber-100/80  text-amber-700",
+  relationships:"bg-rose-100/80   text-rose-700",
+  adversity:    "bg-slate-100/80  text-slate-600",
+  beliefs:      "bg-violet-100/80 text-violet-700",
+  purpose:      "bg-sky-100/80    text-sky-700",
+  family:       "bg-orange-100/80 text-orange-700",
+  humor:        "bg-lime-100/80   text-lime-700",
+  legacy:       "bg-emerald-100/80 text-emerald-700",
+  self:         "bg-indigo-100/80 text-indigo-700",
+};
+const catColor = (cat?: string) =>
+  cat ? (CAT_COLORS[cat.toLowerCase()] ?? "bg-muted/60 text-muted-foreground") : "";
+
+/* ─────────────────────────────────────────────────────────────── */
 export default function ProfilePage() {
   const { user } = useAuth();
   const { profile, updateProfile } = useProfile();
   const navigate = useNavigate();
-  
-  const [entries, setEntries] = useState<Response[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedFilter, setSelectedFilter] = useState<string>('all');
+
+  const [entries, setEntries]               = useState<Response[]>([]);
+  const [isLoading, setIsLoading]           = useState(true);
+  const [selectedFilter, setSelectedFilter] = useState("all");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [selectedEntry, setSelectedEntry] = useState<Response | null>(null);
+  const [selectedEntry, setSelectedEntry]   = useState<Response | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return;
-      
-      setIsLoading(true);
-      try {
-        const { data: responsesData } = await supabase
-          .from('responses')
-          .select(`
-            id,
-            content,
-            content_type,
-            privacy,
-            created_at,
-            question_id,
-            audio_url,
-            video_url,
-            photo_url,
-            questions (
-              question,
-              category,
-              depth
-            )
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-        
-        setEntries(responsesData || []);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchData();
+    if (!user) return;
+    setIsLoading(true);
+    supabase
+      .from("responses")
+      .select(`id, content, content_type, privacy, created_at, question_id,
+               audio_url, video_url, photo_url,
+               questions ( question, category, depth )`)
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => { setEntries(data || []); setIsLoading(false); });
   }, [user]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
-
     setIsUploadingAvatar(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${user.id}/avatar.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
+      const ext  = file.name.split(".").pop();
+      const path = `${user.id}/avatar.${ext}`;
+      const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
       await updateProfile({ avatar_url: `${publicUrl}?t=${Date.now()}` });
-      toast.success('Profile picture updated');
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to upload photo');
-    } finally {
-      setIsUploadingAvatar(false);
-    }
+      toast.success("Profile picture updated");
+    } catch { toast.error("Failed to upload photo"); }
+    finally { setIsUploadingAvatar(false); }
   };
 
-  // Calculate media counts
-  const videoCount = entries.filter(e => e.content_type === 'video').length;
-  const voiceCount = entries.filter(e => e.content_type === 'audio').length;
-  const textCount = entries.filter(e => !e.content_type || e.content_type === 'text').length;
-  const photoCount = entries.filter(e => e.content_type === 'photo').length;
+  const counts = {
+    video: entries.filter(e => e.content_type === "video").length,
+    voice: entries.filter(e => e.content_type === "audio").length,
+    text:  entries.filter(e => !e.content_type || e.content_type === "text").length,
+    photo: entries.filter(e => e.content_type === "photo").length,
+  };
 
-
-  // Filter entries by media type
-  const filteredEntries = entries.filter(entry => {
-    if (selectedFilter === 'all') return true;
-    if (selectedFilter === 'video') return entry.content_type === 'video';
-    if (selectedFilter === 'voice') return entry.content_type === 'audio';
-    if (selectedFilter === 'text') return !entry.content_type || entry.content_type === 'text';
+  const filtered = entries.filter(e => {
+    if (selectedFilter === "all")   return true;
+    if (selectedFilter === "video") return e.content_type === "video";
+    if (selectedFilter === "voice") return e.content_type === "audio";
+    if (selectedFilter === "text")  return !e.content_type || e.content_type === "text";
+    if (selectedFilter === "photo") return e.content_type === "photo";
     return true;
   });
 
-  // Get user initials
-  const getInitials = () => {
-    if (profile?.display_name) {
-      return profile.display_name.charAt(0).toUpperCase();
-    }
-    if (user?.email) {
-      return user.email.charAt(0).toUpperCase();
-    }
-    return 'M';
-  };
+  const FILTERS = [
+    { id: "all",   label: "All" },
+    counts.text  > 0 && { id: "text",  label: "Written" },
+    counts.voice > 0 && { id: "voice", label: "Voice"   },
+    counts.video > 0 && { id: "video", label: "Video"   },
+    counts.photo > 0 && { id: "photo", label: "Photos"  },
+  ].filter(Boolean) as { id: string; label: string }[];
 
-  const displayName = profile?.display_name || user?.email?.split('@')[0] || 'Your Legacy';
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "Your Legacy";
+  const initials    = displayName.charAt(0).toUpperCase();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-6 h-6 rounded-full border-2 border-muted-foreground/20 border-t-foreground/60 animate-spin" />
-      </div>
-    );
-  }
+  if (isLoading) return (
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="w-6 h-6 rounded-full border-2 border-muted-foreground/20 border-t-foreground/60 animate-spin" />
+    </div>
+  );
 
   return (
     <div className="min-h-[calc(100vh-8rem)] pb-20">
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* PRESENCE - Profile Header */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+
+      {/* ── PROFILE HEADER ── */}
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
-        className="pt-16 pb-20 md:pt-20 md:pb-24"
+        transition={{ duration: 0.7, ease: [0.23, 1, 0.32, 1] }}
+        className="pt-10 pb-10 md:pt-16 md:pb-16"
       >
         <div className="max-w-2xl mx-auto px-6 text-center">
-          {/* Avatar - soft, warm */}
+
+          {/* Avatar */}
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-            className="mb-8"
+            transition={{ duration: 0.5 }}
+            className="mb-5"
           >
-            <div 
-              className="relative w-32 h-32 md:w-36 md:h-36 mx-auto rounded-full bg-gradient-to-br from-[hsl(var(--matter-sage)/0.4)] to-[hsl(var(--matter-forest)/0.3)] flex items-center justify-center cursor-pointer group"
+            <div
+              className="relative w-24 h-24 md:w-32 md:h-32 mx-auto rounded-full bg-gradient-to-br from-[hsl(var(--matter-sage)/0.4)] to-[hsl(var(--matter-forest)/0.3)] flex items-center justify-center cursor-pointer group"
               onClick={() => fileInputRef.current?.click()}
             >
-              {profile?.avatar_url ? (
-                <img 
-                  src={profile.avatar_url} 
-                  alt={displayName}
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <span className="font-serif text-5xl md:text-6xl text-foreground/60">
-                  {getInitials()}
-                </span>
-              )}
+              {profile?.avatar_url
+                ? <img src={profile.avatar_url} alt={displayName} className="w-full h-full rounded-full object-cover" />
+                : <span className="font-serif text-4xl md:text-5xl text-foreground/60">{initials}</span>
+              }
               <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
-                <Camera className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Camera className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               {isUploadingAvatar && (
                 <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
-                  <div className="w-6 h-6 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                 </div>
               )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarUpload}
-              />
+              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
             </div>
           </motion.div>
 
           {/* Name */}
           <motion.h1
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.5 }}
-            className="font-serif text-4xl md:text-5xl text-foreground mb-4 tracking-tight"
+            transition={{ delay: 0.1, duration: 0.5 }}
+            className="font-serif text-3xl md:text-5xl text-foreground mb-2 tracking-tight"
           >
             {displayName}
           </motion.h1>
 
-          {/* Identity - soft, poetic */}
           <motion.p
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, duration: 0.5 }}
-            className="text-muted-foreground text-lg md:text-xl leading-relaxed mb-6"
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="text-muted-foreground text-base md:text-lg leading-relaxed mb-4"
           >
             A life told one question at a time.
           </motion.p>
 
-          {/* Counts - subtle, secondary */}
+          {/* Stats row */}
           {entries.length > 0 && (
-            <motion.p
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.35, duration: 0.5 }}
-              className="text-muted-foreground/60 text-sm tracking-wide"
+              transition={{ delay: 0.3 }}
+              className="flex items-center justify-center gap-5 md:gap-8"
             >
-              {entries.length} moment{entries.length !== 1 ? 's' : ''}
-              {videoCount > 0 && <span className="mx-1.5">·</span>}
-              {videoCount > 0 && <>{videoCount} video{videoCount !== 1 ? 's' : ''}</>}
-              {voiceCount > 0 && <span className="mx-1.5">·</span>}
-              {voiceCount > 0 && <>{voiceCount} voice</>}
-              {textCount > 0 && <span className="mx-1.5">·</span>}
-              {textCount > 0 && <>{textCount} written</>}
-              {photoCount > 0 && <span className="mx-1.5">·</span>}
-              {photoCount > 0 && <>{photoCount} photo{photoCount !== 1 ? 's' : ''}</>}
-            </motion.p>
+              {[
+                { label: "moments",  value: entries.length },
+                counts.voice > 0 && { label: "voice",   value: counts.voice },
+                counts.video > 0 && { label: "video",   value: counts.video },
+                counts.text  > 0 && { label: "written", value: counts.text  },
+              ].filter(Boolean).map((s: any) => (
+                <div key={s.label} className="text-center">
+                  <p className="font-serif text-xl md:text-2xl text-foreground">{s.value}</p>
+                  <p className="text-xs text-muted-foreground/60 mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </motion.div>
           )}
         </div>
       </motion.section>
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* FEATURED MOMENT - intimate, unhurried */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* ── CONTENT ── */}
+      <section className="max-w-4xl mx-auto px-4 md:px-6">
 
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      {/* MOMENTS - calm, breathing */}
-      {/* ═══════════════════════════════════════════════════════════════ */}
-      <section className="max-w-4xl mx-auto px-6">
-        {/* Minimal filters - just text, no icons */}
-        {entries.length > 0 && (
+        {/* Filter tabs */}
+        {FILTERS.length > 1 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="flex justify-center gap-6 mb-12"
+            transition={{ delay: 0.4 }}
+            className="flex justify-center gap-5 md:gap-8 mb-8 md:mb-12"
           >
-            {['all', 'video', 'voice', 'text'].map((filter) => (
+            {FILTERS.map(f => (
               <button
-                key={filter}
-                onClick={() => setSelectedFilter(filter)}
-                className={`text-sm transition-all ${
-                  selectedFilter === filter
-                    ? 'text-foreground'
-                    : 'text-muted-foreground/50 hover:text-muted-foreground'
+                key={f.id}
+                onClick={() => setSelectedFilter(f.id)}
+                className={`text-sm transition-all pb-1 border-b ${
+                  selectedFilter === f.id
+                    ? "text-foreground border-foreground"
+                    : "text-muted-foreground/40 border-transparent hover:text-muted-foreground"
                 }`}
               >
-                {filter === 'all' ? 'All' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                {f.label}
               </button>
             ))}
           </motion.div>
         )}
 
-        {/* Empty State - inviting, not lonely */}
-        {entries.length === 0 && !isLoading && (
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-20"
-          >
-            <h3 className="font-serif text-2xl md:text-3xl text-foreground mb-4">
-              Your story begins here
-            </h3>
-            <p className="text-muted-foreground mb-10 max-w-md mx-auto leading-relaxed">
-              Answer your first question to start preserving your legacy — 
-              for the people who matter most.
+        {/* Empty state */}
+        {entries.length === 0 && (
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="text-center py-24">
+            <h3 className="font-serif text-2xl md:text-3xl text-foreground mb-4">Your story begins here</h3>
+            <p className="text-muted-foreground mb-10 max-w-sm mx-auto leading-relaxed text-sm md:text-base">
+              Answer your first question to start preserving your legacy — for the people who matter most.
             </p>
-            <Button 
-              onClick={() => navigate('/home')}
-              size="lg"
-              className="rounded-full bg-foreground text-background hover:bg-foreground/90 px-8 h-12"
-            >
-              Begin
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button onClick={() => navigate("/home")} size="lg" className="rounded-full px-8 h-12">
+              Begin <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </motion.div>
         )}
 
-        {/* Moments Grid - generous spacing */}
-        {filteredEntries.length > 0 && (
-          <motion.div 
+        {/* Cards grid */}
+        {filtered.length > 0 && (
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.55 }}
-            className="columns-1 md:columns-2 gap-8"
+            transition={{ delay: 0.45 }}
+            className="columns-1 md:columns-2 gap-6"
           >
-            {filteredEntries.map((entry, index) => (
-              <MomentCard 
-                key={entry.id} 
-                entry={entry} 
-                index={index}
-                onSelect={() => setSelectedEntry(entry)}
-              />
+            {filtered.map((entry, i) => (
+              <MomentCard key={entry.id} entry={entry} index={i} onSelect={() => setSelectedEntry(entry)} />
             ))}
           </motion.div>
         )}
 
-        {/* Closing - anchoring meaning */}
         {entries.length > 0 && (
           <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="text-center text-muted-foreground/50 mt-24 mb-8 text-sm"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+            className="text-center text-muted-foreground/40 mt-20 mb-8 text-xs md:text-sm"
           >
-            This is a growing record of a life — shaped week by week.
+            A growing record of a life — shaped week by week.
           </motion.p>
         )}
       </section>
 
+      {/* Detail sheet */}
       <AnimatePresence>
         {selectedEntry && (
           <EntryDetailSheet entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
@@ -335,237 +272,270 @@ export default function ProfilePage() {
   );
 }
 
-// Moment Card - calm, weighted by type
+/* ═══════════════════════════════════════════════════════════════
+   MOMENT CARD
+═══════════════════════════════════════════════════════════════ */
 function MomentCard({ entry, index, onSelect }: { entry: Response; index: number; onSelect: () => void }) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const videoRef = React.useRef<HTMLVideoElement>(null);
-  const audioRef = React.useRef<HTMLAudioElement>(null);
-  
-  const isVideo = entry.content_type === 'video';
-  const isAudio = entry.content_type === 'audio';
-  const isPhoto = entry.content_type === 'photo';
-  const isText = !entry.content_type || entry.content_type === 'text';
-  
-  const formattedDate = entry.created_at 
-    ? format(new Date(entry.created_at), 'MMMM yyyy')
-    : '';
+  const isVideo = entry.content_type === "video";
+  const isAudio = entry.content_type === "audio";
+  const isPhoto = entry.content_type === "photo";
+  const isText  = !entry.content_type || entry.content_type === "text";
+  const cat     = entry.questions?.category;
+  const date    = entry.created_at ? format(new Date(entry.created_at), "MMMM yyyy") : "";
 
-  const togglePlay = () => {
-    if (isVideo && videoRef.current) {
-      if (isPlaying) videoRef.current.pause();
-      else videoRef.current.play();
-      setIsPlaying(!isPlaying);
-    }
-    if (isAudio && audioRef.current) {
-      if (isPlaying) audioRef.current.pause();
-      else audioRef.current.play();
-      setIsPlaying(!isPlaying);
-    }
-  };
+  const TEXT_LIMIT = 160;
+  const isTruncated = isText && entry.content.length > TEXT_LIMIT;
+  const preview = isTruncated ? entry.content.slice(0, TEXT_LIMIT).trimEnd() : entry.content;
 
-  // Card sizing: video = most generous, then audio/photo, then text
-  const paddingClass = isVideo ? 'p-7' : isAudio || isPhoto ? 'p-6' : 'p-5';
+  const pad = isVideo ? "p-0" : isAudio ? "p-5" : isPhoto ? "p-0" : "p-5";
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+      transition={{ delay: index * 0.04, duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
       onClick={onSelect}
-      className={`bg-card rounded-2xl overflow-hidden break-inside-avoid mb-8 cursor-pointer hover:bg-secondary/20 transition-colors ${paddingClass}`}
+      className={`bg-card rounded-2xl overflow-hidden break-inside-avoid mb-5 cursor-pointer
+                  ring-1 ring-border/50 hover:ring-border hover:shadow-sm transition-all active:scale-[0.99] ${pad}`}
     >
-      {/* Question context */}
-      <p className="text-muted-foreground/40 text-xs mb-1.5">In response to</p>
-      <h3 className={`font-serif text-foreground leading-snug mb-5 ${
-        isVideo ? 'text-xl' : isAudio || isPhoto ? 'text-lg' : 'text-base'
-      }`}>
-        {entry.questions?.question || 'A reflection'}
-      </h3>
-
-      {/* Content */}
-      {isText && (
-        <p className="text-muted-foreground leading-relaxed text-[15px]">
-          {entry.content}
-        </p>
+      {/* Photo hero */}
+      {isPhoto && entry.photo_url && (
+        <>
+          <div className="relative w-full aspect-[4/3] bg-muted overflow-hidden">
+            <img src={entry.photo_url} alt="" className="w-full h-full object-cover" />
+          </div>
+          <div className="p-5 pt-4">
+            <QuestionMeta question={entry.questions?.question} cat={cat} date={date} />
+          </div>
+        </>
       )}
 
+      {/* Video hero */}
       {isVideo && entry.video_url && (
-        <div 
-          className="relative aspect-video bg-secondary/30 rounded-xl overflow-hidden cursor-pointer group"
-          onClick={togglePlay}
-        >
-          <video 
-            ref={videoRef}
-            src={entry.video_url} 
-            className="w-full h-full object-cover"
-            playsInline
-            onEnded={() => setIsPlaying(false)}
-          />
-          {!isPlaying && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 rounded-full bg-background/90 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+        <>
+          <div className="relative w-full aspect-video bg-black overflow-hidden">
+            <video src={entry.video_url} className="w-full h-full object-cover opacity-90" />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+              <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
                 <Play className="w-5 h-5 text-foreground fill-foreground ml-0.5" />
               </div>
             </div>
-          )}
-        </div>
+          </div>
+          <div className="p-5 pt-4">
+            <QuestionMeta question={entry.questions?.question} cat={cat} date={date} />
+          </div>
+        </>
       )}
 
-      {isPhoto && entry.photo_url && (
-        <div className="relative aspect-[4/3] bg-secondary/30 rounded-xl overflow-hidden">
-          <img 
-            src={entry.photo_url} 
-            alt=""
-            className="w-full h-full object-cover"
-          />
-        </div>
-      )}
-
-      {isAudio && entry.audio_url && (
-        <div 
-          className="bg-secondary/20 rounded-xl p-4 cursor-pointer group"
-          onClick={togglePlay}
-        >
-          <audio 
-            ref={audioRef}
-            src={entry.audio_url} 
-            onEnded={() => setIsPlaying(false)}
-            className="hidden"
-          />
-          <div className="flex items-center gap-4">
-            <button className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-              {isPlaying ? (
-                <div className="w-3 h-3 bg-background rounded-sm" />
-              ) : (
-                <Play className="w-4 h-4 text-background fill-background ml-0.5" />
-              )}
-            </button>
-            <div className="flex-1 flex items-end gap-[2px] h-8">
-              {[0.3, 0.5, 0.7, 0.4, 1, 0.8, 0.6, 0.9, 0.5, 0.7, 0.4, 0.8, 0.6, 0.5, 0.3, 0.6, 0.8, 0.5].map((h, i) => (
-                <div 
-                  key={i} 
-                  className={`flex-1 rounded-full transition-all ${
-                    isPlaying ? 'bg-foreground/50' : 'bg-foreground/20'
-                  }`}
-                  style={{ height: `${h * 100}%` }} 
-                />
+      {/* Audio card */}
+      {isAudio && (
+        <>
+          <QuestionMeta question={entry.questions?.question} cat={cat} date={date} />
+          <div className="mt-4 bg-secondary/30 rounded-xl p-3.5 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center flex-shrink-0">
+              <Play className="w-3.5 h-3.5 text-background fill-background ml-[1px]" />
+            </div>
+            <div className="flex-1 flex items-end gap-[2px] h-6">
+              {[0.3,0.6,0.9,0.5,1,0.7,0.4,0.8,0.5,0.9,0.3,0.7,0.6,0.4,0.8,0.5,0.7,0.4,0.6,0.9].map((h, i) => (
+                <div key={i} className="flex-1 bg-foreground/20 rounded-full" style={{ height: `${h * 100}%` }} />
               ))}
             </div>
           </div>
-        </div>
+          <TapHint />
+        </>
       )}
 
-      {/* Date - quiet, secondary */}
-      <p className="text-muted-foreground/40 text-xs mt-4">{formattedDate}</p>
+      {/* Text card */}
+      {isText && (
+        <>
+          <QuestionMeta question={entry.questions?.question} cat={cat} date={date} />
+          <div className="mt-3 relative">
+            <p className="text-[14px] text-muted-foreground leading-relaxed">
+              {preview}
+            </p>
+            {isTruncated && (
+              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card to-transparent" />
+            )}
+          </div>
+          <TapHint />
+        </>
+      )}
     </motion.article>
   );
 }
 
-// Entry Detail Sheet - slides up on tap
+function QuestionMeta({ question, cat, date }: { question?: string; cat?: string; date: string }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        {cat
+          ? <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full capitalize ${catColor(cat)}`}>{cat}</span>
+          : <span />
+        }
+        <span className="text-[11px] text-muted-foreground/40 ml-auto">{date}</span>
+      </div>
+      <p className="text-muted-foreground/40 text-[11px] mb-1">In response to</p>
+      <h3 className="font-serif text-[15px] md:text-base text-foreground leading-snug">
+        {question || "A reflection"}
+      </h3>
+    </div>
+  );
+}
+
+function TapHint() {
+  return (
+    <div className="flex items-center gap-0.5 mt-3 text-muted-foreground/30">
+      <span className="text-[11px]">Read</span>
+      <ChevronRight className="w-3 h-3" />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ENTRY DETAIL SHEET
+   — Bottom sheet on mobile
+   — Centered modal on desktop
+═══════════════════════════════════════════════════════════════ */
 function EntryDetailSheet({ entry, onClose }: { entry: Response; onClose: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const isText  = !entry.content_type || entry.content_type === 'text';
-  const isLong  = entry.content.length > 300;
+  const isText  = !entry.content_type || entry.content_type === "text";
+  const isAudio = entry.content_type === "audio";
+  const isVideo = entry.content_type === "video";
+  const isPhoto = !!entry.photo_url;
+  const isLong  = isText && entry.content.length > 400;
   const displayContent = !expanded && isLong
-    ? entry.content.slice(0, 300).trimEnd() + '…'
+    ? entry.content.slice(0, 400).trimEnd() + "…"
     : entry.content;
-  const date = entry.created_at ? format(new Date(entry.created_at), 'EEEE, MMMM d, yyyy') : 'Recently';
+  const date = entry.created_at ? format(new Date(entry.created_at), "EEEE, MMMM d, yyyy") : "Recently";
+  const cat  = entry.questions?.category;
 
   const togglePlay = () => {
-    if (entry.content_type === 'video' && videoRef.current) {
-      isPlaying ? videoRef.current.pause() : videoRef.current.play();
-    }
-    if (entry.content_type === 'audio' && audioRef.current) {
-      isPlaying ? audioRef.current.pause() : audioRef.current.play();
-    }
-    setIsPlaying(!isPlaying);
+    if (isVideo && videoRef.current) isPlaying ? videoRef.current.pause() : videoRef.current.play();
+    if (isAudio && audioRef.current) isPlaying ? audioRef.current.pause() : audioRef.current.play();
+    setIsPlaying(p => !p);
   };
 
   return (
     <>
+      {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
         onClick={onClose}
-        className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
       />
+
+      {/* Sheet */}
       <motion.div
-        initial={{ y: '100%' }}
+        initial={{ y: "100%" }}
         animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        className="fixed inset-x-0 bottom-0 z-50 max-h-[92vh] bg-card rounded-t-3xl border-t border-border overflow-y-auto
-                   md:inset-0 md:m-auto md:w-[580px] md:h-fit md:max-h-[88vh] md:rounded-3xl md:border md:shadow-2xl"
-        style={{ boxShadow: '0 -10px 60px rgba(0,0,0,0.12)' }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 32, stiffness: 320 }}
+        className="fixed inset-x-0 bottom-0 z-50 bg-card rounded-t-3xl overflow-hidden
+                   max-h-[94vh] flex flex-col
+                   md:inset-0 md:m-auto md:rounded-3xl md:w-[600px] md:max-h-[88vh] md:shadow-2xl"
       >
-        <div className="sticky top-0 bg-card/95 backdrop-blur-sm z-10 pt-3 pb-2 px-5">
-          <div className="w-10 h-1 bg-muted-foreground/20 rounded-full mx-auto mb-4 md:hidden" />
+        {/* Sticky header */}
+        <div className="flex-shrink-0 pt-3 pb-3 px-5 border-b border-border/50 bg-card">
+          {/* Drag handle — mobile only */}
+          <div className="w-10 h-1 bg-muted-foreground/20 rounded-full mx-auto mb-3 md:hidden" />
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">{date}</span>
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+            <div className="flex items-center gap-2 flex-wrap">
+              {cat && (
+                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full capitalize ${catColor(cat)}`}>
+                  {cat}
+                </span>
+              )}
+              <span className="text-xs text-muted-foreground/60">{date}</span>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors ml-2 flex-shrink-0"
+            >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        <div className="px-5 pb-10">
-          {entry.photo_url && (
-            <div className="mb-6 -mx-5 -mt-2">
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Photo — full bleed */}
+          {isPhoto && entry.photo_url && (
+            <div className="w-full">
               <img src={entry.photo_url} alt="" className="w-full max-h-[55vh] object-cover" />
             </div>
           )}
 
-          {entry.content_type === 'video' && entry.video_url && (
-            <div className="mb-6 -mx-5 relative aspect-video bg-black cursor-pointer" onClick={togglePlay}>
-              <video ref={videoRef} src={entry.video_url} className="w-full h-full object-contain" playsInline onEnded={() => setIsPlaying(false)} />
+          {/* Video — full bleed */}
+          {isVideo && entry.video_url && (
+            <div className="relative w-full aspect-video bg-black cursor-pointer" onClick={togglePlay}>
+              <video ref={videoRef} src={entry.video_url} className="w-full h-full object-contain"
+                playsInline onEnded={() => setIsPlaying(false)} />
               {!isPlaying && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-                    <Play className="w-6 h-6 text-foreground fill-foreground ml-0.5" />
+                  <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-xl">
+                    <Play className="w-7 h-7 text-foreground fill-foreground ml-0.5" />
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          <h2 className="text-xl md:text-2xl font-serif text-foreground mb-5 leading-snug">
-            {entry.questions?.question || 'A reflection'}
-          </h2>
+          <div className="px-6 py-6 pb-10">
+            {/* Question */}
+            <p className="text-muted-foreground/50 text-xs mb-1.5">In response to</p>
+            <h2 className="font-serif text-xl md:text-2xl text-foreground leading-snug mb-6">
+              {entry.questions?.question || "A reflection"}
+            </h2>
 
-          {entry.content_type === 'audio' && entry.audio_url && (
-            <div className="mb-6 bg-secondary/30 rounded-2xl p-5 cursor-pointer" onClick={togglePlay}>
-              <audio ref={audioRef} src={entry.audio_url} onEnded={() => setIsPlaying(false)} className="hidden" />
-              <div className="flex items-center gap-4">
-                <button className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center flex-shrink-0">
-                  {isPlaying ? <div className="w-3.5 h-3.5 bg-background rounded-sm" /> : <Play className="w-5 h-5 text-background fill-background ml-0.5" />}
-                </button>
-                <div className="flex-1 flex items-end gap-[2px] h-10">
-                  {[0.3,0.5,0.7,0.4,1,0.8,0.6,0.9,0.5,0.7,0.4,0.8,0.6,0.5,0.3,0.6,0.8,0.5,0.7,0.4].map((h, i) => (
-                    <div key={i} className={`flex-1 rounded-full transition-all ${isPlaying ? 'bg-foreground/50' : 'bg-foreground/20'}`} style={{ height: `${h * 100}%` }} />
-                  ))}
+            {/* Audio player */}
+            {isAudio && entry.audio_url && (
+              <div className="mb-6 bg-secondary/30 rounded-2xl p-5 cursor-pointer" onClick={togglePlay}>
+                <audio ref={audioRef} src={entry.audio_url} onEnded={() => setIsPlaying(false)} className="hidden" />
+                <div className="flex items-center gap-4">
+                  <button className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 active:scale-95 transition-transform">
+                    {isPlaying
+                      ? <div className="w-4 h-4 bg-background rounded-sm" />
+                      : <Play className="w-5 h-5 text-background fill-background ml-0.5" />
+                    }
+                  </button>
+                  <div className="flex-1 flex items-end gap-[2px] h-10">
+                    {[0.3,0.5,0.7,0.4,1,0.8,0.6,0.9,0.5,0.7,0.4,0.8,0.6,0.5,0.3,0.6,0.8,0.5,0.7,0.4,0.6,0.9,0.5,0.7].map((h, i) => (
+                      <div key={i}
+                        className={`flex-1 rounded-full transition-all duration-300 ${isPlaying ? "bg-foreground/60" : "bg-foreground/20"}`}
+                        style={{ height: `${h * 100}%` }}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {isText && (
-            <>
-              <p className="text-[15px] text-foreground leading-relaxed whitespace-pre-wrap">{displayContent}</p>
-              {isLong && !expanded && (
-                <button onClick={() => setExpanded(true)} className="mt-3 flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                  Read more <ChevronDown className="w-3.5 h-3.5" />
-                </button>
-              )}
-              {isLong && expanded && (
-                <button onClick={() => setExpanded(false)} className="mt-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                  Show less
-                </button>
-              )}
-            </>
-          )}
+            {/* Text answer */}
+            {isText && (
+              <>
+                <p className="text-[15px] md:text-base text-foreground leading-relaxed whitespace-pre-wrap">
+                  {displayContent}
+                </p>
+                {isLong && !expanded && (
+                  <button onClick={() => setExpanded(true)}
+                    className="mt-4 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Read more <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {isLong && expanded && (
+                  <button onClick={() => setExpanded(false)}
+                    className="mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    Show less
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </motion.div>
     </>
