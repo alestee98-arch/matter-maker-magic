@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { Play, ArrowRight, Camera, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Play, Pause, ArrowRight, Camera, X, ChevronDown, ChevronRight, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -19,6 +19,7 @@ interface Response {
   audio_url?: string | null;
   video_url?: string | null;
   photo_url?: string | null;
+  transcript?: string | null;
   questions?: {
     question: string;
     category: string;
@@ -60,7 +61,7 @@ export default function ProfilePage() {
     supabase
       .from("responses")
       .select(`id, content, content_type, privacy, created_at, question_id,
-               audio_url, video_url, photo_url,
+               audio_url, video_url, photo_url, transcript,
                questions ( question, category, depth )`)
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
@@ -400,7 +401,6 @@ function EntryDetailSheet({ entry, onClose }: { entry: Response; onClose: () => 
   const [expanded, setExpanded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
 
   const isText  = !entry.content_type || entry.content_type === "text";
   const isAudio = entry.content_type === "audio";
@@ -418,6 +418,8 @@ function EntryDetailSheet({ entry, onClose }: { entry: Response; onClose: () => 
     if (isAudio && audioRef.current) isPlaying ? audioRef.current.pause() : audioRef.current.play();
     setIsPlaying(p => !p);
   };
+
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   return (
     <>
@@ -494,25 +496,14 @@ function EntryDetailSheet({ entry, onClose }: { entry: Response; onClose: () => 
 
             {/* Audio player */}
             {isAudio && entry.audio_url && (
-              <div className="mb-6 bg-secondary/30 rounded-2xl p-5 cursor-pointer" onClick={togglePlay}>
-                <audio ref={audioRef} src={entry.audio_url} onEnded={() => setIsPlaying(false)} className="hidden" />
-                <div className="flex items-center gap-4">
-                  <button className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 active:scale-95 transition-transform">
-                    {isPlaying
-                      ? <div className="w-4 h-4 bg-background rounded-sm" />
-                      : <Play className="w-5 h-5 text-background fill-background ml-0.5" />
-                    }
-                  </button>
-                  <div className="flex-1 flex items-end gap-[2px] h-10">
-                    {[0.3,0.5,0.7,0.4,1,0.8,0.6,0.9,0.5,0.7,0.4,0.8,0.6,0.5,0.3,0.6,0.8,0.5,0.7,0.4,0.6,0.9,0.5,0.7].map((h, i) => (
-                      <div key={i}
-                        className={`flex-1 rounded-full transition-all duration-300 ${isPlaying ? "bg-foreground/60" : "bg-foreground/20"}`}
-                        style={{ height: `${h * 100}%` }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <AudioPlayer
+                src={entry.audio_url}
+                transcript={entry.transcript}
+                isPlaying={isPlaying}
+                onToggle={togglePlay}
+                audioRef={audioRef}
+                onEnded={() => setIsPlaying(false)}
+              />
             )}
 
             {/* Text answer */}
@@ -539,5 +530,141 @@ function EntryDetailSheet({ entry, onClose }: { entry: Response; onClose: () => 
         </div>
       </motion.div>
     </>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AUDIO PLAYER — progress bar, timer, transcript reveal
+═══════════════════════════════════════════════════════════════ */
+function AudioPlayer({
+  src, transcript, isPlaying, onToggle, audioRef, onEnded
+}: {
+  src: string;
+  transcript?: string | null;
+  isPlaying: boolean;
+  onToggle: () => void;
+  audioRef: React.RefObject<HTMLAudioElement>;
+  onEnded: () => void;
+}) {
+  const [currentTime, setCurrentTime]   = useState(0);
+  const [duration, setDuration]         = useState(0);
+  const [showTranscript, setShowTranscript] = useState(false);
+  const progressRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onTime = () => setCurrentTime(audio.currentTime);
+    const onLoad = () => setDuration(audio.duration);
+    audio.addEventListener("timeupdate", onTime);
+    audio.addEventListener("loadedmetadata", onLoad);
+    audio.addEventListener("ended", onEnded);
+    return () => {
+      audio.removeEventListener("timeupdate", onTime);
+      audio.removeEventListener("loadedmetadata", onLoad);
+      audio.removeEventListener("ended", onEnded);
+    };
+  }, [audioRef, onEnded]);
+
+  const fmt = (s: number) => {
+    if (!s || isNaN(s)) return "0:00";
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const remaining = duration > 0 ? duration - currentTime : 0;
+
+  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!progressRef.current || !audioRef.current || !duration) return;
+    const rect = progressRef.current.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    audioRef.current.currentTime = ratio * duration;
+  };
+
+  return (
+    <div className="mb-6 bg-secondary/30 rounded-2xl overflow-hidden">
+      <audio ref={audioRef} src={src} className="hidden" />
+
+      {/* Player controls */}
+      <div className="p-5">
+        <div className="flex items-center gap-4 mb-4">
+          {/* Play/Pause button */}
+          <button
+            onClick={onToggle}
+            className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 active:scale-95 transition-transform"
+          >
+            {isPlaying
+              ? <Pause className="w-5 h-5 text-background fill-background" />
+              : <Play className="w-5 h-5 text-background fill-background ml-0.5" />
+            }
+          </button>
+
+          {/* Time */}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground/60 flex-shrink-0 w-16">
+            <span>{fmt(currentTime)}</span>
+            <span>/</span>
+            <span>{fmt(duration)}</span>
+          </div>
+
+          {/* Time remaining */}
+          {duration > 0 && (
+            <span className="ml-auto text-xs text-muted-foreground/40">
+              -{fmt(remaining)}
+            </span>
+          )}
+        </div>
+
+        {/* Progress bar — clickable/seekable */}
+        <div
+          ref={progressRef}
+          onClick={seek}
+          className="relative h-1.5 bg-foreground/10 rounded-full cursor-pointer group"
+        >
+          <div
+            className="absolute left-0 top-0 h-full bg-foreground/60 rounded-full transition-all"
+            style={{ width: `${progress}%` }}
+          />
+          {/* Scrubber dot */}
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-foreground rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{ left: `calc(${progress}% - 6px)` }}
+          />
+        </div>
+      </div>
+
+      {/* Transcript toggle — only show if transcript exists */}
+      {transcript && (
+        <div className="border-t border-border/30">
+          <button
+            onClick={() => setShowTranscript(v => !v)}
+            className="w-full flex items-center justify-between px-5 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <FileText className="w-3.5 h-3.5" />
+              Show transcript
+            </span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showTranscript ? "rotate-180" : ""}`} />
+          </button>
+
+          <AnimatePresence>
+            {showTranscript && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <p className="px-5 pb-5 text-[14px] text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {transcript}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+    </div>
   );
 }
