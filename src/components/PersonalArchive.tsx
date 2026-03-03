@@ -28,6 +28,7 @@ interface Response {
   photo_url: string | null;
   audio_url: string | null;
   video_url: string | null;
+  transcript: string | null;
   questions?: {
     question: string;
     category: string;
@@ -51,7 +52,7 @@ export default function PersonalArchive() {
           .from('responses')
           .select(`
             id, content, content_type, privacy, created_at, question_id,
-            photo_url, audio_url, video_url,
+            photo_url, audio_url, video_url, transcript,
             questions ( question, category )
           `)
           .eq('user_id', user.id)
@@ -187,6 +188,7 @@ export default function PersonalArchive() {
 
 function ArchiveDetailSheet({ entry, onClose }: { entry: Response; onClose: () => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [showTranscript, setShowTranscript] = useState(false);
   const isLong = entry.content.length > 200;
   const displayContent = !expanded && isLong ? entry.content.slice(0, 200) + '...' : entry.content;
 
@@ -209,9 +211,16 @@ function ArchiveDetailSheet({ entry, onClose }: { entry: Response; onClose: () =
         <div className="sticky top-0 bg-card/95 backdrop-blur-sm z-10 pt-3 pb-2 px-5">
           <div className="w-10 h-1 bg-muted-foreground/20 rounded-full mx-auto mb-3" />
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
-              {entry.created_at ? new Date(entry.created_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Recently'}
-            </span>
+            <div className="flex items-center gap-2">
+              {entry.questions?.category && (
+                <span className="text-[11px] font-medium text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+                  {entry.questions.category}
+                </span>
+              )}
+              <span className="text-xs text-muted-foreground">
+                {entry.created_at ? new Date(entry.created_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : 'Recently'}
+              </span>
+            </div>
             <button onClick={onClose} className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
               <X className="w-3.5 h-3.5" />
             </button>
@@ -225,13 +234,41 @@ function ArchiveDetailSheet({ entry, onClose }: { entry: Response; onClose: () =
             </div>
           )}
 
-          <h2 className="text-lg font-serif text-foreground mb-3 leading-snug">
+          <p className="text-xs text-muted-foreground mb-1">In response to</p>
+          <h2 className="text-lg font-serif text-foreground mb-4 leading-snug">
             {entry.questions?.question || 'Reflection'}
           </h2>
 
           {entry.audio_url && (
             <div className="mb-4">
-              <audio controls className="w-full" src={entry.audio_url} />
+              <AudioPlayer src={entry.audio_url} />
+              {entry.transcript && (
+                <div className="mt-3">
+                  <button
+                    onClick={() => setShowTranscript(!showTranscript)}
+                    className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <FileText className="w-3 h-3" />
+                    {showTranscript ? 'Hide transcript' : 'Show transcript'}
+                    <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${showTranscript ? 'rotate-180' : ''}`} />
+                  </button>
+                  <AnimatePresence>
+                    {showTranscript && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <p className="text-sm text-foreground/80 leading-relaxed mt-3 whitespace-pre-wrap">
+                          {entry.transcript}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
             </div>
           )}
 
@@ -241,15 +278,18 @@ function ArchiveDetailSheet({ entry, onClose }: { entry: Response; onClose: () =
             </div>
           )}
 
-          <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{displayContent}</p>
-
-          {isLong && !expanded && (
-            <button
-              onClick={() => setExpanded(true)}
-              className="mt-2 flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Read more <ChevronDown className="w-3 h-3" />
-            </button>
+          {entry.content_type === 'text' && (
+            <>
+              <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{displayContent}</p>
+              {isLong && !expanded && (
+                <button
+                  onClick={() => setExpanded(true)}
+                  className="mt-2 flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Read more <ChevronDown className="w-3 h-3" />
+                </button>
+              )}
+            </>
           )}
 
           <div className="mt-6 flex items-center gap-1.5 text-[11px] text-muted-foreground/50">
@@ -259,5 +299,121 @@ function ArchiveDetailSheet({ entry, onClose }: { entry: Response; onClose: () =
         </div>
       </motion.div>
     </>
+  );
+}
+
+function AudioPlayer({ src }: { src: string }) {
+  const audioRef = React.useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const progressRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onLoaded = () => setDuration(audio.duration);
+    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const onEnded = () => setIsPlaying(false);
+
+    audio.addEventListener('loadedmetadata', onLoaded);
+    audio.addEventListener('timeupdate', onTimeUpdate);
+    audio.addEventListener('ended', onEnded);
+    return () => {
+      audio.removeEventListener('loadedmetadata', onLoaded);
+      audio.removeEventListener('timeupdate', onTimeUpdate);
+      audio.removeEventListener('ended', onEnded);
+    };
+  }, []);
+
+  const togglePlay = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current;
+    const bar = progressRef.current;
+    if (!audio || !bar || !duration) return;
+    const rect = bar.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audio.currentTime = pct * duration;
+  };
+
+  const fmt = (s: number) => {
+    if (!s || !isFinite(s)) return '0:00';
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  };
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  // Generate waveform bars (visual only)
+  const bars = React.useMemo(() => {
+    const count = 28;
+    const seed = src.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    return Array.from({ length: count }, (_, i) => {
+      const h = 0.2 + 0.8 * Math.abs(Math.sin(seed * (i + 1) * 0.3));
+      return h;
+    });
+  }, [src]);
+
+  return (
+    <div className="bg-secondary/60 rounded-2xl p-4">
+      <audio ref={audioRef} src={src} preload="metadata" />
+      <div className="flex items-center gap-3">
+        <button
+          onClick={togglePlay}
+          className="w-11 h-11 rounded-full bg-foreground text-background flex items-center justify-center shrink-0 hover:opacity-90 transition-opacity"
+        >
+          {isPlaying ? (
+            <div className="flex items-center gap-0.5">
+              <div className="w-[3px] h-3.5 bg-background rounded-full" />
+              <div className="w-[3px] h-3.5 bg-background rounded-full" />
+            </div>
+          ) : (
+            <Play className="w-4 h-4 fill-current ml-0.5" />
+          )}
+        </button>
+
+        <div className="flex-1 min-w-0">
+          <div
+            ref={progressRef}
+            onClick={handleSeek}
+            className="flex items-end gap-[2px] h-10 cursor-pointer"
+          >
+            {bars.map((h, i) => {
+              const barPct = ((i + 0.5) / bars.length) * 100;
+              const isActive = barPct <= progress;
+              return (
+                <div
+                  key={i}
+                  className="flex-1 rounded-full transition-colors duration-150"
+                  style={{
+                    height: `${h * 100}%`,
+                    backgroundColor: isActive
+                      ? 'hsl(var(--foreground))'
+                      : 'hsl(var(--muted-foreground) / 0.3)',
+                  }}
+                />
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between mt-2 px-1">
+        <span className="text-[11px] tabular-nums text-muted-foreground">{fmt(currentTime)}</span>
+        <span className="text-[11px] tabular-nums text-muted-foreground">{fmt(duration)}</span>
+      </div>
+    </div>
   );
 }
