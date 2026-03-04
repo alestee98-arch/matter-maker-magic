@@ -313,7 +313,7 @@ const AudioPlayer = React.forwardRef<{ currentTime: number; duration: number }, 
     if (!audio) return;
 
     const onLoaded = () => setDuration(audio.duration);
-    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const onTimeUpdate = () => { if (!isDragging.current) setCurrentTime(audio.currentTime); };
     const onEnded = () => setIsPlaying(false);
 
     audio.addEventListener('loadedmetadata', onLoaded);
@@ -351,7 +351,7 @@ const AudioPlayer = React.forwardRef<{ currentTime: number; duration: number }, 
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     isDragging.current = true;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    e.currentTarget.setPointerCapture(e.pointerId);
     seekTo(e.clientX);
   };
 
