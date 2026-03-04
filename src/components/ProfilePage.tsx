@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
@@ -546,16 +546,15 @@ function AudioPlayer({
   audioRef: React.RefObject<HTMLAudioElement>;
   onEnded: () => void;
 }) {
-  const [currentTime, setCurrentTime]       = useState(0);
-  const [duration, setDuration]             = useState(0);
+  const [currentTime, setCurrentTime]   = useState(0);
+  const [duration, setDuration]         = useState(0);
   const [showTranscript, setShowTranscript] = useState(false);
-  const [isDragging, setIsDragging]         = useState(false);
   const progressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const onTime = () => { if (!isDragging) setCurrentTime(audio.currentTime); };
+    const onTime = () => setCurrentTime(audio.currentTime);
     const onLoad = () => setDuration(audio.duration);
     audio.addEventListener("timeupdate", onTime);
     audio.addEventListener("loadedmetadata", onLoad);
@@ -565,7 +564,7 @@ function AudioPlayer({
       audio.removeEventListener("loadedmetadata", onLoad);
       audio.removeEventListener("ended", onEnded);
     };
-  }, [audioRef, onEnded, isDragging]);
+  }, [audioRef, onEnded]);
 
   const fmt = (s: number) => {
     if (!s || isNaN(s)) return "0:00";
@@ -574,76 +573,15 @@ function AudioPlayer({
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
-  const getRatioFromEvent = useCallback((clientX: number) => {
-    if (!progressRef.current || !duration) return null;
-    const rect = progressRef.current.getBoundingClientRect();
-    return Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-  }, [duration]);
-
-  const seekToRatio = useCallback((ratio: number) => {
-    if (!audioRef.current || !duration) return;
-    const newTime = ratio * duration;
-    audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
-  }, [audioRef, duration]);
-
-  // Mouse drag on progress bar
-  const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(true);
-    const ratio = getRatioFromEvent(e.clientX);
-    if (ratio !== null) seekToRatio(ratio);
-
-    const onMove = (me: MouseEvent) => {
-      const r = getRatioFromEvent(me.clientX);
-      if (r !== null) {
-        const newTime = r * duration;
-        setCurrentTime(newTime);
-        if (audioRef.current) audioRef.current.currentTime = newTime;
-      }
-    };
-    const onUp = () => {
-      setIsDragging(false);
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseup", onUp);
-    };
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
-  }, [getRatioFromEvent, seekToRatio, duration, audioRef]);
-
-  // Touch drag support
-  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(true);
-    const ratio = getRatioFromEvent(e.touches[0].clientX);
-    if (ratio !== null) seekToRatio(ratio);
-
-    const onMove = (te: TouchEvent) => {
-      const r = getRatioFromEvent(te.touches[0].clientX);
-      if (r !== null) {
-        const newTime = r * duration;
-        setCurrentTime(newTime);
-        if (audioRef.current) audioRef.current.currentTime = newTime;
-      }
-    };
-    const onEnd = () => {
-      setIsDragging(false);
-      document.removeEventListener("touchmove", onMove);
-      document.removeEventListener("touchend", onEnd);
-    };
-    document.addEventListener("touchmove", onMove, { passive: false });
-    document.addEventListener("touchend", onEnd);
-  }, [getRatioFromEvent, seekToRatio, duration, audioRef]);
-
-  const progress  = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
   const remaining = duration > 0 ? duration - currentTime : 0;
 
-  // Transcript word highlighting — distribute words evenly across duration
-  const words = transcript ? transcript.trim().split(/\s+/) : [];
-  const totalWords = words.length;
-  const currentWordIndex = duration > 0 && totalWords > 0
-    ? Math.floor((currentTime / duration) * totalWords)
-    : -1;
+  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!progressRef.current || !audioRef.current || !duration) return;
+    const rect = progressRef.current.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    audioRef.current.currentTime = ratio * duration;
+  };
 
   return (
     <div className="mb-6 bg-secondary/30 rounded-2xl overflow-hidden">
@@ -652,7 +590,7 @@ function AudioPlayer({
       {/* Player controls */}
       <div className="p-5">
         <div className="flex items-center gap-4 mb-4">
-          {/* Play/Pause */}
+          {/* Play/Pause button */}
           <button
             onClick={onToggle}
             className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 active:scale-95 transition-transform"
@@ -663,14 +601,14 @@ function AudioPlayer({
             }
           </button>
 
-          {/* Elapsed / Total */}
+          {/* Time */}
           <div className="flex items-center gap-1 text-xs text-muted-foreground/60 flex-shrink-0 w-16">
             <span>{fmt(currentTime)}</span>
             <span>/</span>
             <span>{fmt(duration)}</span>
           </div>
 
-          {/* Remaining */}
+          {/* Time remaining */}
           {duration > 0 && (
             <span className="ml-auto text-xs text-muted-foreground/40">
               -{fmt(remaining)}
@@ -678,26 +616,25 @@ function AudioPlayer({
           )}
         </div>
 
-        {/* Progress bar — draggable, Netflix-style */}
+        {/* Progress bar — clickable/seekable */}
         <div
           ref={progressRef}
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
-          className="relative h-2 bg-foreground/10 rounded-full cursor-pointer group select-none"
+          onClick={seek}
+          className="relative h-1.5 bg-foreground/10 rounded-full cursor-pointer group"
         >
           <div
-            className="absolute left-0 top-0 h-full bg-foreground/60 rounded-full"
+            className="absolute left-0 top-0 h-full bg-foreground/60 rounded-full transition-all"
             style={{ width: `${progress}%` }}
           />
-          {/* Scrubber thumb — always visible while dragging, hover otherwise */}
+          {/* Scrubber dot */}
           <div
-            className={`absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-foreground rounded-full shadow transition-opacity ${isDragging ? "opacity-100 scale-110" : "opacity-0 group-hover:opacity-100"}`}
-            style={{ left: `calc(${progress}% - 7px)` }}
+            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-foreground rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{ left: `calc(${progress}% - 6px)` }}
           />
         </div>
       </div>
 
-      {/* Transcript toggle */}
+      {/* Transcript toggle — only show if transcript exists */}
       {transcript && (
         <div className="border-t border-border/30">
           <button
@@ -706,7 +643,7 @@ function AudioPlayer({
           >
             <span className="flex items-center gap-2">
               <FileText className="w-3.5 h-3.5" />
-              {showTranscript ? "Hide transcript" : "Show transcript"}
+              Show transcript
             </span>
             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showTranscript ? "rotate-180" : ""}`} />
           </button>
@@ -720,25 +657,8 @@ function AudioPlayer({
                 transition={{ duration: 0.25, ease: "easeInOut" }}
                 className="overflow-hidden"
               >
-                <p className="px-5 pb-5 text-[14px] leading-relaxed">
-                  {words.map((word, i) => {
-                    const isPast    = i < currentWordIndex;
-                    const isCurrent = i === currentWordIndex;
-                    return (
-                      <span
-                        key={i}
-                        className={`transition-all duration-150 ${
-                          isCurrent
-                            ? "text-foreground bg-foreground/10 rounded px-0.5"
-                            : isPast
-                            ? "text-foreground/70"
-                            : "text-muted-foreground/30"
-                        }`}
-                      >
-                        {word}{" "}
-                      </span>
-                    );
-                  })}
+                <p className="px-5 pb-5 text-[14px] text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {transcript}
                 </p>
               </motion.div>
             )}
