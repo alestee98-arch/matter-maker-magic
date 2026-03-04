@@ -189,6 +189,7 @@ export default function PersonalArchive() {
 function ArchiveDetailSheet({ entry, onClose }: { entry: Response; onClose: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
+  const audioPlayerRef = React.useRef<{ currentTime: number; duration: number } | null>(null);
   const isLong = entry.content.length > 200;
   const displayContent = !expanded && isLong ? entry.content.slice(0, 200) + '...' : entry.content;
 
@@ -241,7 +242,7 @@ function ArchiveDetailSheet({ entry, onClose }: { entry: Response; onClose: () =
 
           {entry.audio_url && (
             <div className="mb-4">
-              <AudioPlayer src={entry.audio_url} />
+              <AudioPlayer src={entry.audio_url} ref={audioPlayerRef} />
               {entry.transcript && (
                 <div className="mt-3">
                   <button
@@ -261,9 +262,7 @@ function ArchiveDetailSheet({ entry, onClose }: { entry: Response; onClose: () =
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                       >
-                        <p className="text-sm text-foreground/80 leading-relaxed mt-3 whitespace-pre-wrap">
-                          {entry.transcript}
-                        </p>
+                        <TranscriptHighlight transcript={entry.transcript!} audioRef={audioPlayerRef} />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -302,7 +301,7 @@ function ArchiveDetailSheet({ entry, onClose }: { entry: Response; onClose: () =
   );
 }
 
-function AudioPlayer({ src }: { src: string }) {
+const AudioPlayer = React.forwardRef<{ currentTime: number; duration: number }, { src: string }>(function AudioPlayer({ src }, ref) {
   const audioRef = React.useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -338,13 +337,31 @@ function AudioPlayer({ src }: { src: string }) {
     setIsPlaying(!isPlaying);
   };
 
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+  const seekTo = (clientX: number) => {
     const audio = audioRef.current;
     const bar = progressRef.current;
     if (!audio || !bar || !duration) return;
     const rect = bar.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     audio.currentTime = pct * duration;
+    setCurrentTime(pct * duration);
+  };
+
+  const isDragging = React.useRef(false);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    isDragging.current = true;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    seekTo(e.clientX);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging.current) return;
+    seekTo(e.clientX);
+  };
+
+  const handlePointerUp = () => {
+    isDragging.current = false;
   };
 
   const fmt = (s: number) => {
@@ -353,6 +370,12 @@ function AudioPlayer({ src }: { src: string }) {
     const sec = Math.floor(s % 60);
     return `${m}:${sec.toString().padStart(2, '0')}`;
   };
+
+  // Expose currentTime/duration to parent for transcript sync
+  React.useImperativeHandle(ref, () => ({
+    get currentTime() { return currentTime; },
+    get duration() { return duration; },
+  }), [currentTime, duration]);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -387,8 +410,10 @@ function AudioPlayer({ src }: { src: string }) {
         <div className="flex-1 min-w-0">
           <div
             ref={progressRef}
-            onClick={handleSeek}
-            className="flex items-end gap-[2px] h-10 cursor-pointer"
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            className="flex items-end gap-[2px] h-10 cursor-pointer touch-none select-none"
           >
             {bars.map((h, i) => {
               const barPct = ((i + 0.5) / bars.length) * 100;
@@ -415,5 +440,51 @@ function AudioPlayer({ src }: { src: string }) {
         <span className="text-[11px] tabular-nums text-muted-foreground">{fmt(duration)}</span>
       </div>
     </div>
+  );
+});
+
+function TranscriptHighlight({ transcript, audioRef }: { transcript: string; audioRef: React.RefObject<{ currentTime: number; duration: number } | null> }) {
+  const words = React.useMemo(() => transcript.split(/(\s+)/), [transcript]);
+  const [highlightIdx, setHighlightIdx] = useState(-1);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const ref = audioRef.current;
+      if (!ref || !ref.duration) return;
+      const pct = ref.currentTime / ref.duration;
+      // Map audio progress to word index
+      const wordCount = words.filter(w => w.trim()).length;
+      const idx = Math.floor(pct * wordCount);
+      setHighlightIdx(idx);
+    }, 80);
+    return () => clearInterval(id);
+  }, [audioRef, words]);
+
+  let wordIndex = 0;
+  return (
+    <p className="text-sm leading-relaxed mt-3 whitespace-pre-wrap">
+      {words.map((segment, i) => {
+        if (!segment.trim()) {
+          return <span key={i}>{segment}</span>;
+        }
+        const wi = wordIndex++;
+        const isHighlighted = wi < highlightIdx;
+        const isCurrent = wi === highlightIdx;
+        return (
+          <span
+            key={i}
+            className={`transition-colors duration-150 ${
+              isCurrent
+                ? 'text-foreground font-medium bg-accent/15 rounded px-0.5'
+                : isHighlighted
+                  ? 'text-foreground'
+                  : 'text-muted-foreground/50'
+            }`}
+          >
+            {segment}
+          </span>
+        );
+      })}
+    </p>
   );
 }
