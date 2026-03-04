@@ -307,6 +307,7 @@ const AudioPlayer = React.forwardRef<{ currentTime: number; duration: number }, 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const progressRef = React.useRef<HTMLDivElement>(null);
+  const isDragging = React.useRef(false);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -346,8 +347,6 @@ const AudioPlayer = React.forwardRef<{ currentTime: number; duration: number }, 
     audio.currentTime = pct * duration;
     setCurrentTime(pct * duration);
   };
-
-  const isDragging = React.useRef(false);
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     isDragging.current = true;
@@ -452,7 +451,6 @@ function TranscriptHighlight({ transcript, audioRef }: { transcript: string; aud
       const ref = audioRef.current;
       if (!ref || !ref.duration) return;
       const pct = ref.currentTime / ref.duration;
-      // Map audio progress to word index
       const wordCount = words.filter(w => w.trim()).length;
       const idx = Math.floor(pct * wordCount);
       setHighlightIdx(idx);
