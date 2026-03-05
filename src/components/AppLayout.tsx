@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Home, User, Settings, Menu, X, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Home, User, Settings, Menu, X, LogOut, ListOrdered } from 'lucide-react';
 import MatterLogo from '@/components/MatterLogo';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -26,6 +27,7 @@ export default function AppLayout({ children, currentView, onViewChange, onBack 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
   const { profile } = useProfile();
+  const navigate = useNavigate();
 
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'User';
   const avatarUrl = profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${displayName}`;
@@ -65,6 +67,15 @@ export default function AppLayout({ children, currentView, onViewChange, onBack 
                 </button>
               ))}
             </nav>
+
+            {/* Queue link */}
+            <button
+              onClick={() => navigate('/queue')}
+              className="hidden md:flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-full hover:bg-secondary/60"
+            >
+              <ListOrdered className="w-4 h-4" />
+              Queue
+            </button>
 
             {/* User Menu */}
             <div className="flex items-center gap-3">

@@ -48,21 +48,22 @@ export default function Answer() {
             .single();
 
           if (error || !data) {
-            await fetchRandomQuestion();
+            await fetchNextQuestion();
           } else {
             setQuestion(data);
           }
         } else {
-          await fetchRandomQuestion();
+          await fetchNextQuestion();
         }
       } catch {
-        await fetchRandomQuestion();
+        await fetchNextQuestion();
       } finally {
         setIsLoading(false);
       }
     };
 
-    const fetchRandomQuestion = async () => {
+    const fetchNextQuestion = async () => {
+      // Get answered question IDs
       const { data: responses } = await supabase
         .from('responses')
         .select('question_id')
@@ -70,6 +71,32 @@ export default function Answer() {
 
       const answeredIds = responses?.map(r => r.question_id).filter(Boolean) as string[] || [];
 
+      // Try sequence-based selection first
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('age_group')
+        .eq('id', user!.id)
+        .single();
+
+      const userAgeGroup = (profile as any)?.age_group;
+
+      if (userAgeGroup) {
+        const { data: seqData } = await supabase
+          .from('question_sequences')
+          .select('question_id, position, questions(id, question, category)')
+          .eq('age_group', userAgeGroup)
+          .order('position', { ascending: true }) as any;
+
+        if (seqData && seqData.length > 0) {
+          const nextInSequence = seqData.find((s: any) => !answeredIds.includes(s.question_id));
+          if (nextInSequence?.questions) {
+            setQuestion(nextInSequence.questions);
+            return;
+          }
+        }
+      }
+
+      // Fallback: random unanswered question
       const { data: questions } = await supabase
         .from('questions')
         .select('*');
