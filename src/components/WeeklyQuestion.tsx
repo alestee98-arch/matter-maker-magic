@@ -27,12 +27,14 @@ export default function WeeklyQuestion() {
   
   const { user } = useAuth();
   const { toast } = useToast();
+  const questionLoadedRef = React.useRef(false);
 
   // Fetch user's answered questions and find an unanswered one
+  // Only runs ONCE per mount — prevents mid-answer question swaps
   useEffect(() => {
+    if (!user || questionLoadedRef.current) return;
+
     const fetchQuestionData = async () => {
-      if (!user) return;
-      
       setIsLoading(true);
       try {
         // Get all questions user has answered
@@ -64,6 +66,7 @@ export default function WeeklyQuestion() {
             const randomIndex = Math.floor(Math.random() * questions.length);
             setCurrentQuestion(questions[randomIndex]);
           }
+          questionLoadedRef.current = true;
         }
       } catch (error) {
         console.error('Error fetching question:', error);
@@ -78,7 +81,7 @@ export default function WeeklyQuestion() {
     };
     
     fetchQuestionData();
-  }, [user, toast]);
+  }, [user]); // Removed toast from deps — it was causing re-runs
 
   const handleSubmit = async () => {
     if (!currentQuestion || !user) return;
@@ -125,7 +128,8 @@ export default function WeeklyQuestion() {
         setResponse('');
         setMediaUrl(null);
         setIsSubmitted(false);
-        // Load next question
+        // Allow loading next question
+        questionLoadedRef.current = false;
         setAnsweredQuestionIds(prev => [...prev, currentQuestion.id]);
       }, 2000);
       
