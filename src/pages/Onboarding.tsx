@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,74 +12,61 @@ import { z } from 'zod';
 
 const nameSchema = z.string().trim().min(1, 'This field is required').max(50, 'Must be less than 50 characters');
 
+const AGE_GROUPS = [
+  { value: '18-35', label: '18–35', subtitle: 'Building your story' },
+  { value: '36-55', label: '36–55', subtitle: 'The defining years' },
+  { value: '56-70', label: '56–70', subtitle: 'Hard-earned wisdom' },
+  { value: '71+', label: '71+', subtitle: 'A life fully lived' },
+] as const;
+
 export default function Onboarding() {
+  const [step, setStep] = useState(0);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [marketingOptIn, setMarketingOptIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ firstName?: string; lastName?: string }>({});
-  
+  const [isLoading, setIsLoading] = useState(false);
+
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [onboardingParams] = useSearchParams();
   const onboardingRedirect = onboardingParams.get('redirect') || '/';
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth?mode=signup');
     }
   }, [user, loading, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate
+  const handleNameContinue = () => {
     const firstNameResult = nameSchema.safeParse(firstName);
     const lastNameResult = nameSchema.safeParse(lastName);
-    
+
     const newErrors: typeof errors = {};
-    if (!firstNameResult.success) {
-      newErrors.firstName = firstNameResult.error.errors[0].message;
-    }
-    if (!lastNameResult.success) {
-      newErrors.lastName = lastNameResult.error.errors[0].message;
-    }
-    
+    if (!firstNameResult.success) newErrors.firstName = firstNameResult.error.errors[0].message;
+    if (!lastNameResult.success) newErrors.lastName = lastNameResult.error.errors[0].message;
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
     setErrors({});
+    setStep(1);
+  };
+
+  const handleAgeSelect = async (ageGroup: string) => {
     setIsLoading(true);
-    
     try {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
-      
-      const updateData: Record<string, any> = { display_name: displayName };
-      if (phoneNumber) {
-        updateData.phone = phoneNumber;
-      }
-      
       const { error } = await supabase
         .from('profiles')
-        .update(updateData)
+        .update({ display_name: displayName, age_group: ageGroup } as any)
         .eq('id', user?.id);
-      
+
       if (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Failed to update profile',
-          description: error.message
-        });
+        toast({ variant: 'destructive', title: 'Failed to update profile', description: error.message });
       } else {
-        toast({
-          title: 'Welcome to Matter!',
-          description: 'Your account is all set up.'
-        });
+        toast({ title: 'Welcome to Matter!', description: 'Your account is all set up.' });
         navigate(onboardingRedirect);
       }
     } finally {
@@ -98,143 +84,108 @@ export default function Onboarding() {
     );
   }
 
-  const userInitial = user?.email?.charAt(0).toUpperCase() || 'U';
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Main Content */}
+      {/* Progress dots */}
+      <div className="flex justify-center gap-2 pt-8">
+        {[0, 1].map((i) => (
+          <div
+            key={i}
+            className={`h-2 rounded-full transition-all duration-300 ${
+              i === step ? 'w-6 bg-foreground' : 'w-2 bg-muted-foreground/30'
+            }`}
+          />
+        ))}
+      </div>
+
       <main className="flex-1 flex items-center justify-center px-6 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-serif text-foreground mb-2">Welcome to Matter!</h1>
-            <p className="text-muted-foreground">Let's finish setting up your account.</p>
-          </div>
-
-          {/* User Email Display */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-full bg-muted-foreground flex items-center justify-center text-background font-medium">
-              {userInitial}
-            </div>
-            <span className="text-foreground">{user?.email}</span>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="firstName" className="text-sm font-medium text-foreground">
-                First name
-              </Label>
-              <Input
-                id="firstName"
-                type="text"
-                placeholder="John"
-                value={firstName}
-                onChange={(e) => {
-                  setFirstName(e.target.value);
-                  if (errors.firstName) setErrors({ ...errors, firstName: undefined });
-                }}
-                className={`h-12 text-base bg-muted/50 ${errors.firstName ? 'border-destructive' : ''}`}
-              />
-              {errors.firstName && (
-                <p className="text-sm text-destructive">{errors.firstName}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="lastName" className="text-sm font-medium text-foreground">
-                Last name
-              </Label>
-              <Input
-                id="lastName"
-                type="text"
-                placeholder="Doe"
-                value={lastName}
-                onChange={(e) => {
-                  setLastName(e.target.value);
-                  if (errors.lastName) setErrors({ ...errors, lastName: undefined });
-                }}
-                className={`h-12 text-base bg-muted/50 ${errors.lastName ? 'border-destructive' : ''}`}
-              />
-              {errors.lastName && (
-                <p className="text-sm text-destructive">{errors.lastName}</p>
-              )}
-            </div>
-
-            {/* Phone Number (Optional) */}
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="text-sm font-medium text-foreground">
-                Phone number (optional)
-              </Label>
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-2 text-foreground">
-                  <span className="text-lg">🇺🇸</span>
-                  <span className="text-sm text-muted-foreground">+1</span>
+        <div className="w-full max-w-md">
+          <AnimatePresence mode="wait">
+            {step === 0 && (
+              <motion.div
+                key="name"
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mb-8">
+                  <h1 className="text-2xl font-serif text-foreground mb-2">Welcome to Matter!</h1>
+                  <p className="text-muted-foreground">What should we call you?</p>
                 </div>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder=""
-                  value={phoneNumber}
-                  onChange={(e) => {
-                    // Only allow numbers
-                    const value = e.target.value.replace(/\D/g, '');
-                    setPhoneNumber(value);
-                  }}
-                  className="h-12 text-base bg-muted/50 pl-20"
-                  maxLength={10}
-                />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Matter sends helpful reminders via text. Text STOP or disable in settings to unsubscribe. Msg & data rates may apply.
-              </p>
-            </div>
 
-            {/* Divider */}
-            <div className="border-t border-border pt-6">
-              {/* Marketing Opt-in */}
-              <div className="flex items-start gap-3">
-                <Checkbox
-                  id="marketing"
-                  checked={marketingOptIn}
-                  onCheckedChange={(checked) => setMarketingOptIn(checked === true)}
-                  className="mt-1"
-                />
-                <label 
-                  htmlFor="marketing" 
-                  className="text-sm text-foreground leading-relaxed cursor-pointer"
+                <form
+                  onSubmit={(e) => { e.preventDefault(); handleNameContinue(); }}
+                  className="space-y-6"
                 >
-                  I would like to receive helpful tips, updates, and occasional announcements via email. Unsubscribe at any time.
-                </label>
-              </div>
-            </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName" className="text-sm font-medium text-foreground">First name</Label>
+                    <Input
+                      id="firstName"
+                      type="text"
+                      placeholder="John"
+                      value={firstName}
+                      onChange={(e) => { setFirstName(e.target.value); if (errors.firstName) setErrors({ ...errors, firstName: undefined }); }}
+                      className={`h-12 text-base bg-muted/50 ${errors.firstName ? 'border-destructive' : ''}`}
+                      autoFocus
+                    />
+                    {errors.firstName && <p className="text-sm text-destructive">{errors.firstName}</p>}
+                  </div>
 
-            {/* Privacy Notice */}
-            <p className="text-sm text-muted-foreground">
-              Privacy is important to us. By continuing, you acknowledge that you have read and accept Matter's{' '}
-              <a href="#" className="text-foreground underline hover:no-underline">Terms of Service</a>
-              {' '}and{' '}
-              <a href="#" className="text-foreground underline hover:no-underline">Privacy Policy</a>.
-            </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName" className="text-sm font-medium text-foreground">Last name</Label>
+                    <Input
+                      id="lastName"
+                      type="text"
+                      placeholder="Doe"
+                      value={lastName}
+                      onChange={(e) => { setLastName(e.target.value); if (errors.lastName) setErrors({ ...errors, lastName: undefined }); }}
+                      className={`h-12 text-base bg-muted/50 ${errors.lastName ? 'border-destructive' : ''}`}
+                    />
+                    {errors.lastName && <p className="text-sm text-destructive">{errors.lastName}</p>}
+                  </div>
 
-            <Button 
-              type="submit" 
-              className="w-full h-12 text-base" 
-              disabled={isLoading || !firstName || !lastName}
-            >
-              {isLoading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-foreground" />
-              ) : (
-                'Continue'
-              )}
-            </Button>
-          </form>
-        </motion.div>
+                  <Button
+                    type="submit"
+                    className="w-full h-12 text-base"
+                    disabled={!firstName || !lastName}
+                  >
+                    Continue
+                  </Button>
+                </form>
+              </motion.div>
+            )}
+
+            {step === 1 && (
+              <motion.div
+                key="age"
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="mb-8">
+                  <h1 className="text-2xl font-serif text-foreground mb-2">How old are you?</h1>
+                  <p className="text-muted-foreground">This helps us personalize your questions.</p>
+                </div>
+
+                <div className="space-y-3">
+                  {AGE_GROUPS.map((group) => (
+                    <button
+                      key={group.value}
+                      onClick={() => handleAgeSelect(group.value)}
+                      disabled={isLoading}
+                      className="w-full text-left p-5 rounded-2xl border border-border/50 bg-secondary/30 hover:bg-secondary/60 hover:border-foreground/20 transition-all duration-200 group disabled:opacity-50"
+                    >
+                      <span className="text-lg font-medium text-foreground">{group.label}</span>
+                      <p className="text-sm text-muted-foreground mt-0.5">{group.subtitle}</p>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </main>
     </div>
   );

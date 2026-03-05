@@ -208,6 +208,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          age_group: string | null
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
@@ -222,6 +223,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          age_group?: string | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
@@ -236,6 +238,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          age_group?: string | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
@@ -250,6 +253,35 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      question_sequences: {
+        Row: {
+          age_group: string
+          id: string
+          position: number
+          question_id: string
+        }
+        Insert: {
+          age_group: string
+          id?: string
+          position: number
+          question_id: string
+        }
+        Update: {
+          age_group?: string
+          id?: string
+          position?: number
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_sequences_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       questions: {
         Row: {
