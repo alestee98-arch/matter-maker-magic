@@ -60,7 +60,7 @@ export default function Onboarding() {
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
       const { error } = await supabase
         .from('profiles')
-        .update({ display_name: displayName, age_group: ageGroup } as any)
+        .update({ display_name: displayName, age_group: ageGroup, onboarding_completed: true } as any)
         .eq('id', user?.id);
 
       if (error) {
