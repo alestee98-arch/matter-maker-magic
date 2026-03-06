@@ -206,6 +206,47 @@ export type Database = {
           },
         ]
       }
+      processing_jobs: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          job_type: string
+          response_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          job_type?: string
+          response_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          job_type?: string
+          response_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processing_jobs_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age_group: string | null
