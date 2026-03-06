@@ -233,7 +233,7 @@ export default function ProfilePage() {
             <p className="text-muted-foreground mb-10 max-w-sm mx-auto leading-relaxed text-sm md:text-base">
               Answer your first question to start preserving your legacy — for the people who matter most.
             </p>
-            <Button onClick={() => navigate("/home")} size="lg" className="rounded-full px-8 h-12">
+            <Button onClick={() => navigate("/")} size="lg" className="rounded-full px-8 h-12">
               Begin <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </motion.div>
