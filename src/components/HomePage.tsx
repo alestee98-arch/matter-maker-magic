@@ -53,7 +53,7 @@ export default function HomePage() {
             .eq('user_id', user.id),
           supabase
             .from('profiles')
-            .select('age_group')
+            .select('age_group, current_sequence_position')
             .eq('id', user.id)
             .maybeSingle(),
         ]);
@@ -65,29 +65,27 @@ export default function HomePage() {
         );
 
         const userAgeGroup = profileResult.data?.age_group;
+        const currentPos = (profileResult.data as any)?.current_sequence_position ?? 0;
         let foundQuestion: Question | null = null;
 
         // Try sequenced approach if age_group exists
         if (userAgeGroup) {
           const { data: seqRows } = await supabase
             .from('question_sequences')
-            .select('question_id, questions(id, question, category, depth)')
+            .select('question_id, position, questions(id, question, category, depth)')
             .eq('age_group', userAgeGroup)
-            .order('position', { ascending: true }) as any;
+            .gte('position', currentPos)
+            .order('position', { ascending: true })
+            .limit(1) as any;
 
-          if (seqRows) {
-            // Find the first unanswered question in sequence
-            for (const row of seqRows) {
-              if (!answeredIds.has(row.question_id) && row.questions) {
-                foundQuestion = {
-                  id: row.questions.id,
-                  question: row.questions.question,
-                  category: row.questions.category,
-                  depth: row.questions.depth,
-                };
-                break;
-              }
-            }
+          if (seqRows && seqRows.length > 0 && seqRows[0].questions) {
+            const row = seqRows[0];
+            foundQuestion = {
+              id: row.questions.id,
+              question: row.questions.question,
+              category: row.questions.category,
+              depth: row.questions.depth,
+            };
           }
         }
 
