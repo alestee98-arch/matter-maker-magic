@@ -45,30 +45,67 @@ export default function HomePage() {
       
       setIsLoadingQuestion(true);
       try {
-        const { data: responses } = await supabase
-          .from('responses')
-          .select('question_id')
-          .eq('user_id', user.id);
-        
+        // Fetch responses and profile in parallel
+        const [respResult, profileResult] = await Promise.all([
+          supabase
+            .from('responses')
+            .select('question_id')
+            .eq('user_id', user.id),
+          supabase
+            .from('profiles')
+            .select('age_group')
+            .eq('id', user.id)
+            .maybeSingle(),
+        ]);
+
+        const responses = respResult.data;
         setEntriesCount(responses?.length || 0);
-        const answeredIds = responses?.map(r => r.question_id).filter(Boolean) as string[] || [];
-        
-        const { data: questions, error } = await supabase
-          .from('questions')
-          .select('*');
-        
-        if (error) throw error;
-        
-        if (questions && questions.length > 0) {
-          const unansweredQuestions = questions.filter(q => !answeredIds.includes(q.id));
-          
-          if (unansweredQuestions.length > 0) {
-            const randomIndex = Math.floor(Math.random() * unansweredQuestions.length);
-            setCurrentQuestion(unansweredQuestions[randomIndex]);
-          } else {
-            const randomIndex = Math.floor(Math.random() * questions.length);
-            setCurrentQuestion(questions[randomIndex]);
+        const answeredIds = new Set(
+          responses?.map(r => r.question_id).filter(Boolean) as string[] || []
+        );
+
+        const userAgeGroup = profileResult.data?.age_group;
+        let foundQuestion: Question | null = null;
+
+        // Try sequenced approach if age_group exists
+        if (userAgeGroup) {
+          const { data: seqRows } = await supabase
+            .from('question_sequences')
+            .select('question_id, questions(id, question, category, depth)')
+            .eq('age_group', userAgeGroup)
+            .order('position', { ascending: true }) as any;
+
+          if (seqRows) {
+            // Find the first unanswered question in sequence
+            for (const row of seqRows) {
+              if (!answeredIds.has(row.question_id) && row.questions) {
+                foundQuestion = {
+                  id: row.questions.id,
+                  question: row.questions.question,
+                  category: row.questions.category,
+                  depth: row.questions.depth,
+                };
+                break;
+              }
+            }
           }
+        }
+
+        // Fallback to random if no sequence result
+        if (!foundQuestion) {
+          const { data: questions } = await supabase
+            .from('questions')
+            .select('*');
+
+          if (questions && questions.length > 0) {
+            const unanswered = questions.filter(q => !answeredIds.has(q.id));
+            const pool = unanswered.length > 0 ? unanswered : questions;
+            foundQuestion = pool[Math.floor(Math.random() * pool.length)];
+          }
+        }
+
+        if (foundQuestion) {
+          setCurrentQuestion(foundQuestion);
         }
       } catch (error) {
         console.error('Error fetching question:', error);
