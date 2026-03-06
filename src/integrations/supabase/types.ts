@@ -260,6 +260,7 @@ export type Database = {
           legacy_status: string | null
           notify_email: boolean | null
           notify_sms: boolean | null
+          onboarding_completed: boolean | null
           phone: string | null
           updated_at: string | null
         }
@@ -275,6 +276,7 @@ export type Database = {
           legacy_status?: string | null
           notify_email?: boolean | null
           notify_sms?: boolean | null
+          onboarding_completed?: boolean | null
           phone?: string | null
           updated_at?: string | null
         }
@@ -290,6 +292,7 @@ export type Database = {
           legacy_status?: string | null
           notify_email?: boolean | null
           notify_sms?: boolean | null
+          onboarding_completed?: boolean | null
           phone?: string | null
           updated_at?: string | null
         }

@@ -31,6 +31,13 @@ export default function Index() {
     }
   }, [profile?.phone]);
 
+  // Redirect to onboarding if not completed
+  useEffect(() => {
+    if (!loading && user && profile && !(profile as any).onboarding_completed) {
+      navigate('/onboarding');
+    }
+  }, [user, profile, loading, navigate]);
+
   // Show loading state
   if (loading) {
     return (
@@ -75,6 +82,10 @@ export default function Index() {
         </div>
       </div>
     );
+  }
+
+  if (user && profile && !(profile as any).onboarding_completed) {
+    return null;
   }
 
   // If user is logged in, show the app
