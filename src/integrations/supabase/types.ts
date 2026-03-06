@@ -254,6 +254,7 @@ export type Database = {
           bio: string | null
           birth_date: string | null
           created_at: string | null
+          current_sequence_position: number | null
           display_name: string | null
           id: string
           legacy_activated_at: string | null
@@ -270,6 +271,7 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           created_at?: string | null
+          current_sequence_position?: number | null
           display_name?: string | null
           id: string
           legacy_activated_at?: string | null
@@ -286,6 +288,7 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           created_at?: string | null
+          current_sequence_position?: number | null
           display_name?: string | null
           id?: string
           legacy_activated_at?: string | null
