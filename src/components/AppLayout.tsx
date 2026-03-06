@@ -141,12 +141,26 @@ export default function AppLayout({ children, currentView, onViewChange, onBack 
                     {item.label}
                   </motion.button>
                 ))}
+
+                <motion.button
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: navigation.length * 0.05 }}
+                  onClick={() => {
+                    navigate('/queue');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-muted-foreground hover:bg-secondary transition-all"
+                >
+                  <ListOrdered className="h-5 w-5" />
+                  Queue
+                </motion.button>
                 
                 {onBack && (
                   <motion.button
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: navigation.length * 0.05 }}
+                    transition={{ delay: (navigation.length + 1) * 0.05 }}
                     onClick={onBack}
                     className="flex w-full items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-muted-foreground hover:bg-secondary transition-all"
                   >
