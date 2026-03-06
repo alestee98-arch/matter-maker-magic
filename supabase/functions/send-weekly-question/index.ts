@@ -53,10 +53,11 @@ serve(async (req) => {
             .gte('position', profile.current_sequence_position ?? 1)
             .order('position', { ascending: true })
             .limit(1)
-            .single();
+            .maybeSingle();
 
           if (seqQuestion?.questions) {
-            question = seqQuestion.questions as { id: string; question: string; category: string };
+            const q = seqQuestion.questions as any;
+            question = { id: q.id, question: q.question, category: q.category };
           }
         }
 
