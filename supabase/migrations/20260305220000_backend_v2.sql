@@ -1,14 +1,12 @@
 -- =============================================
 -- MATTER BACKEND V2
 -- Production-grade schema additions
+-- (Lovable handled: processing_jobs, onboarding_completed, current_sequence_position)
+-- This migration adds what Lovable did NOT add
 -- =============================================
 
--- 1. PROFILE IMPROVEMENTS
--- Track where each user is in their question sequence
+-- 1. PROFILE IMPROVEMENTS (fields Lovable didn't add)
 ALTER TABLE public.profiles 
-  ADD COLUMN IF NOT EXISTS age_group TEXT CHECK (age_group IN ('18-35', '36-55', '56-70', '71+')),
-  ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE,
-  ADD COLUMN IF NOT EXISTS current_sequence_position INTEGER DEFAULT 1,
   ADD COLUMN IF NOT EXISTS last_question_sent_at TIMESTAMP WITH TIME ZONE,
   ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMP WITH TIME ZONE,
   ADD COLUMN IF NOT EXISTS total_responses INTEGER DEFAULT 0,
@@ -18,7 +16,6 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS urgency TEXT CHECK (urgency IN ('high', 'medium', 'low'));
 
 -- 2. NOTIFICATION LOG
--- Every notification sent, tracked with delivery status
 CREATE TABLE IF NOT EXISTS public.notification_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -32,40 +29,18 @@ CREATE TABLE IF NOT EXISTS public.notification_log (
 );
 
 ALTER TABLE public.notification_log ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Service role only" ON public.notification_log USING (false);
+CREATE POLICY "Service role only on notification_log" ON public.notification_log USING (false);
 
-CREATE INDEX idx_notification_log_user_id ON public.notification_log(user_id);
-CREATE INDEX idx_notification_log_sent_at ON public.notification_log(sent_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notification_log_user_id ON public.notification_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_notification_log_sent_at ON public.notification_log(sent_at DESC);
 
--- 3. PROCESSING JOBS
--- Async job queue with status tracking and retry
-CREATE TABLE IF NOT EXISTS public.processing_jobs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  response_id UUID NOT NULL REFERENCES public.responses(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
-  job_type TEXT NOT NULL DEFAULT 'process_response' CHECK (job_type IN ('process_response', 'generate_embedding', 'analyze_personality')),
-  attempts INTEGER DEFAULT 0,
-  max_attempts INTEGER DEFAULT 3,
-  error_message TEXT,
-  started_at TIMESTAMP WITH TIME ZONE,
-  completed_at TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-ALTER TABLE public.processing_jobs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Service role only" ON public.processing_jobs USING (false);
-
-CREATE INDEX idx_processing_jobs_status ON public.processing_jobs(status);
-CREATE INDEX idx_processing_jobs_response_id ON public.processing_jobs(response_id);
-
--- 4. ADD PROCESSING STATUS TO RESPONSES
+-- 3. ADD PROCESSING STATUS TO RESPONSES
 ALTER TABLE public.responses
   ADD COLUMN IF NOT EXISTS processing_status TEXT DEFAULT 'pending' 
     CHECK (processing_status IN ('pending', 'processing', 'completed', 'failed')),
   ADD COLUMN IF NOT EXISTS processed_at TIMESTAMP WITH TIME ZONE;
 
--- 5. TRIGGER: auto-increment total_responses on profile when response inserted
+-- 4. TRIGGER: auto-increment total_responses on profile
 CREATE OR REPLACE FUNCTION public.increment_response_count()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -83,7 +58,7 @@ CREATE TRIGGER on_response_created
   AFTER INSERT ON public.responses
   FOR EACH ROW EXECUTE FUNCTION public.increment_response_count();
 
--- 6. TRIGGER: auto-advance sequence position when response saved for a sequenced question
+-- 5. TRIGGER: auto-advance sequence position
 CREATE OR REPLACE FUNCTION public.advance_sequence_position()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -115,15 +90,16 @@ CREATE TRIGGER on_response_advance_sequence
   AFTER INSERT ON public.responses
   FOR EACH ROW EXECUTE FUNCTION public.advance_sequence_position();
 
--- 7. INDEXES for performance
+-- 6. INDEXES
 CREATE INDEX IF NOT EXISTS idx_responses_user_id ON public.responses(user_id);
 CREATE INDEX IF NOT EXISTS idx_responses_question_id ON public.responses(question_id);
 CREATE INDEX IF NOT EXISTS idx_responses_created_at ON public.responses(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_question_sequences_age_group_position ON public.question_sequences(age_group, position);
 CREATE INDEX IF NOT EXISTS idx_profiles_age_group ON public.profiles(age_group);
 CREATE INDEX IF NOT EXISTS idx_profiles_last_question_sent ON public.profiles(last_question_sent_at);
+CREATE INDEX IF NOT EXISTS idx_processing_jobs_status ON public.processing_jobs(status);
 
--- 8. UNIQUE CONSTRAINT on questions (prevent future duplicates)
+-- 7. UNIQUE CONSTRAINT on questions
 ALTER TABLE public.questions 
   ADD CONSTRAINT IF NOT EXISTS questions_text_unique UNIQUE (question);
 
