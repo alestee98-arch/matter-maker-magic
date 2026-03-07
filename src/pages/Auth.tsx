@@ -144,16 +144,14 @@ export default function Auth() {
           setIsLoading(false);
           setIsAuthenticating(false);
         } else {
-          // Keep isAuthenticating=true to prevent the useEffect from redirecting to /
+          justSignedUp.current = true;
           setIsLoading(false);
           toast({
             title: 'Account created!',
             description: "Let's complete your profile."
           });
           navigate(redirectTo !== '/' ? `/onboarding?redirect=${encodeURIComponent(redirectTo)}` : '/onboarding');
-          return;
         }
-        return;
       }
     } finally {
       setIsLoading(false);
