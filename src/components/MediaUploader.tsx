@@ -346,31 +346,25 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
       );
     }
 
-    // Video recorded — review
+    // Video recorded — inline review (matches uploaded state style)
     if (recordedBlob) {
       const blobUrl = URL.createObjectURL(recordedBlob);
       return (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="fixed inset-0 z-50 bg-black flex flex-col"
+          className="relative rounded-2xl overflow-hidden bg-secondary/50"
         >
-          <video src={blobUrl} controls autoPlay playsInline preload="metadata" className="w-full h-full object-contain" />
-          <div className="absolute bottom-0 inset-x-0 pb-12 pt-6 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center gap-6 px-6">
-            <button
-              onClick={() => { setRecordedBlob(null); startCamera(); }}
-              className="px-5 py-2.5 rounded-full bg-white/15 backdrop-blur-md text-white text-sm font-medium active:scale-95 transition-transform"
-            >
-              Retake
-            </button>
-            <Button
-              onClick={handleUploadRecording}
-              disabled={isUploading}
-              className="rounded-full bg-white text-black hover:bg-white/90 px-6 h-11 font-medium active:scale-95 transition-transform"
-            >
-              {isUploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Check className="w-4 h-4 mr-2" />}
-              Use video
-            </Button>
+          <video src={blobUrl} controls autoPlay playsInline preload="metadata" className="w-full aspect-[9/16] max-h-[50vh] object-cover" />
+          <button
+            onClick={() => { setRecordedBlob(null); setRecordingDuration(0); startCamera(); }}
+            className="absolute top-3 right-3 p-2 rounded-full bg-background/80 hover:bg-background transition-colors"
+          >
+            <Trash2 className="w-4 h-4 text-destructive" />
+          </button>
+          <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-foreground/90 text-background text-xs font-medium flex items-center gap-1.5">
+            <Check className="w-3 h-3" />
+            Ready to save
           </div>
         </motion.div>
       );
