@@ -10,7 +10,8 @@ import {
   Loader2,
   Check,
   Image as ImageIcon,
-  Camera
+  Camera,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -292,37 +293,39 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
     );
   }
 
-  // Camera active state (photo)
+  // Camera active state (photo) — fullscreen on mobile
   if (isCameraActive && type === 'photo') {
     return (
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative rounded-2xl overflow-hidden bg-secondary/50"
+        className="fixed inset-0 z-50 bg-black flex flex-col"
       >
         <video 
           ref={attachStream}
           autoPlay
           muted
           playsInline
-          className="w-full aspect-video object-cover scale-x-[-1]"
+          className="w-full h-full object-cover scale-x-[-1]"
         />
         <canvas ref={canvasRef} className="hidden" />
         
-        {/* Capture button */}
-        <div className="absolute bottom-4 inset-x-0 flex justify-center gap-4">
+        {/* Capture controls — bottom overlay */}
+        <div className="absolute bottom-0 inset-x-0 pb-10 pt-6 bg-gradient-to-t from-black/60 to-transparent flex justify-center items-center gap-8">
           <button
             onClick={stopCamera}
-            className="w-12 h-12 rounded-full bg-background/80 flex items-center justify-center hover:bg-background transition-colors"
+            className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
           >
-            <Trash2 className="w-5 h-5 text-muted-foreground" />
+            <X className="w-5 h-5 text-white" />
           </button>
           <button
             onClick={capturePhoto}
-            className="w-16 h-16 rounded-full bg-white border-4 border-foreground flex items-center justify-center hover:scale-105 transition-transform shadow-xl"
+            className="w-18 h-18 rounded-full bg-white border-4 border-white/80 flex items-center justify-center hover:scale-105 transition-transform shadow-xl"
+            style={{ width: 72, height: 72 }}
           >
-            <div className="w-12 h-12 rounded-full bg-foreground" />
+            <div className="w-14 h-14 rounded-full bg-white border-2 border-black/10" />
           </button>
+          <div className="w-12 h-12" /> {/* Spacer for centering */}
         </div>
       </motion.div>
     );
@@ -379,7 +382,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative rounded-2xl overflow-hidden bg-secondary/50"
+        className={type === 'video' ? "fixed inset-0 z-50 bg-black" : "relative rounded-2xl overflow-hidden bg-secondary/50"}
       >
         {type === 'video' ? (
           <video 
@@ -387,7 +390,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
             autoPlay
             muted
             playsInline
-            className="w-full aspect-video object-cover scale-x-[-1]"
+            className="w-full h-full object-cover scale-x-[-1]"
           />
         ) : (
           <div className="aspect-video flex flex-col items-center justify-center">

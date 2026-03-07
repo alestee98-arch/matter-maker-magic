@@ -585,7 +585,7 @@ function AudioPlayer({
 
   return (
     <div className="mb-6 bg-secondary/30 rounded-2xl overflow-hidden">
-      <audio ref={audioRef} src={src} className="hidden" />
+      <audio ref={audioRef} src={src} preload="metadata" className="hidden" />
 
       {/* Player controls */}
       <div className="p-5">
