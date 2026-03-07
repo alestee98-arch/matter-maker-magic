@@ -472,19 +472,12 @@ function EntryDetailSheet({ entry, onClose }: { entry: Response; onClose: () => 
             </div>
           )}
 
-          {/* Video — full bleed */}
+          {/* Video — with player controls like audio */}
           {isVideo && entry.video_url && (
-            <div className="relative w-full aspect-video bg-black cursor-pointer" onClick={togglePlay}>
-              <video ref={videoRef} src={entry.video_url} className="w-full h-full object-contain"
-                playsInline preload="metadata" onEnded={() => setIsPlaying(false)} />
-              {!isPlaying && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-xl">
-                    <Play className="w-7 h-7 text-foreground fill-foreground ml-0.5" />
-                  </div>
-                </div>
-              )}
-            </div>
+            <VideoPlayer
+              src={entry.video_url}
+              transcript={entry.transcript}
+            />
           )}
 
           <div className="px-6 py-6 pb-10">
