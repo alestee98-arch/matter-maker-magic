@@ -100,15 +100,35 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
   };
 
   // Photo-specific functions
-  const startCamera = async () => {
+  const startCamera = async (facing?: 'user' | 'environment') => {
     try {
+      const mode = facing || facingMode;
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user' } 
+        video: { facingMode: mode } 
       });
       streamRef.current = stream;
       setIsCameraActive(true);
     } catch (error) {
       console.error('Error starting camera:', error);
+    }
+  };
+
+  const switchCameraFacing = async () => {
+    const newFacing = facingMode === 'user' ? 'environment' : 'user';
+    setFacingMode(newFacing);
+    // Stop current stream and restart with new facing
+    streamRef.current?.getTracks().forEach(track => track.stop());
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: newFacing } 
+      });
+      streamRef.current = stream;
+      if (videoPreviewRef.current) {
+        videoPreviewRef.current.srcObject = stream;
+        videoPreviewRef.current.play().catch(() => {});
+      }
+    } catch (error) {
+      console.error('Error switching camera:', error);
     }
   };
 
