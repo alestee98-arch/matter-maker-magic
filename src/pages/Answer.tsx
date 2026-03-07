@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, Loader2, Lock, ArrowLeft, PenTool, Mic, Video, Image as ImageIcon } from 'lucide-react';
+import { Check, Loader2, Lock, ArrowLeft, PenTool, Mic, Camera, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -20,8 +20,9 @@ export default function Answer() {
 
   const [question, setQuestion] = useState<{ id: string; question: string; category: string } | null>(null);
   const [response, setResponse] = useState('');
-  const [responseType, setResponseType] = useState<'text' | 'audio' | 'video' | 'photo'>('text');
+  const [responseType, setResponseType] = useState<'text' | 'audio' | 'camera' | 'upload'>('text');
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const [capturedMediaType, setCapturedMediaType] = useState<'audio' | 'video' | 'photo' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -120,16 +121,17 @@ export default function Answer() {
 
     setIsSubmitting(true);
     try {
+      const contentType = responseType === 'text' ? 'text' : (capturedMediaType || 'text');
       const insertData = {
         user_id: user.id,
         question_id: question.id,
-        content: response.trim() || `[${responseType} response]`,
-        content_type: responseType,
+        content: response.trim() || `[${contentType} response]`,
+        content_type: contentType,
         word_count: response.trim() ? response.trim().split(/\s+/).length : 0,
         privacy: 'private' as const,
-        audio_url: responseType === 'audio' ? mediaUrl : null,
-        video_url: responseType === 'video' ? mediaUrl : null,
-        photo_url: responseType === 'photo' ? mediaUrl : null,
+        audio_url: capturedMediaType === 'audio' ? mediaUrl : null,
+        video_url: capturedMediaType === 'video' ? mediaUrl : null,
+        photo_url: capturedMediaType === 'photo' ? mediaUrl : null,
       };
 
       const { data: inserted, error } = await supabase
@@ -230,14 +232,14 @@ export default function Answer() {
                 {/* Response type selector */}
                 <div className="flex gap-2 mb-6">
                   {[
-                    { type: 'text' as const, icon: PenTool, label: 'Text' },
-                    { type: 'audio' as const, icon: Mic, label: 'Audio' },
-                    { type: 'video' as const, icon: Video, label: 'Video' },
-                    { type: 'photo' as const, icon: ImageIcon, label: 'Photo' },
+                    { type: 'text' as const, icon: PenTool, label: 'Write' },
+                    { type: 'audio' as const, icon: Mic, label: 'Record' },
+                    { type: 'camera' as const, icon: Camera, label: 'Camera' },
+                    { type: 'upload' as const, icon: Upload, label: 'Upload' },
                   ].map(({ type, icon: Icon, label }) => (
                     <button
                       key={type}
-                      onClick={() => { setResponseType(type); setMediaUrl(null); }}
+                      onClick={() => { setResponseType(type); setMediaUrl(null); setCapturedMediaType(null); }}
                       className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
                         responseType === type
                           ? 'bg-foreground text-background'
@@ -262,9 +264,10 @@ export default function Answer() {
                 ) : (
                   <MediaUploader
                     type={responseType}
-                    onUpload={(url) => setMediaUrl(url)}
-                    onClear={() => setMediaUrl(null)}
+                    onUpload={(url, contentType) => { setMediaUrl(url); setCapturedMediaType(contentType); }}
+                    onClear={() => { setMediaUrl(null); setCapturedMediaType(null); }}
                     mediaUrl={mediaUrl}
+                    capturedType={capturedMediaType}
                   />
                 )}
 
