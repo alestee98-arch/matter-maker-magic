@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { Play, Pause, ArrowRight, Camera, X, ChevronDown, ChevronRight, FileText } from "lucide-react";
+import { Play, Pause, ArrowRight, Camera, X, ChevronDown, ChevronRight, FileText, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -55,7 +55,7 @@ export default function ProfilePage() {
   const [selectedEntry, setSelectedEntry]   = useState<Response | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  const fetchEntries = () => {
     if (!user) return;
     setIsLoading(true);
     supabase
@@ -66,7 +66,9 @@ export default function ProfilePage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data }) => { setEntries(data || []); setIsLoading(false); });
-  }, [user]);
+  };
+
+  useEffect(() => { fetchEntries(); }, [user]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -266,7 +268,28 @@ export default function ProfilePage() {
       {/* Detail sheet */}
       <AnimatePresence>
         {selectedEntry && (
-          <EntryDetailSheet entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
+          <EntryDetailSheet
+            entry={selectedEntry}
+            onClose={() => setSelectedEntry(null)}
+            onDelete={async (entry, reAnswer) => {
+              // Delete the response
+              const { error } = await supabase
+                .from("responses")
+                .delete()
+                .eq("id", entry.id);
+              if (error) {
+                toast.error("Failed to delete response");
+                return;
+              }
+              toast.success("Response removed");
+              setSelectedEntry(null);
+              fetchEntries();
+              if (reAnswer && entry.question_id) {
+                // Navigate to home with question pre-loaded for re-answer
+                navigate(`/?reanswer=${entry.question_id}`);
+              }
+            }}
+          />
         )}
       </AnimatePresence>
     </div>
@@ -397,9 +420,10 @@ function TapHint() {
    — Bottom sheet on mobile
    — Centered modal on desktop
 ═══════════════════════════════════════════════════════════════ */
-function EntryDetailSheet({ entry, onClose }: { entry: Response; onClose: () => void }) {
+function EntryDetailSheet({ entry, onClose, onDelete }: { entry: Response; onClose: () => void; onDelete: (entry: Response, reAnswer: boolean) => void }) {
   const [expanded, setExpanded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const isText  = !entry.content_type || entry.content_type === "text";
@@ -454,14 +478,61 @@ function EntryDetailSheet({ entry, onClose }: { entry: Response; onClose: () => 
               )}
               <span className="text-xs text-muted-foreground/60">{date}</span>
             </div>
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors ml-2 flex-shrink-0"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Delete confirmation overlay */}
+        <AnimatePresence>
+          {confirmDelete && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-10 bg-card/95 backdrop-blur-sm flex flex-col items-center justify-center px-8 text-center"
+            >
+              <Trash2 className="w-8 h-8 text-muted-foreground/40 mb-4" />
+              <h3 className="font-serif text-xl text-foreground mb-2">Remove this response?</h3>
+              <p className="text-sm text-muted-foreground mb-8 max-w-xs">
+                Would you like to re-answer this question, or remove it and come back to it later?
+              </p>
+              <div className="flex flex-col gap-3 w-full max-w-xs">
+                <Button
+                  onClick={() => onDelete(entry, true)}
+                  className="rounded-full h-12 bg-foreground text-background hover:bg-foreground/90"
+                >
+                  Re-answer this question
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => onDelete(entry, false)}
+                  className="rounded-full h-12 border-border/50"
+                >
+                  Remove &amp; answer later
+                </Button>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="text-sm text-muted-foreground/60 hover:text-muted-foreground mt-1 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto">
