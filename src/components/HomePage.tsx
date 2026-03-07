@@ -402,128 +402,32 @@ export default function HomePage() {
                   </div>
                 )}
 
-                {responseType === 'audio' && (
+                {(responseType === 'audio' || responseType === 'video' || responseType === 'photo') && (
                   <div className="space-y-6">
-                    {!mediaUrl ? (
-                      <div className="text-center py-12 bg-secondary/30 rounded-2xl border border-border/50">
-                        <Mic className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                        <MediaUploader
-                          type="audio"
-                          onUpload={setMediaUrl}
-                          onClear={() => setMediaUrl(null)}
-                          mediaUrl={mediaUrl}
-                        />
-                      </div>
-                    ) : (
-                      <>
-                        <MediaUploader
-                          type="audio"
-                          onUpload={setMediaUrl}
-                          onClear={() => setMediaUrl(null)}
-                          mediaUrl={mediaUrl}
-                        />
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground/70">
-                            <Lock className="w-3.5 h-3.5" />
-                            <span>Private by default</span>
-                          </div>
-                          <Button 
-                            onClick={handleSubmitWithConfirmation}
-                            disabled={isSubmitting}
-                            className="rounded-full px-8 h-12 font-medium text-base bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                          >
-                            {isSubmitting ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              'Save recording'
-                            )}
-                          </Button>
+                    <MediaUploader
+                      type={responseType}
+                      onUpload={setMediaUrl}
+                      onClear={() => setMediaUrl(null)}
+                      mediaUrl={mediaUrl}
+                    />
+                    {mediaUrl && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground/70">
+                          <Lock className="w-3.5 h-3.5" />
+                          <span>Private by default</span>
                         </div>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {responseType === 'video' && (
-                  <div className="space-y-6">
-                    {!mediaUrl ? (
-                      <div className="text-center py-12 bg-secondary/30 rounded-2xl border border-border/50">
-                        <Video className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                        <MediaUploader
-                          type="video"
-                          onUpload={setMediaUrl}
-                          onClear={() => setMediaUrl(null)}
-                          mediaUrl={mediaUrl}
-                        />
+                        <Button 
+                          onClick={handleSubmitWithConfirmation}
+                          disabled={isSubmitting}
+                          className="rounded-full px-8 h-12 font-medium text-base bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+                        >
+                          {isSubmitting ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            `Save ${responseType === 'audio' ? 'recording' : responseType}`
+                          )}
+                        </Button>
                       </div>
-                    ) : (
-                      <>
-                        <MediaUploader
-                          type="video"
-                          onUpload={setMediaUrl}
-                          onClear={() => setMediaUrl(null)}
-                          mediaUrl={mediaUrl}
-                        />
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground/70">
-                            <Lock className="w-3.5 h-3.5" />
-                            <span>Private by default</span>
-                          </div>
-                          <Button 
-                            onClick={handleSubmitWithConfirmation}
-                            disabled={isSubmitting}
-                            className="rounded-full px-8 h-12 font-medium text-base bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                          >
-                            {isSubmitting ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              'Save video'
-                            )}
-                          </Button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {responseType === 'photo' && (
-                  <div className="space-y-6">
-                    {!mediaUrl ? (
-                      <div className="text-center py-12 bg-secondary/30 rounded-2xl border border-border/50">
-                        <ImageIcon className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                        <MediaUploader
-                          type="photo"
-                          onUpload={setMediaUrl}
-                          onClear={() => setMediaUrl(null)}
-                          mediaUrl={mediaUrl}
-                        />
-                      </div>
-                    ) : (
-                      <>
-                        <MediaUploader
-                          type="photo"
-                          onUpload={setMediaUrl}
-                          onClear={() => setMediaUrl(null)}
-                          mediaUrl={mediaUrl}
-                        />
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground/70">
-                            <Lock className="w-3.5 h-3.5" />
-                            <span>Private by default</span>
-                          </div>
-                          <Button 
-                            onClick={handleSubmitWithConfirmation}
-                            disabled={isSubmitting}
-                            className="rounded-full px-8 h-12 font-medium text-base bg-foreground text-background hover:bg-foreground/90 shadow-lg"
-                          >
-                            {isSubmitting ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              'Save photo'
-                            )}
-                          </Button>
-                        </div>
-                      </>
                     )}
                   </div>
                 )}
