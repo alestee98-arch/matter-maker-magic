@@ -146,6 +146,12 @@ export default function HomePage() {
       if (inserted?.id) {
         triggerProcessingPipeline(inserted.id, user.id);
       }
+
+      // Advance the sequence position so the next question is shown
+      await supabase
+        .from('profiles')
+        .update({ current_sequence_position: (profileResult.data as any)?.current_sequence_position != null ? ((profileResult.data as any).current_sequence_position + 1) : 1 })
+        .eq('id', user.id);
       
       setIsSubmitted(true);
       setEntriesCount(prev => prev + 1);

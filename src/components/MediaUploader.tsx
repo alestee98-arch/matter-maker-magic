@@ -286,7 +286,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
         className="relative rounded-2xl overflow-hidden bg-secondary/50"
       >
         {capturedType === 'video' ? (
-          <video src={mediaUrl} controls className="w-full aspect-[9/16] max-h-[50vh] object-cover" />
+          <video src={mediaUrl} controls playsInline preload="metadata" className="w-full aspect-[9/16] max-h-[50vh] object-cover" />
         ) : capturedType === 'photo' ? (
           <img src={mediaUrl} alt="Uploaded" className="w-full max-h-[50vh] object-cover" />
         ) : capturedType === 'audio' ? (
