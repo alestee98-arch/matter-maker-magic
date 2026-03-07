@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable/index';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { z } from 'zod';
 import MatterLogo from '@/components/MatterLogo';
