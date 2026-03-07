@@ -100,11 +100,10 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
   };
 
   // Photo-specific functions
-  const startCamera = async (facing?: 'user' | 'environment') => {
+  const startCamera = async () => {
     try {
-      const mode = facing || facingMode;
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: mode } 
+        video: { facingMode } 
       });
       streamRef.current = stream;
       setIsCameraActive(true);
