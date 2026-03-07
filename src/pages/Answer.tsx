@@ -121,16 +121,17 @@ export default function Answer() {
 
     setIsSubmitting(true);
     try {
+      const contentType = responseType === 'text' ? 'text' : (capturedMediaType || 'text');
       const insertData = {
         user_id: user.id,
         question_id: question.id,
-        content: response.trim() || `[${responseType} response]`,
-        content_type: responseType,
+        content: response.trim() || `[${contentType} response]`,
+        content_type: contentType,
         word_count: response.trim() ? response.trim().split(/\s+/).length : 0,
         privacy: 'private' as const,
-        audio_url: responseType === 'audio' ? mediaUrl : null,
-        video_url: responseType === 'video' ? mediaUrl : null,
-        photo_url: responseType === 'photo' ? mediaUrl : null,
+        audio_url: capturedMediaType === 'audio' ? mediaUrl : null,
+        video_url: capturedMediaType === 'video' ? mediaUrl : null,
+        photo_url: capturedMediaType === 'photo' ? mediaUrl : null,
       };
 
       const { data: inserted, error } = await supabase
