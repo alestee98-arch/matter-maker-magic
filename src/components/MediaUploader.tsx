@@ -33,6 +33,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
