@@ -268,7 +268,28 @@ export default function ProfilePage() {
       {/* Detail sheet */}
       <AnimatePresence>
         {selectedEntry && (
-          <EntryDetailSheet entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
+          <EntryDetailSheet
+            entry={selectedEntry}
+            onClose={() => setSelectedEntry(null)}
+            onDelete={async (entry, reAnswer) => {
+              // Delete the response
+              const { error } = await supabase
+                .from("responses")
+                .delete()
+                .eq("id", entry.id);
+              if (error) {
+                toast.error("Failed to delete response");
+                return;
+              }
+              toast.success("Response removed");
+              setSelectedEntry(null);
+              fetchEntries();
+              if (reAnswer && entry.question_id) {
+                // Navigate to home with question pre-loaded for re-answer
+                navigate(`/?reanswer=${entry.question_id}`);
+              }
+            }}
+          />
         )}
       </AnimatePresence>
     </div>
