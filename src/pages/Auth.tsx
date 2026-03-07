@@ -150,6 +150,7 @@ export default function Auth() {
       }
     } finally {
       setIsLoading(false);
+      setIsAuthenticating(false);
     }
   };
 

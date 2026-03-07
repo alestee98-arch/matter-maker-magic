@@ -45,7 +45,7 @@ export default function MatterLogo({ className = '', showText = true, size = 'md
       </svg>
       
       {showText && (
-        <span className={`font-semibold ${text} tracking-tight`}>
+        <span className={`font-semibold ${text} tracking-tight`} translate="no">
           Matter
         </span>
       )}
