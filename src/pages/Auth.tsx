@@ -90,6 +90,7 @@ export default function Auth() {
     }
     
     setIsLoading(true);
+    setIsAuthenticating(true);
     
     try {
       if (isLogin) {
