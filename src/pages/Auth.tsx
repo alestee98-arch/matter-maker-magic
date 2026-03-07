@@ -445,11 +445,8 @@ export default function Auth() {
                       variant="outline" 
                       className="w-full h-12 text-base gap-3 rounded-full border-border/50 hover:bg-[#f5f5f3]"
                       onClick={async () => {
-                        const { error } = await supabase.auth.signInWithOAuth({
-                          provider: 'google',
-                          options: {
-                            redirectTo: `${window.location.origin}/`
-                          }
+                        const { error } = await lovable.auth.signInWithOAuth('google', {
+                          redirect_uri: window.location.origin,
                         });
                         if (error) {
                           toast({
