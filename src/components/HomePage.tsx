@@ -152,12 +152,14 @@ export default function HomePage() {
         triggerProcessingPipeline(inserted.id, user.id);
       }
 
-      // Advance the sequence position so the next question is shown
-      await supabase
+      // Advance the sequence position to the current question's position
+      // so gt('position', sequencePosition) will skip past it next time
+      const { error: updateError } = await supabase
         .from('profiles')
-        .update({ current_sequence_position: sequencePosition + 1 })
+        .update({ current_sequence_position: sequencePosition })
         .eq('id', user.id);
-      setSequencePosition(prev => prev + 1);
+      
+      if (updateError) console.error('Failed to advance position:', updateError);
       
       setIsSubmitted(true);
       setEntriesCount(prev => prev + 1);
@@ -168,6 +170,7 @@ export default function HomePage() {
         setMediaUrl(null);
         setCapturedMediaType(null);
         setIsSubmitted(false);
+        setRefreshKey(prev => prev + 1); // Trigger refetch of next question
       }, 3000);
       
     } catch (error: any) {
