@@ -421,7 +421,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
             autoPlay
             muted
             playsInline
-            className="w-full h-full object-cover scale-x-[-1]"
+            className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
           />
         ) : (
           <div className="aspect-video flex flex-col items-center justify-center">
@@ -454,7 +454,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
         )}
         
         {/* Recording indicator */}
-        <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-destructive text-white text-sm font-medium">
+        <div className={`absolute ${type === 'video' ? 'top-14' : 'top-4'} left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-destructive text-white text-sm font-medium`}>
           <motion.div
             animate={{ opacity: [1, 0, 1] }}
             transition={{ repeat: Infinity, duration: 1 }}
@@ -464,10 +464,10 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
         </div>
         
         {/* Stop button */}
-        <div className="absolute bottom-4 inset-x-0 flex justify-center">
+        <div className={`absolute ${type === 'video' ? 'bottom-12' : 'bottom-4'} inset-x-0 flex justify-center`}>
           <button
             onClick={stopRecording}
-            className="w-16 h-16 rounded-full bg-destructive flex items-center justify-center hover:bg-destructive/90 transition-colors shadow-xl"
+            className="w-[72px] h-[72px] rounded-full bg-destructive flex items-center justify-center hover:bg-destructive/90 active:scale-95 transition-all shadow-xl"
           >
             <Square className="w-6 h-6 text-white fill-white" />
           </button>
