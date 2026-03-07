@@ -39,7 +39,9 @@ export default function AppLayout({ children, currentView, onViewChange, onBack 
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
-            <MatterLogo size="md" className="text-foreground" />
+            <button onClick={() => onViewChange('home')} className="focus:outline-none">
+              <MatterLogo size="md" className="text-foreground" />
+            </button>
             
             {/* Desktop Navigation - Centered */}
             <nav className="hidden md:flex items-center bg-secondary/60 rounded-full p-1">
