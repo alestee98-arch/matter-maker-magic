@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { triggerProcessingPipeline } from '@/lib/process-pipeline';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
