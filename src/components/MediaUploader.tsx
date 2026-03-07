@@ -139,9 +139,11 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        // Mirror the image for selfie
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
+        // Only mirror for front-facing camera
+        if (facingMode === 'user') {
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+        }
         ctx.drawImage(video, 0, 0);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
         setCapturedPhoto(dataUrl);
