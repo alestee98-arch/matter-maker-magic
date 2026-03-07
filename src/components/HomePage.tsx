@@ -50,6 +50,23 @@ export default function HomePage() {
       if (!user) return;
       
       setIsLoadingQuestion(true);
+      const reanswerQid = searchParams.get('reanswer');
+      
+      // If re-answering a specific question, fetch it directly
+      if (reanswerQid) {
+        const { data: q } = await supabase.from('questions').select('*').eq('id', reanswerQid).maybeSingle();
+        if (q) {
+          setCurrentQuestion(q);
+          // Clear the param so refreshes don't re-trigger
+          setSearchParams({}, { replace: true });
+          // Still fetch entry count
+          const { data: resp } = await supabase.from('responses').select('question_id').eq('user_id', user.id);
+          setEntriesCount(resp?.length || 0);
+          setIsLoadingQuestion(false);
+          return;
+        }
+      }
+      
       try {
         const [respResult, profileResult] = await Promise.all([
           supabase.from('responses').select('question_id').eq('user_id', user.id),
