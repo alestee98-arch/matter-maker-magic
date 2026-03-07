@@ -315,7 +315,7 @@ function MomentCard({ entry, index, onSelect }: { entry: Response; index: number
       {isVideo && entry.video_url && (
         <>
           <div className="relative w-full aspect-video bg-black overflow-hidden">
-            <video src={entry.video_url} className="w-full h-full object-cover opacity-90" />
+            <video src={entry.video_url} preload="metadata" playsInline muted className="w-full h-full object-cover opacity-90" />
             <div className="absolute inset-0 flex items-center justify-center bg-black/20">
               <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
                 <Play className="w-5 h-5 text-foreground fill-foreground ml-0.5" />
