@@ -381,7 +381,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative rounded-2xl overflow-hidden bg-secondary/50"
+        className={type === 'video' ? "fixed inset-0 z-50 bg-black" : "relative rounded-2xl overflow-hidden bg-secondary/50"}
       >
         {type === 'video' ? (
           <video 
@@ -389,7 +389,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
             autoPlay
             muted
             playsInline
-            className="w-full aspect-video object-cover scale-x-[-1]"
+            className="w-full h-full object-cover scale-x-[-1]"
           />
         ) : (
           <div className="aspect-video flex flex-col items-center justify-center">
