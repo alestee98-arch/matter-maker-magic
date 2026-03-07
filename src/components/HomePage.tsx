@@ -59,6 +59,7 @@ export default function HomePage() {
 
         const userAgeGroup = profileResult.data?.age_group;
         const currentPos = (profileResult.data as any)?.current_sequence_position ?? 0;
+        setSequencePosition(currentPos);
         let foundQuestion: Question | null = null;
 
         if (userAgeGroup) {
