@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { Play, Pause, ArrowRight, Camera, X, ChevronDown, ChevronRight, FileText } from "lucide-react";
+import { Play, Pause, ArrowRight, Camera, X, ChevronDown, ChevronRight, FileText, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
