@@ -417,30 +417,45 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
           {/* Bottom — single shutter button: tap = photo, hold = video */}
           <div className="absolute bottom-0 inset-x-0 pb-10 pt-8 bg-gradient-to-t from-black/60 to-transparent flex justify-center">
             <button
-              onPointerDown={() => {
+              onTouchStart={(e) => {
+                e.preventDefault();
                 isHoldingRef.current = false;
                 holdTimerRef.current = setTimeout(() => {
                   isHoldingRef.current = true;
                   startVideoRecording();
                 }, 400);
               }}
-              onPointerUp={() => {
+              onTouchEnd={(e) => {
+                e.preventDefault();
                 if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
                 if (isHoldingRef.current) {
-                  // Was recording video — stop it
                   stopRecording();
                 } else {
-                  // Quick tap — take photo
                   capturePhoto();
                 }
                 isHoldingRef.current = false;
               }}
-              onPointerLeave={() => {
-                if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+              onMouseDown={() => {
+                isHoldingRef.current = false;
+                holdTimerRef.current = setTimeout(() => {
+                  isHoldingRef.current = true;
+                  startVideoRecording();
+                }, 400);
               }}
-              className={`w-[76px] h-[76px] rounded-full bg-white flex items-center justify-center active:scale-95 transition-transform shadow-2xl`}
+              onMouseUp={() => {
+                if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+                if (isHoldingRef.current) {
+                  stopRecording();
+                } else {
+                  capturePhoto();
+                }
+                isHoldingRef.current = false;
+              }}
+              onContextMenu={(e) => e.preventDefault()}
+              style={{ touchAction: 'none', WebkitTouchCallout: 'none', userSelect: 'none' } as React.CSSProperties}
+              className="w-[76px] h-[76px] rounded-full bg-white flex items-center justify-center active:scale-95 transition-transform shadow-2xl select-none"
             >
-              <div className="w-[64px] h-[64px] rounded-full border-[3px] border-black/10" />
+              <div className="w-[64px] h-[64px] rounded-full border-[3px] border-black/10 pointer-events-none" />
             </button>
           </div>
         </motion.div>
