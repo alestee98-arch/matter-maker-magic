@@ -60,10 +60,10 @@ export default function Auth() {
   };
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && user && !isAuthenticating) {
       navigate(redirectTo);
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isAuthenticating]);
 
   const handleEmailContinue = () => {
     const emailResult = emailSchema.safeParse(email);
