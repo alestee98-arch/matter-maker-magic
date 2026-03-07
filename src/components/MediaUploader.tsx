@@ -166,9 +166,9 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
-      if (type === 'audio') {
-        streamRef.current?.getTracks().forEach(track => track.stop());
-      }
+      // Always stop the camera/mic stream so the review screen shows playback, not live feed
+      streamRef.current?.getTracks().forEach(track => track.stop());
+      setIsCameraActive(false);
       setIsRecording(false);
       if (timerRef.current) clearInterval(timerRef.current);
     }
