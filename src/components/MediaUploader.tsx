@@ -166,9 +166,9 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
-      if (type === 'audio') {
-        streamRef.current?.getTracks().forEach(track => track.stop());
-      }
+      // Always stop the camera/mic stream so the review screen shows playback, not live feed
+      streamRef.current?.getTracks().forEach(track => track.stop());
+      setIsCameraActive(false);
       setIsRecording(false);
       if (timerRef.current) clearInterval(timerRef.current);
     }
@@ -355,7 +355,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
           animate={{ opacity: 1 }}
           className="fixed inset-0 z-50 bg-black flex flex-col"
         >
-          <video src={blobUrl} controls autoPlay playsInline muted className="w-full h-full object-contain" />
+          <video src={blobUrl} controls autoPlay playsInline preload="metadata" className="w-full h-full object-contain" />
           <div className="absolute bottom-0 inset-x-0 pb-12 pt-6 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center gap-6 px-6">
             <button
               onClick={() => { setRecordedBlob(null); startCamera(); }}
