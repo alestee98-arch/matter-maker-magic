@@ -264,9 +264,10 @@ export default function Answer() {
                 ) : (
                   <MediaUploader
                     type={responseType}
-                    onUpload={(url) => setMediaUrl(url)}
-                    onClear={() => setMediaUrl(null)}
+                    onUpload={(url, contentType) => { setMediaUrl(url); setCapturedMediaType(contentType); }}
+                    onClear={() => { setMediaUrl(null); setCapturedMediaType(null); }}
                     mediaUrl={mediaUrl}
+                    capturedType={capturedMediaType}
                   />
                 )}
 
