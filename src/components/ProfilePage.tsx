@@ -55,7 +55,7 @@ export default function ProfilePage() {
   const [selectedEntry, setSelectedEntry]   = useState<Response | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  const fetchEntries = () => {
     if (!user) return;
     setIsLoading(true);
     supabase
@@ -66,7 +66,9 @@ export default function ProfilePage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .then(({ data }) => { setEntries(data || []); setIsLoading(false); });
-  }, [user]);
+  };
+
+  useEffect(() => { fetchEntries(); }, [user]);
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
