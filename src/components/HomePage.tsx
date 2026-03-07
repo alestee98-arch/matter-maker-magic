@@ -5,12 +5,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { 
   PenTool, 
   Mic, 
-  Video, 
   Lock, 
   Loader2,
   Check,
   Sparkles,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Camera,
+  Upload
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -31,12 +32,13 @@ export default function HomePage() {
   
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [response, setResponse] = useState('');
-  const [responseType, setResponseType] = useState<'text' | 'audio' | 'video' | 'photo'>('text');
+  const [responseType, setResponseType] = useState<'text' | 'audio' | 'camera' | 'upload'>('text');
   const [isLoadingQuestion, setIsLoadingQuestion] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [entriesCount, setEntriesCount] = useState(0);
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const [capturedMediaType, setCapturedMediaType] = useState<'audio' | 'video' | 'photo' | null>(null);
   const [showSavedConfirmation, setShowSavedConfirmation] = useState(false);
 
   useEffect(() => {
@@ -45,30 +47,19 @@ export default function HomePage() {
       
       setIsLoadingQuestion(true);
       try {
-        // Fetch responses and profile in parallel
         const [respResult, profileResult] = await Promise.all([
-          supabase
-            .from('responses')
-            .select('question_id')
-            .eq('user_id', user.id),
-          supabase
-            .from('profiles')
-            .select('age_group, current_sequence_position')
-            .eq('id', user.id)
-            .maybeSingle(),
+          supabase.from('responses').select('question_id').eq('user_id', user.id),
+          supabase.from('profiles').select('age_group, current_sequence_position').eq('id', user.id).maybeSingle(),
         ]);
 
         const responses = respResult.data;
         setEntriesCount(responses?.length || 0);
-        const answeredIds = new Set(
-          responses?.map(r => r.question_id).filter(Boolean) as string[] || []
-        );
+        const answeredIds = new Set(responses?.map(r => r.question_id).filter(Boolean) as string[] || []);
 
         const userAgeGroup = profileResult.data?.age_group;
         const currentPos = (profileResult.data as any)?.current_sequence_position ?? 0;
         let foundQuestion: Question | null = null;
 
-        // Try sequenced approach if age_group exists
         if (userAgeGroup) {
           const { data: seqRows } = await supabase
             .from('question_sequences')
@@ -80,21 +71,12 @@ export default function HomePage() {
 
           if (seqRows && seqRows.length > 0 && seqRows[0].questions) {
             const row = seqRows[0];
-            foundQuestion = {
-              id: row.questions.id,
-              question: row.questions.question,
-              category: row.questions.category,
-              depth: row.questions.depth,
-            };
+            foundQuestion = { id: row.questions.id, question: row.questions.question, category: row.questions.category, depth: row.questions.depth };
           }
         }
 
-        // Fallback to random if no sequence result
         if (!foundQuestion) {
-          const { data: questions } = await supabase
-            .from('questions')
-            .select('*');
-
+          const { data: questions } = await supabase.from('questions').select('*');
           if (questions && questions.length > 0) {
             const unanswered = questions.filter(q => !answeredIds.has(q.id));
             const pool = unanswered.length > 0 ? unanswered : questions;
@@ -102,9 +84,7 @@ export default function HomePage() {
           }
         }
 
-        if (foundQuestion) {
-          setCurrentQuestion(foundQuestion);
-        }
+        if (foundQuestion) setCurrentQuestion(foundQuestion);
       } catch (error) {
         console.error('Error fetching question:', error);
       } finally {
@@ -118,23 +98,26 @@ export default function HomePage() {
   // Clear media when switching response types
   useEffect(() => {
     setMediaUrl(null);
+    setCapturedMediaType(null);
     setResponse('');
   }, [responseType]);
+
+  const handleMediaUpload = (url: string, contentType: 'audio' | 'video' | 'photo') => {
+    setMediaUrl(url);
+    setCapturedMediaType(contentType);
+  };
 
   const handleSubmit = async () => {
     if (!currentQuestion || !user) return;
     
-    // For text, require content OR mediaUrl. For media modes, require mediaUrl
     if (responseType === 'text' && !response.trim() && !mediaUrl) return;
-    if ((responseType === 'audio' || responseType === 'video' || responseType === 'photo') && !mediaUrl) return;
+    if (responseType !== 'text' && !mediaUrl) return;
     
     setIsSubmitting(true);
     try {
-      // Determine content_type based on what's being submitted
-      let contentType = responseType;
-      if (responseType === 'text' && mediaUrl && !response.trim()) {
-        contentType = 'photo';
-      }
+      const contentType = responseType === 'text' 
+        ? (mediaUrl && !response.trim() ? 'photo' : 'text')
+        : capturedMediaType || 'text';
       
       const insertData: any = {
         user_id: user.id,
@@ -148,18 +131,9 @@ export default function HomePage() {
         insertData.word_count = response.trim().split(/\s+/).length;
       }
       
-      if (responseType === 'audio' && mediaUrl) {
-        insertData.audio_url = mediaUrl;
-      }
-      
-      if (responseType === 'video' && mediaUrl) {
-        insertData.video_url = mediaUrl;
-      }
-      
-      // Handle photo attachment in text mode or photo mode
-      if ((responseType === 'photo' || responseType === 'text') && mediaUrl) {
-        insertData.photo_url = mediaUrl;
-      }
+      if (capturedMediaType === 'audio' && mediaUrl) insertData.audio_url = mediaUrl;
+      if (capturedMediaType === 'video' && mediaUrl) insertData.video_url = mediaUrl;
+      if ((capturedMediaType === 'photo' || responseType === 'text') && mediaUrl) insertData.photo_url = mediaUrl;
       
       const { data: inserted, error } = await supabase
         .from('responses')
@@ -169,31 +143,24 @@ export default function HomePage() {
       
       if (error) throw error;
 
-      // Fire-and-forget: silently process response in background
       if (inserted?.id) {
         triggerProcessingPipeline(inserted.id, user.id);
       }
       
       setIsSubmitted(true);
       setEntriesCount(prev => prev + 1);
-      toast({
-        title: 'Preserved',
-        description: 'Your response has been saved to your legacy.'
-      });
+      toast({ title: 'Preserved', description: 'Your response has been saved to your legacy.' });
       
       setTimeout(() => {
         setResponse('');
         setMediaUrl(null);
+        setCapturedMediaType(null);
         setIsSubmitted(false);
       }, 3000);
       
     } catch (error: any) {
       console.error('Error saving response:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.message
-      });
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
     } finally {
       setIsSubmitting(false);
     }
@@ -212,7 +179,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-[calc(100vh-8rem)] flex flex-col">
-      {/* Header with contextual framing */}
+      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -226,7 +193,6 @@ export default function HomePage() {
           Week {weekNumber} of your journey
         </h1>
         <p className="text-sm text-muted-foreground mt-1">This week's reflection</p>
-        
         <p className="text-xs text-muted-foreground/60 mt-3">
           {entriesCount === 0 
             ? `Week ${weekNumber} · Your journey starts here`
@@ -239,42 +205,19 @@ export default function HomePage() {
       <div className="flex-1 flex flex-col max-w-2xl">
         <AnimatePresence mode="wait">
           {isLoadingQuestion ? (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex-1 flex items-center justify-center"
-            >
+            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 flex items-center justify-center">
               <div className="w-8 h-8 rounded-full border-2 border-muted-foreground/20 border-t-foreground animate-spin" />
             </motion.div>
           ) : isSubmitted ? (
-            <motion.div
-              key="submitted"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="flex-1 flex flex-col items-center justify-center text-center py-20"
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-                className="w-16 h-16 rounded-full bg-foreground flex items-center justify-center mb-6"
-              >
+            <motion.div key="submitted" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="flex-1 flex flex-col items-center justify-center text-center py-20">
+              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: 'spring', stiffness: 200 }} className="w-16 h-16 rounded-full bg-foreground flex items-center justify-center mb-6">
                 <Check className="w-8 h-8 text-background" />
               </motion.div>
               <h2 className="text-2xl font-serif text-foreground mb-2">Preserved</h2>
               <p className="text-muted-foreground">This moment is now part of your legacy.</p>
             </motion.div>
           ) : currentQuestion ? (
-            <motion.div
-              key="question"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="flex-1 flex flex-col"
-            >
+            <motion.div key="question" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="flex-1 flex flex-col">
               {/* Question */}
               <div className="mb-8">
                 <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground mb-4">
@@ -286,18 +229,18 @@ export default function HomePage() {
                 </h2>
               </div>
 
-              {/* Response Type Tabs - Segmented Control */}
-              <div className="inline-flex bg-secondary/50 p-1 rounded-xl mb-6 border border-border/30">
+              {/* Response Type Tabs */}
+              <div className="inline-flex bg-secondary/50 p-1 rounded-xl mb-6 border border-border/30 overflow-x-auto">
                 {[
                   { key: 'text', label: 'Write', icon: PenTool },
                   { key: 'audio', label: 'Record', icon: Mic },
-                  { key: 'video', label: 'Video', icon: Video },
-                  { key: 'photo', label: 'Photo', icon: ImageIcon },
+                  { key: 'camera', label: 'Camera', icon: Camera },
+                  { key: 'upload', label: 'Upload', icon: Upload },
                 ].map(({ key, label, icon: Icon }) => (
                   <button
                     key={key}
                     onClick={() => setResponseType(key as typeof responseType)}
-                    className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                       responseType === key
                         ? 'bg-background text-foreground shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
@@ -321,7 +264,7 @@ export default function HomePage() {
                       className="min-h-[200px] bg-secondary/30 border border-border/50 rounded-2xl resize-none text-lg leading-relaxed placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:border-foreground/30 focus-visible:bg-secondary/50 focus-visible:shadow-sm px-4 py-4 transition-all duration-200"
                     />
                     
-                    {/* Photo attachment option */}
+                    {/* Photo attachment */}
                     <div className="flex items-center gap-3">
                       <label className="flex items-center gap-2 px-4 py-2 rounded-full border border-border/50 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-secondary/30 cursor-pointer transition-all duration-200">
                         <ImageIcon className="w-4 h-4" />
@@ -333,45 +276,22 @@ export default function HomePage() {
                           onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (!file || !user) return;
-                            
                             const fileExt = file.name.split('.').pop();
                             const fileName = `${user.id}/photo_${Date.now()}.${fileExt}`;
-                            
-                            const { data, error } = await supabase.storage
-                              .from('user-media')
-                              .upload(fileName, file);
-                            
-                            if (error) {
-                              toast({
-                                variant: 'destructive',
-                                title: 'Upload failed',
-                                description: error.message
-                              });
-                              return;
-                            }
-                            
-                            const { data: { publicUrl } } = supabase.storage
-                              .from('user-media')
-                              .getPublicUrl(fileName);
-                            
+                            const { error } = await supabase.storage.from('user-media').upload(fileName, file);
+                            if (error) { toast({ variant: 'destructive', title: 'Upload failed', description: error.message }); return; }
+                            const { data: { publicUrl } } = supabase.storage.from('user-media').getPublicUrl(fileName);
                             setMediaUrl(publicUrl);
+                            setCapturedMediaType('photo');
                           }}
                         />
                       </label>
                       
                       {mediaUrl && (
                         <div className="relative">
-                          <img 
-                            src={mediaUrl} 
-                            alt="Attached" 
-                            className="h-12 w-12 object-cover rounded-lg border border-border/50"
-                          />
-                          <button
-                            onClick={() => setMediaUrl(null)}
-                            className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-xs hover:bg-destructive/90"
-                          >
-                            ×
-                          </button>
+                          <img src={mediaUrl} alt="Attached" className="h-12 w-12 object-cover rounded-lg border border-border/50" />
+                          <button onClick={() => { setMediaUrl(null); setCapturedMediaType(null); }}
+                            className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center text-xs hover:bg-destructive/90">×</button>
                         </div>
                       )}
                     </div>
@@ -388,27 +308,24 @@ export default function HomePage() {
                         disabled={(!response.trim() && !mediaUrl) || isSubmitting}
                         className={`rounded-full px-8 h-12 font-medium text-base transition-all duration-200 ${
                           (response.trim() || mediaUrl)
-                            ? 'bg-foreground text-background hover:bg-foreground/90 shadow-lg shadow-foreground/10 hover:shadow-xl hover:shadow-foreground/15'
+                            ? 'bg-foreground text-background hover:bg-foreground/90 shadow-lg shadow-foreground/10'
                             : 'bg-muted text-muted-foreground cursor-not-allowed'
                         }`}
                       >
-                        {isSubmitting ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          'Save response'
-                        )}
+                        {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save response'}
                       </Button>
                     </div>
                   </div>
                 )}
 
-                {(responseType === 'audio' || responseType === 'video' || responseType === 'photo') && (
+                {(responseType === 'audio' || responseType === 'camera' || responseType === 'upload') && (
                   <div className="space-y-6">
                     <MediaUploader
                       type={responseType}
-                      onUpload={setMediaUrl}
-                      onClear={() => setMediaUrl(null)}
+                      onUpload={handleMediaUpload}
+                      onClear={() => { setMediaUrl(null); setCapturedMediaType(null); }}
                       mediaUrl={mediaUrl}
+                      capturedType={capturedMediaType}
                     />
                     {mediaUrl && (
                       <div className="flex items-center justify-between">
@@ -421,11 +338,7 @@ export default function HomePage() {
                           disabled={isSubmitting}
                           className="rounded-full px-8 h-12 font-medium text-base bg-foreground text-background hover:bg-foreground/90 shadow-lg"
                         >
-                          {isSubmitting ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            `Save ${responseType === 'audio' ? 'recording' : responseType}`
-                          )}
+                          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : `Save ${capturedMediaType || 'media'}`}
                         </Button>
                       </div>
                     )}
@@ -434,15 +347,10 @@ export default function HomePage() {
               </div>
             </motion.div>
           ) : (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex-1 flex items-center justify-center text-center"
-            >
+            <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex items-center justify-center text-center">
               <div>
-                <p className="text-muted-foreground">No questions available.</p>
-                <p className="text-sm text-muted-foreground/70">Check back soon.</p>
+                <h2 className="text-xl font-serif text-foreground mb-2">No questions available</h2>
+                <p className="text-muted-foreground">Check back soon for your next reflection.</p>
               </div>
             </motion.div>
           )}
