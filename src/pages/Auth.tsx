@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ export default function Auth() {
   const [displayName, setDisplayName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const justSignedUp = useRef(false);
   
   const { signIn, signUp, user, loading } = useAuth();
   const { toast } = useToast();
@@ -60,7 +61,7 @@ export default function Auth() {
   };
 
   useEffect(() => {
-    if (!loading && user && !isAuthenticating) {
+    if (!loading && user && !isAuthenticating && !justSignedUp.current) {
       navigate(redirectTo);
     }
   }, [user, loading, navigate, isAuthenticating]);
@@ -143,16 +144,14 @@ export default function Auth() {
           setIsLoading(false);
           setIsAuthenticating(false);
         } else {
-          // Keep isAuthenticating=true to prevent the useEffect from redirecting to /
+          justSignedUp.current = true;
           setIsLoading(false);
           toast({
             title: 'Account created!',
             description: "Let's complete your profile."
           });
           navigate(redirectTo !== '/' ? `/onboarding?redirect=${encodeURIComponent(redirectTo)}` : '/onboarding');
-          return;
         }
-        return;
       }
     } finally {
       setIsLoading(false);
