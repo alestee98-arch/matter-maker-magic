@@ -20,8 +20,9 @@ export default function Answer() {
 
   const [question, setQuestion] = useState<{ id: string; question: string; category: string } | null>(null);
   const [response, setResponse] = useState('');
-  const [responseType, setResponseType] = useState<'text' | 'audio' | 'video' | 'photo'>('text');
+  const [responseType, setResponseType] = useState<'text' | 'audio' | 'camera' | 'upload'>('text');
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const [capturedMediaType, setCapturedMediaType] = useState<'audio' | 'video' | 'photo' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
