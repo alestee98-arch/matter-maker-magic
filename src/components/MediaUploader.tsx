@@ -98,15 +98,25 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
     }
   };
 
+  const getVideoMimeType = () => {
+    if (MediaRecorder.isTypeSupported('video/mp4')) return 'video/mp4';
+    if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) return 'video/webm;codecs=vp9';
+    if (MediaRecorder.isTypeSupported('video/webm')) return 'video/webm';
+    return '';
+  };
+
   const startVideoRecording = () => {
     if (!streamRef.current) return;
     try {
-      const mediaRecorder = new MediaRecorder(streamRef.current);
+      const mimeType = getVideoMimeType();
+      const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
+      const mediaRecorder = new MediaRecorder(streamRef.current, options);
       mediaRecorderRef.current = mediaRecorder;
       const chunks: BlobPart[] = [];
       mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
+        const actualType = mimeType || 'video/mp4';
+        const blob = new Blob(chunks, { type: actualType });
         setRecordedBlob(blob);
       };
       mediaRecorder.start();
