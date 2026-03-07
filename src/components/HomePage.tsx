@@ -107,9 +107,65 @@ export default function HomePage() {
     setResponse('');
   }, [responseType]);
 
-  const handleMediaUpload = (url: string, contentType: 'audio' | 'video' | 'photo') => {
+  const handleMediaUpload = async (url: string, contentType: 'audio' | 'video' | 'photo') => {
     setMediaUrl(url);
     setCapturedMediaType(contentType);
+    // Auto-submit for recorded audio/video — skip the redundant second save screen
+    if (contentType === 'audio' || contentType === 'video') {
+      // We need to submit with the new values directly since setState is async
+      await handleSubmitDirect(url, contentType);
+    }
+  };
+
+  const handleSubmitDirect = async (url: string, contentType: 'audio' | 'video' | 'photo') => {
+    if (!currentQuestion || !user) return;
+    setIsSubmitting(true);
+    try {
+      const insertData: any = {
+        user_id: user.id,
+        question_id: currentQuestion.id,
+        content: `${contentType} response`,
+        content_type: contentType,
+        privacy: 'private'
+      };
+      if (contentType === 'audio') insertData.audio_url = url;
+      if (contentType === 'video') insertData.video_url = url;
+      if (contentType === 'photo') insertData.photo_url = url;
+
+      const { data: inserted, error } = await supabase
+        .from('responses')
+        .insert(insertData)
+        .select('id')
+        .single();
+      if (error) throw error;
+
+      if (inserted?.id) {
+        triggerProcessingPipeline(inserted.id, user.id);
+      }
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ current_sequence_position: sequencePosition })
+        .eq('id', user.id);
+      if (updateError) console.error('Failed to advance position:', updateError);
+
+      setIsSubmitted(true);
+      setEntriesCount(prev => prev + 1);
+      toast({ title: 'Preserved', description: 'Your response has been saved to your legacy.' });
+
+      setTimeout(() => {
+        setResponse('');
+        setMediaUrl(null);
+        setCapturedMediaType(null);
+        setIsSubmitted(false);
+        setRefreshKey(prev => prev + 1);
+      }, 3000);
+    } catch (error: any) {
+      console.error('Error saving response:', error);
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSubmit = async () => {
