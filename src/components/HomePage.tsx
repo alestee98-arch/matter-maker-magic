@@ -67,7 +67,7 @@ export default function HomePage() {
             .from('question_sequences')
             .select('question_id, position, questions(id, question, category, depth)')
             .eq('age_group', userAgeGroup)
-            .gte('position', currentPos)
+            .gt('position', currentPos)
             .order('position', { ascending: true })
             .limit(1) as any;
 
