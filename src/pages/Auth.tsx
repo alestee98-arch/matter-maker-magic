@@ -20,6 +20,7 @@ export default function Auth() {
   const mode = searchParams.get('mode');
   const redirectTo = searchParams.get('redirect') || '/';
   const [isLogin, setIsLogin] = useState(mode !== 'signup');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [step, setStep] = useState<'email' | 'password' | 'forgot' | 'forgot-sent'>('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
