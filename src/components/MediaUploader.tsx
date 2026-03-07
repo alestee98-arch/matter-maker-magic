@@ -346,25 +346,43 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
       );
     }
 
-    // Video recorded — inline review (matches uploaded state style)
+    // Video recorded — inline review with Save/Retake
     if (recordedBlob) {
       const blobUrl = URL.createObjectURL(recordedBlob);
       return (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="relative rounded-2xl overflow-hidden bg-secondary/50"
+          className="space-y-4"
         >
-          <video src={blobUrl} controls autoPlay playsInline preload="metadata" className="w-full aspect-[9/16] max-h-[50vh] object-cover" />
-          <button
-            onClick={() => { setRecordedBlob(null); setRecordingDuration(0); startCamera(); }}
-            className="absolute top-3 right-3 p-2 rounded-full bg-background/80 hover:bg-background transition-colors"
-          >
-            <Trash2 className="w-4 h-4 text-destructive" />
-          </button>
-          <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-foreground/90 text-background text-xs font-medium flex items-center gap-1.5">
-            <Check className="w-3 h-3" />
-            Ready to save
+          <div className="relative rounded-2xl overflow-hidden bg-secondary/50">
+            <video src={blobUrl} controls autoPlay playsInline preload="metadata" className="w-full aspect-[9/16] max-h-[50vh] object-cover" />
+            <button
+              onClick={() => { setRecordedBlob(null); setRecordingDuration(0); startCamera(); }}
+              className="absolute top-3 right-3 p-2 rounded-full bg-background/80 hover:bg-background transition-colors"
+            >
+              <Trash2 className="w-4 h-4 text-destructive" />
+            </button>
+            <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-foreground/90 text-background text-xs font-medium flex items-center gap-1.5">
+              <Check className="w-3 h-3" />
+              Ready to save
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => { setRecordedBlob(null); setRecordingDuration(0); startCamera(); }}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Retake video
+            </button>
+            <Button
+              onClick={handleUploadRecording}
+              disabled={isUploading}
+              className="rounded-full bg-foreground text-background hover:bg-foreground/90 px-6"
+            >
+              {isUploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Video className="w-4 h-4 mr-2" />}
+              Save video
+            </Button>
           </div>
         </motion.div>
       );
