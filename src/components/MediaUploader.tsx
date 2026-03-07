@@ -11,7 +11,8 @@ import {
   Check,
   Image as ImageIcon,
   Camera,
-  X
+  X,
+  SwitchCamera
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
