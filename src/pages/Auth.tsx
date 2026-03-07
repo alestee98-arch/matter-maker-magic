@@ -61,7 +61,7 @@ export default function Auth() {
   };
 
   useEffect(() => {
-    if (!loading && user && !isAuthenticating) {
+    if (!loading && user && !isAuthenticating && !justSignedUp.current) {
       navigate(redirectTo);
     }
   }, [user, loading, navigate, isAuthenticating]);
