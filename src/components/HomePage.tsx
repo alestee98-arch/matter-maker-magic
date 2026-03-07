@@ -41,6 +41,7 @@ export default function HomePage() {
   const [capturedMediaType, setCapturedMediaType] = useState<'audio' | 'video' | 'photo' | null>(null);
   const [showSavedConfirmation, setShowSavedConfirmation] = useState(false);
   const [sequencePosition, setSequencePosition] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const fetchQuestion = async () => {
@@ -74,6 +75,8 @@ export default function HomePage() {
           if (seqRows && seqRows.length > 0 && seqRows[0].questions) {
             const row = seqRows[0];
             foundQuestion = { id: row.questions.id, question: row.questions.question, category: row.questions.category, depth: row.questions.depth };
+            // Store the actual sequence position so we can advance correctly
+            setSequencePosition(row.position);
           }
         }
 
@@ -95,7 +98,7 @@ export default function HomePage() {
     };
     
     fetchQuestion();
-  }, [user]);
+  }, [user, refreshKey]);
 
   // Clear media when switching response types
   useEffect(() => {
@@ -149,12 +152,14 @@ export default function HomePage() {
         triggerProcessingPipeline(inserted.id, user.id);
       }
 
-      // Advance the sequence position so the next question is shown
-      await supabase
+      // Advance the sequence position to the current question's position
+      // so gt('position', sequencePosition) will skip past it next time
+      const { error: updateError } = await supabase
         .from('profiles')
-        .update({ current_sequence_position: sequencePosition + 1 })
+        .update({ current_sequence_position: sequencePosition })
         .eq('id', user.id);
-      setSequencePosition(prev => prev + 1);
+      
+      if (updateError) console.error('Failed to advance position:', updateError);
       
       setIsSubmitted(true);
       setEntriesCount(prev => prev + 1);
@@ -165,6 +170,7 @@ export default function HomePage() {
         setMediaUrl(null);
         setCapturedMediaType(null);
         setIsSubmitted(false);
+        setRefreshKey(prev => prev + 1); // Trigger refetch of next question
       }, 3000);
       
     } catch (error: any) {
