@@ -235,7 +235,7 @@ export default function Answer() {
                     { type: 'text' as const, icon: PenTool, label: 'Write' },
                     { type: 'audio' as const, icon: Mic, label: 'Record' },
                     { type: 'camera' as const, icon: Camera, label: 'Camera' },
-                    { type: 'upload' as const, icon: Upload, label: 'Upload' },
+                    { type: 'upload' as const, icon: Upload, label: 'Media' },
                   ].map(({ type, icon: Icon, label }) => (
                     <button
                       key={type}
