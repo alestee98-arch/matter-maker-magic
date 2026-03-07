@@ -284,32 +284,32 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="rounded-2xl overflow-hidden bg-secondary/50"
+        className="fixed inset-0 z-50 bg-black flex flex-col"
       >
         <img 
           src={capturedPhoto} 
           alt="Captured"
-          className="w-full aspect-video object-cover"
+          className="w-full h-full object-cover"
         />
-        <div className="p-4 flex items-center justify-between border-t border-border/30">
+        {/* Bottom bar */}
+        <div className="absolute bottom-0 inset-x-0 pb-12 pt-6 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center gap-6 px-6">
           <button
             onClick={() => { setCapturedPhoto(null); startCamera(); }}
-            className="px-4 py-2 rounded-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="px-5 py-2.5 rounded-full bg-white/15 backdrop-blur-md text-white text-sm font-medium active:scale-95 transition-transform"
           >
-            <Camera className="w-4 h-4 inline mr-2" />
             Retake
           </button>
           <Button
             onClick={handleUploadPhoto}
             disabled={isUploading}
-            className="rounded-full bg-foreground text-background hover:bg-foreground/90"
+            className="rounded-full bg-white text-black hover:bg-white/90 px-6 h-11 font-medium active:scale-95 transition-transform"
           >
             {isUploading ? (
               <Loader2 className="w-4 h-4 animate-spin mr-2" />
             ) : (
               <Check className="w-4 h-4 mr-2" />
             )}
-            Use this photo
+            Use photo
           </Button>
         </div>
       </motion.div>
