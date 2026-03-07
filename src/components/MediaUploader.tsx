@@ -196,11 +196,15 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
     if (!user) return;
     setIsUploading(true);
     try {
-      let fileExt = 'webm';
+      let fileExt = 'mp4';
       if (file instanceof File) {
-        fileExt = file.name.split('.').pop() || 'webm';
+        fileExt = file.name.split('.').pop() || 'mp4';
       } else if (mediaType === 'photo') {
         fileExt = 'jpg';
+      } else if (file instanceof Blob) {
+        // Determine extension from blob mime type
+        if (file.type.includes('webm')) fileExt = 'webm';
+        else if (file.type.includes('mp4')) fileExt = 'mp4';
       }
       
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
