@@ -108,13 +108,13 @@ export default function HomePage() {
   }, [responseType]);
 
   const handleMediaUpload = async (url: string, contentType: 'audio' | 'video' | 'photo') => {
-    setMediaUrl(url);
-    setCapturedMediaType(contentType);
     // Auto-submit for recorded audio/video — skip the redundant second save screen
     if (contentType === 'audio' || contentType === 'video') {
-      // We need to submit with the new values directly since setState is async
       await handleSubmitDirect(url, contentType);
+      return; // Don't set mediaUrl so the second save UI never appears
     }
+    setMediaUrl(url);
+    setCapturedMediaType(contentType);
   };
 
   const handleSubmitDirect = async (url: string, contentType: 'audio' | 'video' | 'photo') => {
