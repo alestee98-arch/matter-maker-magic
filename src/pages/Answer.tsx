@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, Loader2, Lock, ArrowLeft, PenTool, Mic, Video, Image as ImageIcon } from 'lucide-react';
+import { Check, Loader2, Lock, ArrowLeft, PenTool, Mic, Camera, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
