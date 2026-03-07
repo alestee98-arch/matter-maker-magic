@@ -152,8 +152,9 @@ export default function HomePage() {
       // Advance the sequence position so the next question is shown
       await supabase
         .from('profiles')
-        .update({ current_sequence_position: (profileResult.data as any)?.current_sequence_position != null ? ((profileResult.data as any).current_sequence_position + 1) : 1 })
+        .update({ current_sequence_position: sequencePosition + 1 })
         .eq('id', user.id);
+      setSequencePosition(prev => prev + 1);
       
       setIsSubmitted(true);
       setEntriesCount(prev => prev + 1);
