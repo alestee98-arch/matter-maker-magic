@@ -164,10 +164,10 @@ serve(async (req) => {
           }
         }
 
-        // --- UPDATE LAST SENT ---
+        // Advance sequence position
         await supabase
           .from('profiles')
-          .update({ last_question_sent_at: new Date().toISOString() })
+          .update({ current_sequence_position: (profile.current_sequence_position ?? 0) + 1 })
           .eq('id', profile.id);
 
       } catch (userError) {
