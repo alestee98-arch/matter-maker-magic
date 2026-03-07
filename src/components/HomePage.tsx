@@ -41,6 +41,7 @@ export default function HomePage() {
   const [capturedMediaType, setCapturedMediaType] = useState<'audio' | 'video' | 'photo' | null>(null);
   const [showSavedConfirmation, setShowSavedConfirmation] = useState(false);
   const [sequencePosition, setSequencePosition] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const fetchQuestion = async () => {
@@ -74,6 +75,8 @@ export default function HomePage() {
           if (seqRows && seqRows.length > 0 && seqRows[0].questions) {
             const row = seqRows[0];
             foundQuestion = { id: row.questions.id, question: row.questions.question, category: row.questions.category, depth: row.questions.depth };
+            // Store the actual sequence position so we can advance correctly
+            setSequencePosition(row.position);
           }
         }
 
@@ -95,7 +98,7 @@ export default function HomePage() {
     };
     
     fetchQuestion();
-  }, [user]);
+  }, [user, refreshKey]);
 
   // Clear media when switching response types
   useEffect(() => {
