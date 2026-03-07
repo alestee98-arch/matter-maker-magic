@@ -40,6 +40,7 @@ export default function HomePage() {
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [capturedMediaType, setCapturedMediaType] = useState<'audio' | 'video' | 'photo' | null>(null);
   const [showSavedConfirmation, setShowSavedConfirmation] = useState(false);
+  const [sequencePosition, setSequencePosition] = useState(0);
 
   useEffect(() => {
     const fetchQuestion = async () => {
@@ -58,6 +59,7 @@ export default function HomePage() {
 
         const userAgeGroup = profileResult.data?.age_group;
         const currentPos = (profileResult.data as any)?.current_sequence_position ?? 0;
+        setSequencePosition(currentPos);
         let foundQuestion: Question | null = null;
 
         if (userAgeGroup) {
@@ -146,6 +148,13 @@ export default function HomePage() {
       if (inserted?.id) {
         triggerProcessingPipeline(inserted.id, user.id);
       }
+
+      // Advance the sequence position so the next question is shown
+      await supabase
+        .from('profiles')
+        .update({ current_sequence_position: sequencePosition + 1 })
+        .eq('id', user.id);
+      setSequencePosition(prev => prev + 1);
       
       setIsSubmitted(true);
       setEntriesCount(prev => prev + 1);

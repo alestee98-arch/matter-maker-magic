@@ -286,7 +286,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
         className="relative rounded-2xl overflow-hidden bg-secondary/50"
       >
         {capturedType === 'video' ? (
-          <video src={mediaUrl} controls className="w-full aspect-[9/16] max-h-[50vh] object-cover" />
+          <video src={mediaUrl} controls playsInline preload="metadata" className="w-full aspect-[9/16] max-h-[50vh] object-cover" />
         ) : capturedType === 'photo' ? (
           <img src={mediaUrl} alt="Uploaded" className="w-full max-h-[50vh] object-cover" />
         ) : capturedType === 'audio' ? (
@@ -355,7 +355,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
           animate={{ opacity: 1 }}
           className="fixed inset-0 z-50 bg-black flex flex-col"
         >
-          <video src={blobUrl} controls autoPlay playsInline className="w-full h-full object-contain" />
+          <video src={blobUrl} controls autoPlay playsInline muted className="w-full h-full object-contain" />
           <div className="absolute bottom-0 inset-x-0 pb-12 pt-6 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center gap-6 px-6">
             <button
               onClick={() => { setRecordedBlob(null); startCamera(); }}

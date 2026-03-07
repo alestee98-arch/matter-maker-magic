@@ -146,6 +146,19 @@ export default function Answer() {
         triggerProcessingPipeline(inserted.id, user.id);
       }
 
+      // Advance sequence position so the next question is shown
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('current_sequence_position')
+        .eq('id', user.id)
+        .single();
+      
+      const currentPos = (profileData as any)?.current_sequence_position ?? 0;
+      await supabase
+        .from('profiles')
+        .update({ current_sequence_position: currentPos + 1 })
+        .eq('id', user.id);
+
       setIsSubmitted(true);
     } catch (error: any) {
       toast({
