@@ -27,6 +27,7 @@ export default function Auth() {
   const [displayName, setDisplayName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const justSignedUp = useRef(false);
   
   const { signIn, signUp, user, loading } = useAuth();
   const { toast } = useToast();
