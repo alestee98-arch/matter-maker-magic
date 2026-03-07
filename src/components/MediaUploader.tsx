@@ -98,15 +98,25 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
     }
   };
 
+  const getVideoMimeType = () => {
+    if (MediaRecorder.isTypeSupported('video/mp4')) return 'video/mp4';
+    if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) return 'video/webm;codecs=vp9';
+    if (MediaRecorder.isTypeSupported('video/webm')) return 'video/webm';
+    return '';
+  };
+
   const startVideoRecording = () => {
     if (!streamRef.current) return;
     try {
-      const mediaRecorder = new MediaRecorder(streamRef.current);
+      const mimeType = getVideoMimeType();
+      const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
+      const mediaRecorder = new MediaRecorder(streamRef.current, options);
       mediaRecorderRef.current = mediaRecorder;
       const chunks: BlobPart[] = [];
       mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
+        const actualType = mimeType || 'video/mp4';
+        const blob = new Blob(chunks, { type: actualType });
         setRecordedBlob(blob);
       };
       mediaRecorder.start();
@@ -120,16 +130,26 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
     }
   };
 
+  const getAudioMimeType = () => {
+    if (MediaRecorder.isTypeSupported('audio/mp4')) return 'audio/mp4';
+    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) return 'audio/webm;codecs=opus';
+    if (MediaRecorder.isTypeSupported('audio/webm')) return 'audio/webm';
+    return '';
+  };
+
   const startAudioRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      const mediaRecorder = new MediaRecorder(stream);
+      const mimeType = getAudioMimeType();
+      const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
+      const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
       const chunks: BlobPart[] = [];
       mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const actualType = mimeType || 'audio/mp4';
+        const blob = new Blob(chunks, { type: actualType });
         setRecordedBlob(blob);
       };
       mediaRecorder.start();
@@ -186,11 +206,15 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
     if (!user) return;
     setIsUploading(true);
     try {
-      let fileExt = 'webm';
+      let fileExt = 'mp4';
       if (file instanceof File) {
-        fileExt = file.name.split('.').pop() || 'webm';
+        fileExt = file.name.split('.').pop() || 'mp4';
       } else if (mediaType === 'photo') {
         fileExt = 'jpg';
+      } else if (file instanceof Blob) {
+        // Determine extension from blob mime type
+        if (file.type.includes('webm')) fileExt = 'webm';
+        else if (file.type.includes('mp4')) fileExt = 'mp4';
       }
       
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
@@ -331,7 +355,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
           animate={{ opacity: 1 }}
           className="fixed inset-0 z-50 bg-black flex flex-col"
         >
-          <video src={blobUrl} controls playsInline className="w-full h-full object-contain" />
+          <video src={blobUrl} controls autoPlay playsInline className="w-full h-full object-contain" />
           <div className="absolute bottom-0 inset-x-0 pb-12 pt-6 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center gap-6 px-6">
             <button
               onClick={() => { setRecordedBlob(null); startCamera(); }}
