@@ -527,6 +527,147 @@ function EntryDetailSheet({ entry, onClose }: { entry: Response; onClose: () => 
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   VIDEO PLAYER — progress bar, timer, like audio player
+═══════════════════════════════════════════════════════════════ */
+function VideoPlayer({ src, transcript }: { src: string; transcript?: string | null }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [showTranscript, setShowTranscript] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const onTime = () => setCurrentTime(video.currentTime);
+    const onLoad = () => setDuration(video.duration);
+    const onEnd = () => setIsPlaying(false);
+    video.addEventListener("timeupdate", onTime);
+    video.addEventListener("loadedmetadata", onLoad);
+    video.addEventListener("ended", onEnd);
+    return () => {
+      video.removeEventListener("timeupdate", onTime);
+      video.removeEventListener("loadedmetadata", onLoad);
+      video.removeEventListener("ended", onEnd);
+    };
+  }, []);
+
+  const fmt = (s: number) => {
+    if (!s || isNaN(s)) return "0:00";
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+  const remaining = duration > 0 ? duration - currentTime : 0;
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    isPlaying ? videoRef.current.pause() : videoRef.current.play();
+    setIsPlaying(p => !p);
+  };
+
+  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!progressRef.current || !videoRef.current || !duration) return;
+    const rect = progressRef.current.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left) / rect.width;
+    videoRef.current.currentTime = ratio * duration;
+  };
+
+  return (
+    <div className="bg-secondary/30 overflow-hidden">
+      {/* Video element */}
+      <div className="relative w-full aspect-video bg-black cursor-pointer" onClick={togglePlay}>
+        <video ref={videoRef} src={src} className="w-full h-full object-contain"
+          playsInline preload="metadata" />
+        {!isPlaying && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-xl">
+              <Play className="w-7 h-7 text-foreground fill-foreground ml-0.5" />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Controls — progress bar and time */}
+      <div className="p-5">
+        <div className="flex items-center gap-4 mb-4">
+          <button
+            onClick={togglePlay}
+            className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 active:scale-95 transition-transform"
+          >
+            {isPlaying
+              ? <Pause className="w-5 h-5 text-background fill-background" />
+              : <Play className="w-5 h-5 text-background fill-background ml-0.5" />
+            }
+          </button>
+
+          <div className="flex items-center gap-1 text-xs text-muted-foreground/60 flex-shrink-0 w-16">
+            <span>{fmt(currentTime)}</span>
+            <span>/</span>
+            <span>{fmt(duration)}</span>
+          </div>
+
+          {duration > 0 && (
+            <span className="ml-auto text-xs text-muted-foreground/40">
+              -{fmt(remaining)}
+            </span>
+          )}
+        </div>
+
+        <div
+          ref={progressRef}
+          onClick={seek}
+          className="relative h-1.5 bg-foreground/10 rounded-full cursor-pointer group"
+        >
+          <div
+            className="absolute left-0 top-0 h-full bg-foreground/60 rounded-full transition-all"
+            style={{ width: `${progress}%` }}
+          />
+          <div
+            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-foreground rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{ left: `calc(${progress}% - 6px)` }}
+          />
+        </div>
+      </div>
+
+      {/* Transcript toggle */}
+      {transcript && (
+        <div className="border-t border-border/30">
+          <button
+            onClick={() => setShowTranscript(v => !v)}
+            className="w-full flex items-center justify-between px-5 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span className="flex items-center gap-2">
+              <FileText className="w-3.5 h-3.5" />
+              Show transcript
+            </span>
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showTranscript ? "rotate-180" : ""}`} />
+          </button>
+          <AnimatePresence>
+            {showTranscript && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <p className="px-5 pb-5 text-[14px] text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {transcript}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
    AUDIO PLAYER — progress bar, timer, transcript reveal
 ═══════════════════════════════════════════════════════════════ */
 function AudioPlayer({
