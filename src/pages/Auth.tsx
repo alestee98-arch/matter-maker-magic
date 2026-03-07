@@ -140,13 +140,19 @@ export default function Auth() {
               description: error.message
             });
           }
+          setIsLoading(false);
+          setIsAuthenticating(false);
         } else {
+          // Keep isAuthenticating=true to prevent the useEffect from redirecting to /
+          setIsLoading(false);
           toast({
             title: 'Account created!',
             description: "Let's complete your profile."
           });
           navigate(redirectTo !== '/' ? `/onboarding?redirect=${encodeURIComponent(redirectTo)}` : '/onboarding');
+          return;
         }
+        return;
       }
     } finally {
       setIsLoading(false);
