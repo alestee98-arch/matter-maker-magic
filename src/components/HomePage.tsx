@@ -40,6 +40,7 @@ export default function HomePage() {
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [capturedMediaType, setCapturedMediaType] = useState<'audio' | 'video' | 'photo' | null>(null);
   const [showSavedConfirmation, setShowSavedConfirmation] = useState(false);
+  const [sequencePosition, setSequencePosition] = useState(0);
 
   useEffect(() => {
     const fetchQuestion = async () => {
