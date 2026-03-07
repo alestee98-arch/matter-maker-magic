@@ -10,7 +10,8 @@ import {
   Loader2,
   Check,
   Image as ImageIcon,
-  Camera
+  Camera,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
