@@ -329,26 +329,34 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
           autoPlay
           muted
           playsInline
-          className="w-full h-full object-cover scale-x-[-1]"
+          className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
         />
         <canvas ref={canvasRef} className="hidden" />
-        
-        {/* Capture controls — bottom overlay */}
-        <div className="absolute bottom-0 inset-x-0 pb-10 pt-6 bg-gradient-to-t from-black/60 to-transparent flex justify-center items-center gap-8">
+
+        {/* Top bar */}
+        <div className="absolute top-0 inset-x-0 pt-12 pb-4 px-5 bg-gradient-to-b from-black/50 to-transparent flex items-center justify-between">
           <button
             onClick={stopCamera}
-            className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
+            className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center"
           >
             <X className="w-5 h-5 text-white" />
           </button>
           <button
-            onClick={capturePhoto}
-            className="w-18 h-18 rounded-full bg-white border-4 border-white/80 flex items-center justify-center hover:scale-105 transition-transform shadow-xl"
-            style={{ width: 72, height: 72 }}
+            onClick={switchCameraFacing}
+            className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform"
           >
-            <div className="w-14 h-14 rounded-full bg-white border-2 border-black/10" />
+            <SwitchCamera className="w-5 h-5 text-white" />
           </button>
-          <div className="w-12 h-12" /> {/* Spacer for centering */}
+        </div>
+        
+        {/* Bottom capture bar */}
+        <div className="absolute bottom-0 inset-x-0 pb-12 pt-8 bg-gradient-to-t from-black/60 to-transparent flex justify-center items-center">
+          <button
+            onClick={capturePhoto}
+            className="w-[72px] h-[72px] rounded-full bg-white flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-2xl"
+          >
+            <div className="w-[62px] h-[62px] rounded-full border-[3px] border-black/10" />
+          </button>
         </div>
       </motion.div>
     );
