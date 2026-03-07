@@ -232,14 +232,14 @@ export default function Answer() {
                 {/* Response type selector */}
                 <div className="flex gap-2 mb-6">
                   {[
-                    { type: 'text' as const, icon: PenTool, label: 'Text' },
-                    { type: 'audio' as const, icon: Mic, label: 'Audio' },
-                    { type: 'video' as const, icon: Video, label: 'Video' },
-                    { type: 'photo' as const, icon: ImageIcon, label: 'Photo' },
+                    { type: 'text' as const, icon: PenTool, label: 'Write' },
+                    { type: 'audio' as const, icon: Mic, label: 'Record' },
+                    { type: 'camera' as const, icon: Camera, label: 'Camera' },
+                    { type: 'upload' as const, icon: Upload, label: 'Upload' },
                   ].map(({ type, icon: Icon, label }) => (
                     <button
                       key={type}
-                      onClick={() => { setResponseType(type); setMediaUrl(null); }}
+                      onClick={() => { setResponseType(type); setMediaUrl(null); setCapturedMediaType(null); }}
                       className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all ${
                         responseType === type
                           ? 'bg-foreground text-background'
