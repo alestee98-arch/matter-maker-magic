@@ -476,7 +476,7 @@ function EntryDetailSheet({ entry, onClose }: { entry: Response; onClose: () => 
           {isVideo && entry.video_url && (
             <div className="relative w-full aspect-video bg-black cursor-pointer" onClick={togglePlay}>
               <video ref={videoRef} src={entry.video_url} className="w-full h-full object-contain"
-                playsInline onEnded={() => setIsPlaying(false)} />
+                playsInline preload="metadata" onEnded={() => setIsPlaying(false)} />
               {!isPlaying && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-xl">
