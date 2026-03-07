@@ -448,14 +448,26 @@ export default function Auth() {
                       variant="outline" 
                       className="w-full h-12 text-base gap-3 rounded-full border-border/50 hover:bg-[#f5f5f3]"
                       onClick={async () => {
-                        const { error } = await lovable.auth.signInWithOAuth('google', {
-                          redirect_uri: window.location.origin,
-                        });
-                        if (error) {
+                        try {
+                          console.log('[Google Auth] Starting sign in...');
+                          const result = await lovable.auth.signInWithOAuth('google', {
+                            redirect_uri: window.location.origin,
+                          });
+                          console.log('[Google Auth] Result:', JSON.stringify(result));
+                          if (result.error) {
+                            console.error('[Google Auth] Error:', result.error);
+                            toast({
+                              variant: 'destructive',
+                              title: 'Google sign in failed',
+                              description: result.error.message || 'Unknown error'
+                            });
+                          }
+                        } catch (err: any) {
+                          console.error('[Google Auth] Caught exception:', err);
                           toast({
                             variant: 'destructive',
                             title: 'Google sign in failed',
-                            description: error.message
+                            description: err?.message || 'Something went wrong'
                           });
                         }
                       }}
