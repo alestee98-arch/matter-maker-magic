@@ -235,7 +235,7 @@ export default function HomePage() {
                   { key: 'text', label: 'Write', icon: PenTool },
                   { key: 'audio', label: 'Record', icon: Mic },
                   { key: 'camera', label: 'Camera', icon: Camera },
-                  { key: 'upload', label: 'Upload', icon: Upload },
+                  { key: 'upload', label: 'Media', icon: Upload },
                 ].map(({ key, label, icon: Icon }) => (
                   <button
                     key={key}

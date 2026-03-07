@@ -544,7 +544,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
         <p className="text-sm text-muted-foreground mb-6">Photos, videos, or audio from your library</p>
         <Button onClick={() => fileInputRef.current?.click()} size="lg" className="rounded-full bg-foreground text-background hover:bg-foreground/90 shadow-lg">
           <Upload className="w-4 h-4 mr-2" />
-          Choose file
+          Choose from library
         </Button>
         <input
           ref={fileInputRef}
