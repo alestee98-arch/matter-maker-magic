@@ -75,25 +75,25 @@ export default function Answer() {
       // Try sequence-based selection first
       const { data: profile } = await supabase
         .from('profiles')
-        .select('age_group')
+        .select('age_group, current_sequence_position')
         .eq('id', user!.id)
         .single();
 
       const userAgeGroup = (profile as any)?.age_group;
+      const currentPos = (profile as any)?.current_sequence_position ?? 0;
 
       if (userAgeGroup) {
         const { data: seqData } = await supabase
           .from('question_sequences')
           .select('question_id, position, questions(id, question, category)')
           .eq('age_group', userAgeGroup)
-          .order('position', { ascending: true }) as any;
+          .gt('position', currentPos)
+          .order('position', { ascending: true })
+          .limit(1) as any;
 
-        if (seqData && seqData.length > 0) {
-          const nextInSequence = seqData.find((s: any) => !answeredIds.includes(s.question_id));
-          if (nextInSequence?.questions) {
-            setQuestion(nextInSequence.questions);
-            return;
-          }
+        if (seqData && seqData.length > 0 && seqData[0].questions) {
+          setQuestion(seqData[0].questions);
+          return;
         }
       }
 
