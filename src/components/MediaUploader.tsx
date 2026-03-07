@@ -51,11 +51,10 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
     }
   }, [isRecording, isCameraActive]);
 
-  const startRecording = async (useCurrentFacing?: boolean) => {
+  const startRecording = async () => {
     try {
-      const facing = useCurrentFacing ? facingMode : 'user';
       const constraints = type === 'video' 
-        ? { video: { facingMode: facing }, audio: true }
+        ? { video: { facingMode }, audio: true }
         : { audio: true };
       
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
