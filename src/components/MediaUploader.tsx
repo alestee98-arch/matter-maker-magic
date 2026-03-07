@@ -11,7 +11,8 @@ import {
   Check,
   Image as ImageIcon,
   Camera,
-  X
+  X,
+  SwitchCamera
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,6 +33,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -52,7 +54,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
   const startRecording = async () => {
     try {
       const constraints = type === 'video' 
-        ? { video: { facingMode: 'user' }, audio: true }
+        ? { video: { facingMode }, audio: true }
         : { audio: true };
       
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -101,12 +103,31 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'user' } 
+        video: { facingMode } 
       });
       streamRef.current = stream;
       setIsCameraActive(true);
     } catch (error) {
       console.error('Error starting camera:', error);
+    }
+  };
+
+  const switchCameraFacing = async () => {
+    const newFacing = facingMode === 'user' ? 'environment' : 'user';
+    setFacingMode(newFacing);
+    // Stop current stream and restart with new facing
+    streamRef.current?.getTracks().forEach(track => track.stop());
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: newFacing } 
+      });
+      streamRef.current = stream;
+      if (videoPreviewRef.current) {
+        videoPreviewRef.current.srcObject = stream;
+        videoPreviewRef.current.play().catch(() => {});
+      }
+    } catch (error) {
+      console.error('Error switching camera:', error);
     }
   };
 
@@ -118,9 +139,11 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        // Mirror the image for selfie
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
+        // Only mirror for front-facing camera
+        if (facingMode === 'user') {
+          ctx.translate(canvas.width, 0);
+          ctx.scale(-1, 1);
+        }
         ctx.drawImage(video, 0, 0);
         const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
         setCapturedPhoto(dataUrl);
@@ -261,32 +284,32 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="rounded-2xl overflow-hidden bg-secondary/50"
+        className="fixed inset-0 z-50 bg-black flex flex-col"
       >
         <img 
           src={capturedPhoto} 
           alt="Captured"
-          className="w-full aspect-video object-cover"
+          className="w-full h-full object-cover"
         />
-        <div className="p-4 flex items-center justify-between border-t border-border/30">
+        {/* Bottom bar */}
+        <div className="absolute bottom-0 inset-x-0 pb-12 pt-6 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center gap-6 px-6">
           <button
             onClick={() => { setCapturedPhoto(null); startCamera(); }}
-            className="px-4 py-2 rounded-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="px-5 py-2.5 rounded-full bg-white/15 backdrop-blur-md text-white text-sm font-medium active:scale-95 transition-transform"
           >
-            <Camera className="w-4 h-4 inline mr-2" />
             Retake
           </button>
           <Button
             onClick={handleUploadPhoto}
             disabled={isUploading}
-            className="rounded-full bg-foreground text-background hover:bg-foreground/90"
+            className="rounded-full bg-white text-black hover:bg-white/90 px-6 h-11 font-medium active:scale-95 transition-transform"
           >
             {isUploading ? (
               <Loader2 className="w-4 h-4 animate-spin mr-2" />
             ) : (
               <Check className="w-4 h-4 mr-2" />
             )}
-            Use this photo
+            Use photo
           </Button>
         </div>
       </motion.div>
@@ -306,26 +329,34 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
           autoPlay
           muted
           playsInline
-          className="w-full h-full object-cover scale-x-[-1]"
+          className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
         />
         <canvas ref={canvasRef} className="hidden" />
-        
-        {/* Capture controls — bottom overlay */}
-        <div className="absolute bottom-0 inset-x-0 pb-10 pt-6 bg-gradient-to-t from-black/60 to-transparent flex justify-center items-center gap-8">
+
+        {/* Top bar */}
+        <div className="absolute top-0 inset-x-0 pt-12 pb-4 px-5 bg-gradient-to-b from-black/50 to-transparent flex items-center justify-between">
           <button
             onClick={stopCamera}
-            className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
+            className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center"
           >
             <X className="w-5 h-5 text-white" />
           </button>
           <button
-            onClick={capturePhoto}
-            className="w-18 h-18 rounded-full bg-white border-4 border-white/80 flex items-center justify-center hover:scale-105 transition-transform shadow-xl"
-            style={{ width: 72, height: 72 }}
+            onClick={switchCameraFacing}
+            className="w-10 h-10 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform"
           >
-            <div className="w-14 h-14 rounded-full bg-white border-2 border-black/10" />
+            <SwitchCamera className="w-5 h-5 text-white" />
           </button>
-          <div className="w-12 h-12" /> {/* Spacer for centering */}
+        </div>
+        
+        {/* Bottom capture bar */}
+        <div className="absolute bottom-0 inset-x-0 pb-12 pt-8 bg-gradient-to-t from-black/60 to-transparent flex justify-center items-center">
+          <button
+            onClick={capturePhoto}
+            className="w-[72px] h-[72px] rounded-full bg-white flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-2xl"
+          >
+            <div className="w-[62px] h-[62px] rounded-full border-[3px] border-black/10" />
+          </button>
         </div>
       </motion.div>
     );
@@ -390,7 +421,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
             autoPlay
             muted
             playsInline
-            className="w-full h-full object-cover scale-x-[-1]"
+            className={`w-full h-full object-cover ${facingMode === 'user' ? 'scale-x-[-1]' : ''}`}
           />
         ) : (
           <div className="aspect-video flex flex-col items-center justify-center">
@@ -423,7 +454,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
         )}
         
         {/* Recording indicator */}
-        <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-destructive text-white text-sm font-medium">
+        <div className={`absolute ${type === 'video' ? 'top-14' : 'top-4'} left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-destructive text-white text-sm font-medium`}>
           <motion.div
             animate={{ opacity: [1, 0, 1] }}
             transition={{ repeat: Infinity, duration: 1 }}
@@ -433,10 +464,10 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl }: Med
         </div>
         
         {/* Stop button */}
-        <div className="absolute bottom-4 inset-x-0 flex justify-center">
+        <div className={`absolute ${type === 'video' ? 'bottom-12' : 'bottom-4'} inset-x-0 flex justify-center`}>
           <button
             onClick={stopRecording}
-            className="w-16 h-16 rounded-full bg-destructive flex items-center justify-center hover:bg-destructive/90 transition-colors shadow-xl"
+            className="w-[72px] h-[72px] rounded-full bg-destructive flex items-center justify-center hover:bg-destructive/90 active:scale-95 transition-all shadow-xl"
           >
             <Square className="w-6 h-6 text-white fill-white" />
           </button>
