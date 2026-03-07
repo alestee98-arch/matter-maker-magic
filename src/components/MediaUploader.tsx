@@ -35,7 +35,8 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
-  const [cameraMode, setCameraMode] = useState<'photo' | 'video'>('photo');
+  const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isHoldingRef = useRef(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -413,46 +414,34 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
             </button>
           </div>
 
-          {/* Bottom controls */}
-          <div className="absolute bottom-0 inset-x-0 pb-10 pt-6 bg-gradient-to-t from-black/60 to-transparent">
-            {/* Photo/Video mode toggle */}
-            <div className="flex justify-center gap-6 mb-6">
-              <button
-                onClick={() => setCameraMode('photo')}
-                className={`text-sm font-medium px-3 py-1 rounded-full transition-all ${
-                  cameraMode === 'photo' ? 'text-white bg-white/20' : 'text-white/50'
-                }`}
-              >
-                Photo
-              </button>
-              <button
-                onClick={() => setCameraMode('video')}
-                className={`text-sm font-medium px-3 py-1 rounded-full transition-all ${
-                  cameraMode === 'video' ? 'text-white bg-white/20' : 'text-white/50'
-                }`}
-              >
-                Video
-              </button>
-            </div>
-
-            {/* Capture/Record button */}
-            <div className="flex justify-center">
-              {cameraMode === 'photo' ? (
-                <button
-                  onClick={capturePhoto}
-                  className="w-[72px] h-[72px] rounded-full bg-white flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-2xl"
-                >
-                  <div className="w-[62px] h-[62px] rounded-full border-[3px] border-black/10" />
-                </button>
-              ) : (
-                <button
-                  onClick={startVideoRecording}
-                  className="w-[72px] h-[72px] rounded-full bg-destructive flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-2xl"
-                >
-                  <div className="w-[28px] h-[28px] rounded-full bg-white" />
-                </button>
-              )}
-            </div>
+          {/* Bottom — single shutter button: tap = photo, hold = video */}
+          <div className="absolute bottom-0 inset-x-0 pb-10 pt-8 bg-gradient-to-t from-black/60 to-transparent flex justify-center">
+            <button
+              onPointerDown={() => {
+                isHoldingRef.current = false;
+                holdTimerRef.current = setTimeout(() => {
+                  isHoldingRef.current = true;
+                  startVideoRecording();
+                }, 400);
+              }}
+              onPointerUp={() => {
+                if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+                if (isHoldingRef.current) {
+                  // Was recording video — stop it
+                  stopRecording();
+                } else {
+                  // Quick tap — take photo
+                  capturePhoto();
+                }
+                isHoldingRef.current = false;
+              }}
+              onPointerLeave={() => {
+                if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+              }}
+              className={`w-[76px] h-[76px] rounded-full bg-white flex items-center justify-center active:scale-95 transition-transform shadow-2xl`}
+            >
+              <div className="w-[64px] h-[64px] rounded-full border-[3px] border-black/10" />
+            </button>
           </div>
         </motion.div>
       );
@@ -555,7 +544,7 @@ export default function MediaUploader({ type, onUpload, onClear, mediaUrl, captu
         <p className="text-sm text-muted-foreground mb-6">Photos, videos, or audio from your library</p>
         <Button onClick={() => fileInputRef.current?.click()} size="lg" className="rounded-full bg-foreground text-background hover:bg-foreground/90 shadow-lg">
           <Upload className="w-4 h-4 mr-2" />
-          Choose file
+          Choose from library
         </Button>
         <input
           ref={fileInputRef}
