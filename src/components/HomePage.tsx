@@ -267,7 +267,7 @@ export default function HomePage() {
   };
 
   const wordCount = response.trim().split(/\s+/).filter(Boolean).length;
-  const weekNumber = Math.floor(entriesCount / 1) + 1;
+  const weekNumber = entriesCount > 0 ? entriesCount : sequencePosition;
 
   return (
     <div className="min-h-[calc(100vh-8rem)] flex flex-col">
