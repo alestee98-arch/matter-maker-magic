@@ -86,7 +86,7 @@ serve(async (req) => {
           continue;
         }
 
-        const answerLink = `${appUrl}/answer?q=${question.id}`;
+        const answerLink = `${appUrl}/?q=${question.id}`;
 
         // --- SEND EMAIL ---
         if (profile.notify_email !== false) {
