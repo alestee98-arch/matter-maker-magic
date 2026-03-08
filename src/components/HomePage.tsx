@@ -46,6 +46,8 @@ export default function HomePage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
+    let stale = false;
+    
     const fetchQuestion = async () => {
       if (!user) return;
       
@@ -60,15 +62,15 @@ export default function HomePage() {
       // If linking to a specific question (from email or re-answer), fetch it directly
       if (directQid) {
         const { data: q } = await supabase.from('questions').select('*').eq('id', directQid).maybeSingle();
+        if (stale) return;
         if (q) {
           setCurrentQuestion(q);
-          // Clear the param so refreshes don't re-trigger
           window.history.replaceState({}, '', window.location.pathname);
-          // Still fetch entry count and sequence position
           const [respResult, profileResult] = await Promise.all([
             supabase.from('responses').select('question_id').eq('user_id', user.id),
             supabase.from('profiles').select('current_sequence_position').eq('id', user.id).maybeSingle(),
           ]);
+          if (stale) return;
           setEntriesCount(respResult.data?.length || 0);
           setSequencePosition((profileResult.data as any)?.current_sequence_position ?? 0);
           setIsLoadingQuestion(false);
@@ -81,6 +83,7 @@ export default function HomePage() {
           supabase.from('responses').select('question_id').eq('user_id', user.id),
           supabase.from('profiles').select('age_group, current_sequence_position').eq('id', user.id).maybeSingle(),
         ]);
+        if (stale) return;
 
         const responses = respResult.data;
         setEntriesCount(responses?.length || 0);
@@ -99,17 +102,18 @@ export default function HomePage() {
             .gt('position', currentPos)
             .order('position', { ascending: true })
             .limit(1) as any;
+          if (stale) return;
 
           if (seqRows && seqRows.length > 0 && seqRows[0].questions) {
             const row = seqRows[0];
             foundQuestion = { id: row.questions.id, question: row.questions.question, category: row.questions.category, depth: row.questions.depth };
-            // Store the actual sequence position so we can advance correctly
             setSequencePosition(row.position);
           }
         }
 
         if (!foundQuestion) {
           const { data: questions } = await supabase.from('questions').select('*');
+          if (stale) return;
           if (questions && questions.length > 0) {
             const unanswered = questions.filter(q => !answeredIds.has(q.id));
             const pool = unanswered.length > 0 ? unanswered : questions;
@@ -121,11 +125,12 @@ export default function HomePage() {
       } catch (error) {
         console.error('Error fetching question:', error);
       } finally {
-        setIsLoadingQuestion(false);
+        if (!stale) setIsLoadingQuestion(false);
       }
     };
     
     fetchQuestion();
+    return () => { stale = true; };
   }, [user, refreshKey]);
 
   // Clear media when switching response types
