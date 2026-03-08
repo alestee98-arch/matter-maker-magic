@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +18,7 @@ export default function Index() {
   const { user, loading, signOut } = useAuth();
   const { profile, updateProfile } = useProfile();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentView, setCurrentView] = useState<'landing' | 'demo' | 'app'>('landing');
   const [appView, setAppView] = useState<'home' | 'profile' | 'settings'>('home');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -54,9 +55,21 @@ export default function Index() {
     if (user) {
       setCurrentView('app');
     } else {
-      navigate('/auth');
+      const questionId = searchParams.get('q');
+      const redirectPath = questionId ? `/?q=${questionId}` : '/';
+      navigate(`/auth?redirect=${encodeURIComponent(redirectPath)}`);
     }
   };
+
+  // If not logged in but has a question param from email, go straight to auth
+  if (currentView === 'landing' && !user && !loading) {
+    const questionId = searchParams.get('q');
+    if (questionId) {
+      const redirectPath = `/?q=${questionId}`;
+      navigate(`/auth?redirect=${encodeURIComponent(redirectPath)}`, { replace: true });
+      return null;
+    }
+  }
 
   if (currentView === 'landing' && !user) {
     return (
