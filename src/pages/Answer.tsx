@@ -30,7 +30,8 @@ export default function Answer() {
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate(`/auth?mode=login&redirect=/answer${questionId ? `?q=${questionId}` : ''}`);
+      const redirectPath = `/answer${questionId ? `?q=${questionId}` : ''}`;
+      navigate(`/auth?mode=login&redirect=${encodeURIComponent(redirectPath)}`);
     }
   }, [user, authLoading, navigate, questionId]);
 
