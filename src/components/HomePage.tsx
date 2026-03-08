@@ -44,46 +44,51 @@ export default function HomePage() {
   const [showSavedConfirmation, setShowSavedConfirmation] = useState(false);
   const [sequencePosition, setSequencePosition] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
+  const userId = user?.id;
 
   useEffect(() => {
     let stale = false;
     
     const fetchQuestion = async () => {
-      if (!user) return;
+      if (!userId) {
+        console.log('[HomePage] No userId, skipping fetch');
+        return;
+      }
       
+      console.log('[HomePage] Starting question fetch for user:', userId);
       setIsLoadingQuestion(true);
       
-      // Read params once at mount — don't depend on searchParams in the dep array
       const params = new URLSearchParams(window.location.search);
       const reanswerQid = params.get('reanswer');
       const emailQid = params.get('q');
       const directQid = reanswerQid || emailQid;
       
-      // If linking to a specific question (from email or re-answer), fetch it directly
       if (directQid) {
+        console.log('[HomePage] Direct question ID:', directQid);
         const { data: q } = await supabase.from('questions').select('*').eq('id', directQid).maybeSingle();
-        if (stale) return;
+        if (stale) { console.log('[HomePage] Stale after direct fetch'); return; }
         if (q) {
           setCurrentQuestion(q);
           window.history.replaceState({}, '', window.location.pathname);
           const [respResult, profileResult] = await Promise.all([
-            supabase.from('responses').select('question_id').eq('user_id', user.id),
-            supabase.from('profiles').select('current_sequence_position').eq('id', user.id).maybeSingle(),
+            supabase.from('responses').select('question_id').eq('user_id', userId),
+            supabase.from('profiles').select('current_sequence_position').eq('id', userId).maybeSingle(),
           ]);
-          if (stale) return;
+          if (stale) { console.log('[HomePage] Stale after direct metadata fetch'); return; }
           setEntriesCount(respResult.data?.length || 0);
           setSequencePosition((profileResult.data as any)?.current_sequence_position ?? 0);
           setIsLoadingQuestion(false);
+          console.log('[HomePage] Direct question loaded:', q.question.slice(0, 40));
           return;
         }
       }
       
       try {
         const [respResult, profileResult] = await Promise.all([
-          supabase.from('responses').select('question_id').eq('user_id', user.id),
-          supabase.from('profiles').select('age_group, current_sequence_position').eq('id', user.id).maybeSingle(),
+          supabase.from('responses').select('question_id').eq('user_id', userId),
+          supabase.from('profiles').select('age_group, current_sequence_position').eq('id', userId).maybeSingle(),
         ]);
-        if (stale) return;
+        if (stale) { console.log('[HomePage] Stale after profile fetch'); return; }
 
         const responses = respResult.data;
         setEntriesCount(responses?.length || 0);
@@ -91,6 +96,7 @@ export default function HomePage() {
 
         const userAgeGroup = profileResult.data?.age_group;
         const currentPos = (profileResult.data as any)?.current_sequence_position ?? 0;
+        console.log('[HomePage] Profile:', { userAgeGroup, currentPos, responsesCount: responses?.length });
         setSequencePosition(currentPos);
         let foundQuestion: Question | null = null;
 
@@ -102,8 +108,9 @@ export default function HomePage() {
             .gt('position', currentPos)
             .order('position', { ascending: true })
             .limit(1) as any;
-          if (stale) return;
+          if (stale) { console.log('[HomePage] Stale after sequence fetch'); return; }
 
+          console.log('[HomePage] Sequence result:', seqRows?.length, seqRows?.[0]?.questions?.question?.slice(0, 40));
           if (seqRows && seqRows.length > 0 && seqRows[0].questions) {
             const row = seqRows[0];
             foundQuestion = { id: row.questions.id, question: row.questions.question, category: row.questions.category, depth: row.questions.depth };
@@ -113,7 +120,7 @@ export default function HomePage() {
 
         if (!foundQuestion) {
           const { data: questions } = await supabase.from('questions').select('*');
-          if (stale) return;
+          if (stale) { console.log('[HomePage] Stale after fallback fetch'); return; }
           if (questions && questions.length > 0) {
             const unanswered = questions.filter(q => !answeredIds.has(q.id));
             const pool = unanswered.length > 0 ? unanswered : questions;
@@ -121,17 +128,30 @@ export default function HomePage() {
           }
         }
 
-        if (foundQuestion) setCurrentQuestion(foundQuestion);
+        if (foundQuestion) {
+          console.log('[HomePage] ✅ Setting question:', foundQuestion.question.slice(0, 40));
+          setCurrentQuestion(foundQuestion);
+        } else {
+          console.log('[HomePage] ❌ No question found!');
+        }
       } catch (error) {
-        console.error('Error fetching question:', error);
+        console.error('[HomePage] Error fetching question:', error);
       } finally {
-        if (!stale) setIsLoadingQuestion(false);
+        if (!stale) {
+          console.log('[HomePage] Setting isLoadingQuestion = false');
+          setIsLoadingQuestion(false);
+        } else {
+          console.log('[HomePage] Stale in finally, NOT setting loading=false');
+        }
       }
     };
     
     fetchQuestion();
-    return () => { stale = true; };
-  }, [user, refreshKey]);
+    return () => { 
+      console.log('[HomePage] Cleanup: marking stale');
+      stale = true; 
+    };
+  }, [userId, refreshKey]);
 
   // Clear media when switching response types
   useEffect(() => {
