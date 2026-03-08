@@ -55,7 +55,9 @@ export default function Index() {
     if (user) {
       setCurrentView('app');
     } else {
-      navigate('/auth');
+      const questionId = searchParams.get('q');
+      const redirectPath = questionId ? `/?q=${questionId}` : '/';
+      navigate(`/auth?redirect=${encodeURIComponent(redirectPath)}`);
     }
   };
 
