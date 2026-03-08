@@ -102,12 +102,10 @@ serve(async (req) => {
               subject: `${firstName}, this week's question is here`,
               html: `
                 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px; background: #fff;">
-                  <p style="color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 24px;">This Week's Question</p>
-                  <h1 style="font-family: Georgia, serif; font-size: 28px; color: #171717; line-height: 1.3; margin-bottom: 32px;">${question.question}</h1>
+                  <p style="color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px;">This Week's Question</p>
+                  <h1 style="font-family: Georgia, serif; font-size: 28px; color: #171717; line-height: 1.3; margin-bottom: 20px;">${question.question}</h1>
                   <a href="${answerLink}" style="display: inline-block; background: #171717; color: #fff; padding: 14px 32px; border-radius: 999px; text-decoration: none; font-size: 16px; font-weight: 500;">Answer now</a>
-                  <p style="color: #999; font-size: 13px; margin-top: 40px; line-height: 1.6;">Take your time. Your answer is private and becomes part of your legacy — for the people who love you most.</p>
-                  <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;" />
-                  <p style="color: #ccc; font-size: 11px;">Matter &middot; <a href="${appUrl}/unsubscribe?uid=${profile.id}" style="color: #ccc;">Unsubscribe</a></p>
+                  <p style="color: #999; font-size: 13px; margin-top: 24px; line-height: 1.6;">Your answer is private and becomes part of your legacy.</p>
                 </div>
               `,
             }),
