@@ -100,14 +100,7 @@ serve(async (req) => {
               from: 'Matter <hello@mattermore.xyz>',
               to: [email],
               subject: `${firstName}, this week's question is here`,
-              html: `
-                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px; background: #fff;">
-                  <p style="color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px;">This Week's Question</p>
-                  <h1 style="font-family: Georgia, serif; font-size: 28px; color: #171717; line-height: 1.3; margin-bottom: 20px;">${question.question}</h1>
-                  <a href="${answerLink}" style="display: inline-block; background: #171717; color: #fff; padding: 14px 32px; border-radius: 999px; text-decoration: none; font-size: 16px; font-weight: 500;">Answer now</a>
-                  <p style="color: #999; font-size: 13px; margin-top: 24px; line-height: 1.6;">Your answer is private and becomes part of your legacy.</p>
-                </div>
-              `,
+              html: `<div style="font-family:Georgia,serif;max-width:480px;margin:0 auto;padding:32px 16px"><p style="color:#999;font-size:11px;text-transform:uppercase;letter-spacing:2px;margin:0 0 12px">This Week's Question</p><h1 style="font-size:26px;color:#171717;line-height:1.3;margin:0 0 16px">${question.question}</h1><a href="${answerLink}" style="display:inline-block;background:#171717;color:#fff;padding:12px 28px;border-radius:999px;text-decoration:none;font-size:15px">Answer now</a></div>`,
             }),
           });
 
