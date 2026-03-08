@@ -50,8 +50,11 @@ export default function HomePage() {
       if (!user) return;
       
       setIsLoadingQuestion(true);
-      const reanswerQid = searchParams.get('reanswer');
-      const emailQid = searchParams.get('q');
+      
+      // Read params once at mount — don't depend on searchParams in the dep array
+      const params = new URLSearchParams(window.location.search);
+      const reanswerQid = params.get('reanswer');
+      const emailQid = params.get('q');
       const directQid = reanswerQid || emailQid;
       
       // If linking to a specific question (from email or re-answer), fetch it directly
@@ -60,10 +63,14 @@ export default function HomePage() {
         if (q) {
           setCurrentQuestion(q);
           // Clear the param so refreshes don't re-trigger
-          setSearchParams({}, { replace: true });
-          // Still fetch entry count
-          const { data: resp } = await supabase.from('responses').select('question_id').eq('user_id', user.id);
-          setEntriesCount(resp?.length || 0);
+          window.history.replaceState({}, '', window.location.pathname);
+          // Still fetch entry count and sequence position
+          const [respResult, profileResult] = await Promise.all([
+            supabase.from('responses').select('question_id').eq('user_id', user.id),
+            supabase.from('profiles').select('current_sequence_position').eq('id', user.id).maybeSingle(),
+          ]);
+          setEntriesCount(respResult.data?.length || 0);
+          setSequencePosition((profileResult.data as any)?.current_sequence_position ?? 0);
           setIsLoadingQuestion(false);
           return;
         }
@@ -119,7 +126,7 @@ export default function HomePage() {
     };
     
     fetchQuestion();
-  }, [user, refreshKey, searchParams]);
+  }, [user, refreshKey]);
 
   // Clear media when switching response types
   useEffect(() => {
