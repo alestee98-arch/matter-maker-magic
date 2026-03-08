@@ -126,7 +126,7 @@ export default function HomePage() {
     };
     
     fetchQuestion();
-  }, [user, refreshKey, searchParams]);
+  }, [user, refreshKey]);
 
   // Clear media when switching response types
   useEffect(() => {
