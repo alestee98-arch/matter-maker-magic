@@ -282,12 +282,12 @@ export default function HomePage() {
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
         </p>
         <h1 className="text-3xl md:text-4xl text-foreground font-serif">
-          Week {weekNumber} of your journey
+          {weekNumber > 0 ? `Week ${weekNumber} of your journey` : 'Your journey starts here'}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">This week's reflection</p>
         <p className="text-xs text-muted-foreground/60 mt-3">
           {entriesCount === 0 
-            ? `Week ${weekNumber} · Your journey starts here`
+            ? (weekNumber > 0 ? `Week ${weekNumber} · Your journey starts here` : 'Your journey starts here')
             : `Week ${weekNumber} · ${entriesCount} ${entriesCount === 1 ? 'entry' : 'entries'}`
           }
         </p>
