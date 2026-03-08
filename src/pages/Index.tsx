@@ -18,6 +18,7 @@ export default function Index() {
   const { user, loading, signOut } = useAuth();
   const { profile, updateProfile } = useProfile();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentView, setCurrentView] = useState<'landing' | 'demo' | 'app'>('landing');
   const [appView, setAppView] = useState<'home' | 'profile' | 'settings'>('home');
   const [phoneNumber, setPhoneNumber] = useState('');
