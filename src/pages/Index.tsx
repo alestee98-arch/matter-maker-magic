@@ -61,6 +61,16 @@ export default function Index() {
     }
   };
 
+  // If not logged in but has a question param from email, go straight to auth
+  if (currentView === 'landing' && !user && !loading) {
+    const questionId = searchParams.get('q');
+    if (questionId) {
+      const redirectPath = `/?q=${questionId}`;
+      navigate(`/auth?redirect=${encodeURIComponent(redirectPath)}`, { replace: true });
+      return null;
+    }
+  }
+
   if (currentView === 'landing' && !user) {
     return (
       <LandingPage 
