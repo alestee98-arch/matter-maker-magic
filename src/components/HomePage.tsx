@@ -43,6 +43,7 @@ export default function HomePage() {
   const [capturedMediaType, setCapturedMediaType] = useState<'audio' | 'video' | 'photo' | null>(null);
   const [showSavedConfirmation, setShowSavedConfirmation] = useState(false);
   const [sequencePosition, setSequencePosition] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
   const userId = user?.id;
 
   useEffect(() => {
