@@ -51,10 +51,12 @@ export default function HomePage() {
       
       setIsLoadingQuestion(true);
       const reanswerQid = searchParams.get('reanswer');
+      const emailQid = searchParams.get('q');
+      const directQid = reanswerQid || emailQid;
       
-      // If re-answering a specific question, fetch it directly
-      if (reanswerQid) {
-        const { data: q } = await supabase.from('questions').select('*').eq('id', reanswerQid).maybeSingle();
+      // If linking to a specific question (from email or re-answer), fetch it directly
+      if (directQid) {
+        const { data: q } = await supabase.from('questions').select('*').eq('id', directQid).maybeSingle();
         if (q) {
           setCurrentQuestion(q);
           // Clear the param so refreshes don't re-trigger
